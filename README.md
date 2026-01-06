@@ -6,6 +6,11 @@ A portable Python time tracking application for managing work hours, overtime, v
 
 This is a self-contained Flask-based time tracking application with no external services required. All data is stored locally in SQLite, making it completely portable and easy to run anywhere.
 
+## Documentation
+
+- **[Installation Guide](docs/installation.md)** - Detailed installation instructions, prerequisites, and troubleshooting
+- **[Usage Guide](docs/usage.md)** - Complete guide on how to use the application, workflows, and best practices
+
 ## Features
 
 - **Work Hours Tracking**: Track daily work hours (8 hours/day, 40 hours/week standard)
@@ -55,6 +60,9 @@ The easiest way to get started is using the pre-configured development container
 📚 **For detailed dev container documentation, see [docs/DEV_CONTAINER.md](docs/DEV_CONTAINER.md)**
 
 ### Option 2: Manual Installation
+For detailed installation instructions including troubleshooting, see the **[Installation Guide](docs/installation.md)**.
+
+### Quick Start
 
 1. Clone the repository:
 ```bash
@@ -85,25 +93,15 @@ python run.py
 
 6. Open your browser and navigate to `http://localhost:5000`
 
-## Project Structure
-
-```
-time-tracker/
-├── app/
-│   ├── __init__.py          # Flask app initialization
-│   ├── models.py            # Database models
-│   ├── routes.py            # Application routes
-│   ├── templates/           # HTML templates
-│   └── static/              # CSS, JS, images
-├── scripts/
-│   └── init_db.py           # Database initialization
-├── tests/                   # Unit tests
-├── requirements.txt         # Python dependencies
-├── run.py                   # Application entry point
-└── README.md               # This file
-```
+**Alternative:** Use the quick start scripts:
+- Linux/macOS: `./start.sh`
+- Windows: `start.bat`
 
 ## Usage
+
+For detailed usage instructions, workflows, and examples, see the **[Usage Guide](docs/usage.md)**.
+
+### Quick Overview
 
 ### Track Work Hours
 1. Navigate to the dashboard
@@ -120,6 +118,25 @@ time-tracker/
 - Record vacation days with start/end dates
 - Log sick leave days
 - View remaining vacation balance
+
+## Project Structure
+
+```
+time-tracker/
+├── app/
+│   ├── __init__.py          # Flask app initialization
+│   ├── models.py            # Database models
+│   ├── routes.py            # Application routes
+│   ├── templates/           # HTML templates
+│   └── static/              # CSS, JS, images
+├── docs/                    # Documentation
+│   ├── installation.md      # Installation guide
+│   └── usage.md            # Usage guide
+├── tests/                   # Unit tests
+├── requirements.txt         # Python dependencies
+├── run.py                   # Application entry point
+└── README.md               # This file
+```
 
 ## License
 
