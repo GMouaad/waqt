@@ -96,10 +96,14 @@ def start(time: Optional[str], date: Optional[str], description: str):
             start_time = datetime.now().time()
 
         # Check if there's already an open entry for this date
-        # Open entries have duration_hours == 0.0
-        open_entries = TimeEntry.query.filter_by(
-            date=entry_date, duration_hours=0.0
-        ).all()
+        # Open entries are identified by:
+        # - duration_hours == 0.0 and end_time == start_time
+        # This is a marker for entries waiting to be closed with 'waqt end'
+        open_entries = (
+            TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
+            .filter(TimeEntry.end_time == TimeEntry.start_time)
+            .all()
+        )
 
         if open_entries:
             click.echo(
@@ -111,14 +115,15 @@ def start(time: Optional[str], date: Optional[str], description: str):
             click.echo("Please run 'waqt end' first to close it.")
             return
 
-        # Create a new entry with only start time (end_time will be None initially)
-        # We'll store a placeholder value and update it on end
-        # For now, we'll use start_time as end_time temporarily
+        # Create a new entry with start time
+        # end_time is set to start_time as a temporary marker for open entries
+        # duration_hours is 0.0 to indicate this entry is not yet complete
+        # The 'waqt end' command will update these values
         entry = TimeEntry(
             date=entry_date,
             start_time=start_time,
-            end_time=start_time,  # Temporary placeholder
-            duration_hours=0.0,  # Will be calculated on end
+            end_time=start_time,  # Marker: same as start_time for open entries
+            duration_hours=0.0,  # Marker: 0.0 for open entries
             description=description,
         )
 
@@ -189,11 +194,11 @@ def end(time: Optional[str], date: Optional[str]):
         else:
             end_time = datetime.now().time()
 
-        # Find the most recent entry for today with duration 0
-        # (our marker for open entries)
+        # Find the most recent entry for this date that is still open
+        # Open entries have: duration_hours == 0.0 AND end_time == start_time
         open_entry = (
-            TimeEntry.query.filter_by(date=entry_date)
-            .filter_by(duration_hours=0.0)
+            TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
+            .filter(TimeEntry.end_time == TimeEntry.start_time)
             .order_by(TimeEntry.created_at.desc())
             .first()
         )
