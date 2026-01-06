@@ -1,0 +1,251 @@
+# Installation Guide
+
+This guide will help you install and set up the Time Tracker application on your system.
+
+## Prerequisites
+
+Before installing the Time Tracker application, ensure you have the following:
+
+- **Python 3.8 or higher**: The application requires Python 3.8+
+  - Check your Python version: `python --version` or `python3 --version`
+  - Download from: https://www.python.org/downloads/
+
+- **pip**: Python package installer (usually comes with Python)
+  - Check if installed: `pip --version`
+
+- **Git** (optional): For cloning the repository
+  - Download from: https://git-scm.com/downloads
+
+### Operating System Support
+
+The Time Tracker application works on:
+- Linux (Ubuntu, Debian, Fedora, etc.)
+- macOS
+- Windows 10/11
+
+## Installation Steps
+
+### 1. Get the Source Code
+
+#### Option A: Clone with Git (Recommended)
+
+```bash
+git clone https://github.com/GMouaad/time-tracker.git
+cd time-tracker
+```
+
+#### Option B: Download ZIP
+
+1. Visit https://github.com/GMouaad/time-tracker
+2. Click "Code" → "Download ZIP"
+3. Extract the ZIP file
+4. Navigate to the extracted folder
+
+### 2. Create a Virtual Environment
+
+A virtual environment keeps project dependencies isolated from your system Python.
+
+#### On Linux/macOS:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+#### On Windows:
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+You should see `(venv)` in your terminal prompt, indicating the virtual environment is active.
+
+### 3. Install Dependencies
+
+With the virtual environment activated, install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs:
+- Flask 3.0.0 (web framework)
+- Flask-SQLAlchemy 3.1.1 (database ORM)
+- python-dateutil 2.8.2 (date/time utilities)
+- Werkzeug 3.0.1 (WSGI utilities)
+
+### 4. Initialize the Database
+
+Create the SQLite database and set up default settings:
+
+```bash
+python init_db.py
+```
+
+You should see output like:
+```
+✓ Database tables created successfully!
+✓ Added setting: standard_hours_per_day = 8
+✓ Added setting: standard_hours_per_week = 40
+
+✅ Database initialization complete!
+You can now run the app with: python run.py
+```
+
+This creates a `time_tracker.db` file in your project directory.
+
+### 5. Run the Application
+
+Start the Flask development server:
+
+```bash
+python run.py
+```
+
+You should see output like:
+```
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in production.
+ * Running on http://0.0.0.0:5000
+```
+
+### 6. Access the Application
+
+Open your web browser and navigate to:
+
+```
+http://localhost:5000
+```
+
+You should see the Time Tracker dashboard!
+
+## Quick Start Scripts
+
+For convenience, the project includes startup scripts that automate steps 2-5:
+
+### On Linux/macOS:
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+### On Windows:
+
+```bash
+start.bat
+```
+
+These scripts will:
+- Create a virtual environment (if not exists)
+- Activate the virtual environment
+- Install dependencies (if not installed)
+- Initialize the database (if not exists)
+- Start the application
+
+## Verification
+
+To verify your installation is working correctly:
+
+1. **Check the Dashboard**: Visit `http://localhost:5000` and see the dashboard
+2. **Add a Test Entry**: Click "Add Time Entry" and create a test work log
+3. **View Reports**: Navigate to the Reports page to see weekly/monthly summaries
+
+## Troubleshooting
+
+### Python Version Issues
+
+**Problem**: `python: command not found` or wrong version
+
+**Solution**: 
+- Try `python3` instead of `python`
+- Install Python 3.8+ from https://www.python.org/downloads/
+- On Linux: `sudo apt install python3` (Ubuntu/Debian) or `sudo yum install python3` (Fedora)
+
+### Permission Errors
+
+**Problem**: Permission denied when creating files/folders
+
+**Solution**:
+- Ensure you have write permissions in the project directory
+- On Linux/macOS, you may need to use `chmod` to set permissions
+- Don't use `sudo` with pip; use virtual environments instead
+
+### Database Initialization Fails
+
+**Problem**: Errors when running `init_db.py`
+
+**Solution**:
+- Ensure virtual environment is activated
+- Check that Flask and SQLAlchemy are installed: `pip list | grep -i flask`
+- Delete `time_tracker.db` if it exists and try again
+- Check file permissions in the project directory
+
+### Port Already in Use
+
+**Problem**: `Address already in use` error
+
+**Solution**:
+- Another application is using port 5000
+- Find and stop the other application
+- Or modify `run.py` to use a different port:
+  ```python
+  app.run(debug=debug_mode, host='0.0.0.0', port=5001)
+  ```
+
+### Virtual Environment Not Activating
+
+**Problem**: Virtual environment won't activate on Windows
+
+**Solution**:
+- You may need to enable script execution:
+  ```powershell
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  ```
+- Then try activating again
+
+### Dependencies Won't Install
+
+**Problem**: pip install fails
+
+**Solution**:
+- Update pip: `pip install --upgrade pip`
+- Check your internet connection
+- Try installing packages individually:
+  ```bash
+  pip install Flask==3.0.0
+  pip install Flask-SQLAlchemy==3.1.1
+  pip install python-dateutil==2.8.2
+  ```
+
+## Development Installation
+
+If you plan to contribute to the project, install development dependencies:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+This includes testing and code quality tools.
+
+## Uninstallation
+
+To remove the Time Tracker application:
+
+1. Deactivate virtual environment: `deactivate`
+2. Delete the project folder
+3. Your time tracking data is stored in `time_tracker.db` - back it up if needed!
+
+## Next Steps
+
+Once installed, proceed to the [Usage Guide](usage.md) to learn how to use the Time Tracker application effectively.
+
+## Getting Help
+
+If you encounter issues not covered here:
+
+1. Check the [Usage Guide](usage.md) for operational questions
+2. Review the project's [README.md](../README.md)
+3. Open an issue on GitHub: https://github.com/GMouaad/time-tracker/issues
