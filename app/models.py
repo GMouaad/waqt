@@ -1,5 +1,5 @@
 """Database models for time tracking application."""
-from datetime import datetime
+from datetime import datetime, timezone
 from . import db
 
 
@@ -14,7 +14,7 @@ class TimeEntry(db.Model):
     end_time = db.Column(db.Time, nullable=False)
     duration_hours = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     def __repr__(self):
         return f'<TimeEntry {self.date} - {self.duration_hours}h>'
@@ -41,7 +41,7 @@ class LeaveDay(db.Model):
     date = db.Column(db.Date, nullable=False, index=True)
     leave_type = db.Column(db.String(20), nullable=False)  # 'vacation' or 'sick'
     description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     def __repr__(self):
         return f'<LeaveDay {self.date} - {self.leave_type}>'

@@ -47,6 +47,10 @@ jobs:
       run: |
         python init_db.py
     
+    - name: Run tests
+      run: |
+        pytest tests/ -v
+    
     - name: Test application startup
       run: |
         timeout 10s python run.py || code=$?; if [ $code -eq 124 ]; then echo "App started successfully"; else exit $code; fi

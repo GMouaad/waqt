@@ -10,8 +10,19 @@ def create_app():
     """Create and configure the Flask application."""
     app = Flask(__name__)
     
-    # Configuration
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+    # Configuration - Secret Key
+    secret_key = os.environ.get('SECRET_KEY')
+    if not secret_key:
+        is_production = os.environ.get('FLASK_ENV') == 'production' or os.environ.get('ENV') == 'production'
+        if is_production:
+            raise RuntimeError("SECRET_KEY environment variable must be set in production.")
+        secret_key = 'dev-secret-key-change-in-production'
+        # Warning will be visible in development
+        print(
+            "WARNING: Using default insecure SECRET_KEY. This is intended for development only. "
+            "Set the SECRET_KEY environment variable for production deployments."
+        )
+    app.config['SECRET_KEY'] = secret_key
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///time_tracker.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     

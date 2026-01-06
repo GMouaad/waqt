@@ -1,10 +1,10 @@
 """Route handlers for the time tracking application."""
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from datetime import datetime, timedelta
 from . import db
-from .models import TimeEntry, LeaveDay, Settings
+from .models import TimeEntry, LeaveDay
 from .utils import (
-    calculate_duration, calculate_daily_overtime, calculate_weekly_stats,
+    calculate_duration, calculate_weekly_stats,
     calculate_monthly_stats, get_week_bounds, get_month_bounds
 )
 
