@@ -60,6 +60,7 @@ The easiest way to get started is using the pre-configured development container
 📚 **For detailed dev container documentation, see [docs/DEV_CONTAINER.md](docs/DEV_CONTAINER.md)**
 
 ### Option 2: Manual Installation
+
 For detailed installation instructions including troubleshooting, see the **[Installation Guide](docs/installation.md)**.
 
 ### Quick Start
@@ -123,18 +124,21 @@ For detailed usage instructions, workflows, and examples, see the **[Usage Guide
 
 ```
 time-tracker/
-├── app/
-│   ├── __init__.py          # Flask app initialization
-│   ├── models.py            # Database models
-│   ├── routes.py            # Application routes
-│   ├── templates/           # HTML templates
-│   └── static/              # CSS, JS, images
+├── src/
+│   └── waqtracker/          # Main application package
+│       ├── __init__.py      # Flask app initialization
+│       ├── models.py        # Database models
+│       ├── routes.py        # Application routes
+│       ├── templates/       # HTML templates
+│       └── static/          # CSS, JS, images
 ├── docs/                    # Documentation
 │   ├── installation.md      # Installation guide
-│   └── usage.md            # Usage guide
+│   ├── usage.md            # Usage guide
+│   └── DEV_CONTAINER.md    # Dev container guide
 ├── tests/                   # Unit tests
 ├── requirements.txt         # Python dependencies
 ├── run.py                   # Application entry point
+├── init_db.py               # Database initialization
 └── README.md               # This file
 ```
 

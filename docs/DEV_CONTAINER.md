@@ -4,48 +4,36 @@ This document explains how to use the development container (dev container) for 
 
 ## What is a Dev Container?
 
-A development container is a Docker container specifically configured for development. It provides a consistent development environment across different machines and operating systems, ensuring all developers work with the same tools, dependencies, and configurations.
+A development container is a Docker container specifically configured for development. It provides a consistent development environment across different machines and operating systems.
 
 ## Prerequisites
-
-To use the dev container, you need one of the following:
 
 ### Option 1: VS Code (Recommended)
 - [Visual Studio Code](https://code.visualstudio.com/)
 - [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop) or Docker Engine
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
 ### Option 2: GitHub Codespaces
 - A GitHub account
-- No local installation required (runs in the cloud)
-
-### Option 3: Other IDEs
-- [JetBrains IDEs with Dev Containers support](https://www.jetbrains.com/help/idea/connect-to-devcontainer.html)
-- Docker installed locally
+- No local installation required
 
 ## Getting Started with VS Code
 
 ### First-Time Setup
 
 1. **Install Prerequisites:**
-   - Install [VS Code](https://code.visualstudio.com/)
-   - Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
-   - Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+   - Install VS Code, Docker Desktop, and the Dev Containers extension
 
 2. **Open the Project:**
-   - Clone the repository:
-     ```bash
-     git clone https://github.com/GMouaad/time-tracker.git
-     cd time-tracker
-     ```
-   - Open the folder in VS Code:
-     ```bash
-     code .
-     ```
+   ```bash
+   git clone https://github.com/GMouaad/time-tracker.git
+   cd time-tracker
+   code .
+   ```
 
 3. **Start the Dev Container:**
-   - VS Code will detect the `.devcontainer` configuration and prompt you to "Reopen in Container"
-   - Click "Reopen in Container" or use the command palette (F1) and select "Dev Containers: Reopen in Container"
+   - VS Code will prompt you to "Reopen in Container"
+   - Click the prompt or use F1 → "Dev Containers: Reopen in Container"
    - Wait for the container to build (first time takes 2-5 minutes)
 
 4. **Automatic Setup:**

@@ -36,7 +36,7 @@ Thank you for your interest in contributing to the Time Tracker application!
 
 ```bash
 pytest tests/ -v
-pytest tests/ --cov=app  # With coverage report
+pytest tests/ --cov=src.waqtracker  # With coverage report
 ```
 
 ## Code Style
@@ -57,7 +57,7 @@ pytest tests/ --cov=app  # With coverage report
 
 3. Run linting:
    ```bash
-   flake8 app/ tests/
+   flake8 src/waqtracker/ tests/
    ```
 
 4. Commit your changes:
@@ -70,7 +70,7 @@ pytest tests/ --cov=app  # With coverage report
 
 ## Project Structure
 
-- `app/` - Main application code
+- `src/waqtracker/` - Main application code
   - `__init__.py` - Flask app factory
   - `models.py` - Database models
   - `routes.py` - Route handlers

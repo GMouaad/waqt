@@ -1,9 +1,9 @@
 """Unit tests for the time tracker application."""
 import pytest
 from datetime import time, date
-from app import create_app, db
-from app.models import TimeEntry, LeaveDay, Settings
-from app.utils import calculate_duration, calculate_daily_overtime, get_week_bounds
+from src.waqtracker import create_app, db
+from src.waqtracker.models import TimeEntry, LeaveDay, Settings
+from src.waqtracker.utils import calculate_duration, calculate_daily_overtime, get_week_bounds
 
 
 @pytest.fixture

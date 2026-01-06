@@ -24,23 +24,23 @@ This repository contains a portable Python time tracking application built with 
 ### Directory Layout
 ```
 time-tracker/
-├── app/
-│   ├── __init__.py          # Flask app factory
-│   ├── models.py            # SQLAlchemy models
-│   ├── routes.py            # Route handlers
-│   ├── utils.py             # Helper functions
-│   ├── templates/           # Jinja2 HTML templates
-│   │   ├── base.html
-│   │   ├── dashboard.html
-│   │   ├── time_entry.html
-│   │   ├── reports.html
-│   │   └── leave.html
-│   └── static/              # CSS, JS, images
-│       ├── css/
-│       └── js/
-├── scripts/
-│   └── init_db.py           # Database initialization
+├── src/
+│   └── waqtracker/          # Main application package
+│       ├── __init__.py      # Flask app factory
+│       ├── models.py        # SQLAlchemy models
+│       ├── routes.py        # Route handlers
+│       ├── utils.py         # Helper functions
+│       ├── templates/       # Jinja2 HTML templates
+│       │   ├── base.html
+│       │   ├── dashboard.html
+│       │   ├── time_entry.html
+│       │   ├── reports.html
+│       │   └── leave.html
+│       └── static/          # CSS, JS, images
+│           ├── css/
+│           └── js/
 ├── tests/                   # Unit and integration tests
+├── init_db.py               # Database initialization
 ├── requirements.txt         # Python dependencies
 └── run.py                   # Application entry point
 ```
@@ -194,7 +194,7 @@ def new_feature():
 
 ### Database Query Example
 ```python
-from app.models import TimeEntry
+from src.waqtracker.models import TimeEntry
 from datetime import datetime
 
 # Get all entries for a date
