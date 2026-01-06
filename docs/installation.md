@@ -372,6 +372,10 @@ To remove the Time Tracker application:
 
 Once installed, proceed to the [Usage Guide](usage.md) to learn how to use the Time Tracker application effectively.
 
+## Migrating from pip to uv
+
+If you're an existing user with a pip-based setup and want to switch to uv, see the **[UV Migration Guide](UV_MIGRATION_GUIDE.md)** for step-by-step instructions.
+
 ## Getting Help
 
 If you encounter issues not covered here:
