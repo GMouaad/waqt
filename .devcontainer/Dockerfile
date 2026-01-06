@@ -9,16 +9,21 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 # Set working directory
 WORKDIR /workspace
 
-# Create a non-root user (vscode user is already created by the base image)
 # Set up Python environment
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install uv - modern fast Python package manager
+# Switch to vscode user before installing uv
+USER vscode
+
+# Install uv - modern fast Python package manager for vscode user
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.cargo/bin:${PATH}"
+ENV PATH="/home/vscode/.cargo/bin:${PATH}"
+
+# Switch back to root for any additional setup
+USER root
 
 # Upgrade pip as fallback
 RUN python -m pip install --upgrade pip

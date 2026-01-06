@@ -24,15 +24,31 @@ if exist "venv" (
     if not defined VENV_DIR set VENV_DIR=venv
 )
 
+REM Warn if both virtual environments are present
+if exist ".venv" if exist "venv" (
+    echo WARNING: Both ".venv" and "venv" directories were found.
+    echo          Using "%VENV_DIR%" for this session.
+    echo          Consider removing the unused environment to avoid confusion.
+    echo.
+)
+
 REM Create virtual environment if it doesn't exist
 if not defined VENV_DIR (
     echo Virtual environment not found!
     echo Creating virtual environment...
     if "%UV_AVAILABLE%"=="true" (
         uv venv
+        if errorlevel 1 (
+            echo Failed to create virtual environment with uv.
+            exit /b 1
+        )
         set VENV_DIR=.venv
     ) else (
         python -m venv venv
+        if errorlevel 1 (
+            echo Failed to create virtual environment with python -m venv.
+            exit /b 1
+        )
         set VENV_DIR=venv
     )
     echo Virtual environment created

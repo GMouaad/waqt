@@ -33,19 +33,33 @@ if [ -z "$VENV_DIR" ]; then
     echo "❌ Virtual environment not found!"
     echo "Creating virtual environment..."
     if [ "$UV_AVAILABLE" = true ]; then
-        uv venv
+        if ! uv venv; then
+            echo "❌ Failed to create virtual environment using uv"
+            exit 1
+        fi
         VENV_DIR=".venv"
     else
-        python -m venv venv
+        if ! python -m venv venv; then
+            echo "❌ Failed to create virtual environment using python -m venv"
+            exit 1
+        fi
         VENV_DIR="venv"
     fi
     echo "✅ Virtual environment created"
     echo ""
+else
+    # Warn if both venv directories exist
+    if [ -d ".venv" ] && [ -d "venv" ]; then
+        echo "⚠️  WARNING: Both .venv and venv directories found."
+        echo "    Using $VENV_DIR for this session."
+        echo "    Consider removing the unused environment to avoid confusion."
+        echo ""
+    fi
 fi
 
 # Activate virtual environment
 echo "Activating virtual environment..."
-source $VENV_DIR/bin/activate
+source "$VENV_DIR/bin/activate"
 
 # Check if dependencies are installed
 if ! python -c "import flask" 2>/dev/null; then

@@ -2,6 +2,9 @@
 requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project]
 name = "waqtracker"
 version = "0.1.0"
@@ -73,7 +76,7 @@ markers = [
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["tests/*", "venv/*"]
+omit = ["tests/*", "venv/*", ".venv/*"]
 
 [tool.coverage.report]
 exclude_lines = [
