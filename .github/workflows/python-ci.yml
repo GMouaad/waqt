@@ -80,7 +80,7 @@ jobs:
         tar -czf dist/time-tracker.tar.gz app/ run.py init_db.py requirements.txt README.md
     
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: time-tracker-app
         path: dist/time-tracker.tar.gz
