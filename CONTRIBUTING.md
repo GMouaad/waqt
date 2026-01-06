@@ -10,14 +10,16 @@ The fastest and most modern way to set up the development environment:
 
 1. **Install uv**
    ```bash
-   # Linux/macOS
+   # Recommended: Install via pip
+   pip install uv
+   
+   # Alternative: Install via script (Linux/macOS)
+   # For security, review https://astral.sh/uv/install.sh before running
    curl -LsSf https://astral.sh/uv/install.sh | sh
    
-   # Windows (PowerShell)
+   # Alternative: Install via script (Windows PowerShell)
+   # For security, review https://astral.sh/uv/install.ps1 before running
    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-   
-   # Or with pip
-   pip install uv
    ```
 
 2. **Fork and Clone**

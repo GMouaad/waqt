@@ -44,27 +44,36 @@ Traditional installation method using pip. **Note**: This method is deprecated i
 
 First, install the `uv` package manager:
 
-#### On Linux/macOS:
+#### Recommended: Using pip
+
+```bash
+pip install uv
+```
+
+#### Alternative: Using install script
+
+**⚠️ Security Note**: The install scripts download and execute code. Review the script source before running:
+- Linux/macOS: https://astral.sh/uv/install.sh
+- Windows: https://astral.sh/uv/install.ps1
+
+##### On Linux/macOS:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Or using pip:
-```bash
-pip install uv
-```
-
-#### On Windows:
+##### On Windows:
 
 Using PowerShell:
 ```powershell
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-Or using pip:
-```powershell
-pip install uv
+#### Verify Installation
+
+After installing with any method:
+```bash
+uv --version
 ```
 
 Verify installation:

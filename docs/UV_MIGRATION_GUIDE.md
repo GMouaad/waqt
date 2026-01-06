@@ -102,7 +102,7 @@ If you have an existing `venv` directory:
    deactivate
    rm -rf venv/  # Linux/macOS
    # or
-   rmdir /s venv  # Windows
+   rmdir /s /q venv  # Windows
    ```
 
 4. **Create new virtual environment with uv**:
