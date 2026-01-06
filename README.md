@@ -1,173 +1,95 @@
-# System Requirements Example
+# Time Tracker
 
-A comprehensive requirements documentation structure for a multi-service .NET platform following Self-Contained Systems (SCS) architecture patterns.
+A portable Python time tracking application for managing work hours, overtime, vacation days, sick leaves, and work activities.
 
 ## Project Overview
 
-This repository demonstrates a professional approach to documenting requirements for a distributed platform consisting of multiple self-contained services. The structure supports both functional and non-functional requirements while maintaining clear separation of concerns across services.
+This is a self-contained Flask-based time tracking application with no external services required. All data is stored locally in SQLite, making it completely portable and easy to run anywhere.
 
-## Architecture Approach
+## Features
 
-- **Self-Contained Systems (SCS)**: Each service owns its data, UI, and business logic
-- **Domain-Driven Design**: Services aligned with business domains
-- **Event-Driven Architecture**: Loose coupling through domain events
-- **API-First Design**: Well-defined contracts between services
-- **Cloud-Native**: Built for Azure with scalability and resilience
+- **Work Hours Tracking**: Track daily work hours (8 hours/day, 40 hours/week standard)
+- **Overtime Calculation**: Automatically calculate overtime hours
+- **Vacation Days**: Track and manage vacation days
+- **Sick Leaves**: Record sick leave days
+- **Work Activities**: Log detailed work activities and tasks
+- **Reports**: View weekly and monthly overtime summaries
 
-## Documentation Structure
-
-```
-docs/
-├── requirements/
-│   ├── 01-system-overview.md              # High-level system description
-│   ├── 02-system-capabilities.md          # Platform capabilities and roadmap
-│   ├── 03-global-nfr.md                   # System-wide non-functional requirements
-│   ├── 04-integration-patterns.md         # Service communication patterns
-│   ├── 05-security-architecture.md        # Security across all services
-│   │
-│   ├── user-experience/
-│   │   ├── ux-principles.md               # Design principles and standards
-│   │   ├── user-journeys.md               # End-to-end user workflows
-│   │   ├── accessibility-requirements.md  # WCAG compliance and inclusive design
-│   │   └── ui-guidelines.md               # Consistent UI patterns
-│   │
-│   ├── services/
-│   │   ├── user-service/
-│   │   │   ├── service-overview.md        # Complete service specification
-│   │   │   ├── functional-requirements.md # Service-specific features
-│   │   │   ├── nfr-specific.md           # Service-specific NFRs
-│   │   │   └── api-contracts.md          # REST/gRPC specifications
-│   │   │
-│   │   └── shared-contracts/
-│   │       ├── common-models.md           # Shared data models
-│   │       ├── events-schema.md           # Domain events structure
-│   │       └── integration-contracts.md    # Service-to-service contracts
-│   │
-│   └── cross-cutting/
-│       ├── monitoring-logging.md          # Observability requirements
-│       ├── configuration-management.md    # Service configuration
-│       ├── error-handling-patterns.md     # Consistent error handling
-│       └── testing-strategy.md            # Testing across services
-│
-├── decisions/
-│   ├── 001-microservices-vs-modular-monolith.md
-│   ├── 002-net-framework-vs-net-core.md
-│   └── 003-database-per-service.md
-│
-└── operations/
-    ├── sla-requirements.md                # Service level agreements
-    ├── disaster-recovery.md              # Backup and recovery
-    ├── capacity-planning.md              # Scaling requirements
-    └── compliance-requirements.md         # GDPR, SOX, etc.
-```
-
-## Key Features of This Structure
-
-### 1. **Comprehensive Coverage**
-- System-wide and service-specific requirements
-- Functional and non-functional requirements
-- User experience and technical architecture
-- Operational and compliance considerations
-
-### 2. **Scalable Organization**
-- Template-based approach for adding new services
-- Clear separation between global and service-specific concerns
-- Consistent documentation patterns across all services
-
-### 3. **Business Alignment**
-- User journey mapping for better requirement traceability
-- Capability-based planning with roadmap integration
-- Stakeholder-specific documentation sections
-
-### 4. **Technical Excellence**
-- Modern .NET microservices patterns
-- Cloud-native architecture considerations
-- Security-by-design principles
-- Comprehensive integration patterns
-
-### 5. **Operational Readiness**
-- Monitoring and observability requirements
-- Disaster recovery and business continuity
-- Compliance and governance frameworks
-- Capacity planning and scaling strategies
 
 ## Technology Stack
 
-### Core Technologies
-- **.NET 8+**: Primary development framework
-- **Azure Cloud**: Infrastructure and platform services
-- **Azure SQL Database**: Transactional data storage
-- **Azure Cosmos DB**: Document and flexible schema storage
-- **Azure Service Bus**: Reliable messaging and events
+- **Backend**: Flask (Python 3.8+)
+- **Database**: SQLite3
+- **Frontend**: HTML5, CSS3, JavaScript
+- **Portable**: No external services required
 
-### Development Standards
-- **API-First**: OpenAPI 3.0 specifications
-- **Event-Driven**: Domain events for service communication
-- **Security**: OAuth 2.0, Azure AD integration, end-to-end encryption
-- **Monitoring**: Application Insights, structured logging
-- **Testing**: Comprehensive testing strategy with 80%+ coverage
+## Installation
 
-## Getting Started
+1. Clone the repository:
+```bash
+git clone https://github.com/GMouaad/time-tracker.git
+cd time-tracker
+```
 
-### For Product Managers
-1. Start with `01-system-overview.md` for business context
-2. Review `02-system-capabilities.md` for feature planning
-3. Examine `user-experience/user-journeys.md` for user story alignment
+2. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-### For Architects
-1. Review `04-integration-patterns.md` for service communication
-2. Study `05-security-architecture.md` for security patterns
-3. Examine service-specific requirements in `services/` folder
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-### For Developers
-1. Start with `services/shared-contracts/` for common patterns
-2. Review individual service requirements for implementation details
-3. Follow `cross-cutting/` guidelines for consistent implementation
+4. Initialize the database:
+```bash
+python init_db.py
+```
 
-### For Operations Teams
-1. Review `03-global-nfr.md` for performance and reliability requirements
-2. Study `operations/` folder for deployment and maintenance procedures
-3. Examine monitoring and alerting requirements
+5. Run the application:
+```bash
+python run.py
+```
 
-## Contributing
+6. Open your browser and navigate to `http://localhost:5000`
 
-When adding new services or updating requirements:
+## Project Structure
 
-1. **Use Consistent Structure**: Follow the established template patterns
-2. **Maintain Traceability**: Link requirements to business objectives
-3. **Update Cross-References**: Ensure shared contracts and integration points are updated
-4. **Document Decisions**: Use Architecture Decision Records (ADRs) for significant choices
-5. **Keep Current**: Regular reviews to ensure requirements remain aligned with implementation
+```
+time-tracker/
+├── app/
+│   ├── __init__.py          # Flask app initialization
+│   ├── models.py            # Database models
+│   ├── routes.py            # Application routes
+│   ├── templates/           # HTML templates
+│   └── static/              # CSS, JS, images
+├── scripts/
+│   └── init_db.py           # Database initialization
+├── tests/                   # Unit tests
+├── requirements.txt         # Python dependencies
+├── run.py                   # Application entry point
+└── README.md               # This file
+```
 
-## Benefits of This Approach
+## Usage
 
-### For Development Teams
-- Clear service boundaries and responsibilities
-- Consistent patterns across all services
-- Comprehensive API contracts and data models
-- Well-defined integration points
+### Track Work Hours
+1. Navigate to the dashboard
+2. Click "Add Time Entry"
+3. Enter date, start time, end time, and description
+4. The system automatically calculates overtime
 
-### For Business Stakeholders
-- Clear capability roadmap and feature planning
-- User-centric requirement organization
-- Transparent technical architecture decisions
-- Compliance and risk management documentation
+### View Reports
+- **Weekly Overview**: See total hours and overtime for each week
+- **Monthly Overview**: View monthly summaries
+- **Activity Log**: Browse all recorded activities
 
-### For Operations Teams
-- Comprehensive monitoring and alerting requirements
-- Disaster recovery and business continuity planning
-- Capacity planning and scaling guidelines
-- Security and compliance frameworks
+### Manage Leave
+- Record vacation days with start/end dates
+- Log sick leave days
+- View remaining vacation balance
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-This structure incorporates industry best practices for:
-- Domain-Driven Design (DDD)
-- Microsoft .NET microservices guidance
-- Azure Well-Architected Framework
-- OWASP security principles
-- WCAG accessibility standards

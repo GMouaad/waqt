@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Add Time Entry - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <h2>Add Time Entry</h2>
+    <p class="subtitle">Log your work hours and activities</p>
+    
+    <form method="POST" action="{{ url_for('main.time_entry') }}" class="form-card">
+        <div class="form-group">
+            <label for="date">Date *</label>
+            <input type="date" id="date" name="date" value="{{ today.isoformat() }}" required>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="start_time">Start Time *</label>
+                <input type="time" id="start_time" name="start_time" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="end_time">End Time *</label>
+                <input type="time" id="end_time" name="end_time" required>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description *</label>
+            <textarea id="description" name="description" rows="4" required placeholder="What did you work on?"></textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Entry</button>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+    
+    <div class="info-box">
+        <h3>💡 Tips</h3>
+        <ul>
+            <li>Standard work day is 8 hours</li>
+            <li>Hours over 8 per day are counted as overtime</li>
+            <li>You can add multiple entries for the same day</li>
+            <li>Be descriptive in your activity notes for better tracking</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,177 +1,250 @@
-# Copilot Instructions for System Requirements Example
+# Copilot Instructions for Time Tracker App
 
 ## Project Overview
-This repository contains a comprehensive requirements documentation structure for a multi-service .NET platform following Self-Contained Systems (SCS) architecture patterns. The documentation demonstrates professional requirements management for distributed systems with emphasis on Domain-Driven Design, event-driven architecture, and cloud-native patterns.
+This repository contains a portable Python time tracking application built with Flask and SQLite. The app helps users track work hours, overtime, vacation days, sick leaves, and work activities without requiring any external services.
 
 ## Repository Purpose and Context
 
 ### Primary Goals
-- **Requirements Documentation Excellence**: Serve as a template and example for professional system requirements documentation
-- **Architecture Guidance**: Demonstrate best practices for .NET microservices and Self-Contained Systems
-- **Stakeholder Communication**: Provide clear documentation structure for different audience types (Product Managers, Architects, Developers, Operations)
-- **Compliance and Governance**: Include comprehensive security, accessibility, and regulatory considerations
+- **Time Tracking**: Enable users to log daily work hours and activities
+- **Overtime Management**: Automatically calculate and track overtime hours
+- **Leave Management**: Track vacation days and sick leaves
+- **Reporting**: Provide weekly and monthly summaries of work hours
+- **Portability**: Single-file SQLite database, no external dependencies
 
 ### Architecture Philosophy
-- **Self-Contained Systems (SCS)**: Each service owns its data, UI, and business logic
-- **Domain-Driven Design (DDD)**: Services aligned with business domains and bounded contexts
-- **Event-Driven Architecture**: Loose coupling through domain events and asynchronous communication
-- **API-First Design**: Well-defined contracts and OpenAPI specifications
-- **Cloud-Native**: Cloud-focused with scalability, resilience, and observability built-in
+- **Simple and Portable**: Self-contained Flask application
+- **No External Services**: All data stored locally in SQLite
+- **User-Friendly**: Clean, intuitive web interface
+- **Standards-Based**: 8 hours/day, 40 hours/week work schedule
 
-## Documentation Structure and Standards
 
-### File Organization Pattern
+## Application Structure
+
+### Directory Layout
 ```
-docs/
-├── requirements/           # Core requirements documentation
-│   ├── 01-system-overview.md          # High-level system description
-│   ├── 02-system-capabilities.md      # Platform capabilities and roadmap
-│   ├── 03-global-nfr.md              # System-wide non-functional requirements
-│   ├── 04-integration-patterns.md     # Service communication patterns
-│   ├── 05-security-architecture.md    # Security across all services
-│   ├── user-experience/               # UX principles, journeys, accessibility
-│   ├── services/                      # Service-specific requirements
-│   └── cross-cutting/                 # Shared concerns (monitoring, testing, etc.)
-├── decisions/             # Architecture Decision Records (ADRs)
-└── operations/           # Deployment, SLAs, disaster recovery
+time-tracker/
+├── app/
+│   ├── __init__.py          # Flask app factory
+│   ├── models.py            # SQLAlchemy models
+│   ├── routes.py            # Route handlers
+│   ├── utils.py             # Helper functions
+│   ├── templates/           # Jinja2 HTML templates
+│   │   ├── base.html
+│   │   ├── dashboard.html
+│   │   ├── time_entry.html
+│   │   ├── reports.html
+│   │   └── leave.html
+│   └── static/              # CSS, JS, images
+│       ├── css/
+│       └── js/
+├── scripts/
+│   └── init_db.py           # Database initialization
+├── tests/                   # Unit and integration tests
+├── requirements.txt         # Python dependencies
+└── run.py                   # Application entry point
 ```
 
-### Documentation Standards
-- **Consistent Structure**: Each service follows the same template pattern
-- **Traceability**: Link requirements to business objectives and user needs
-- **Completeness**: Cover functional, non-functional, security, and operational aspects
-- **Version Control**: Track changes and decisions through ADRs
-- **Multi-Audience**: Tailor content for different stakeholder types
-
-## Technology Stack and Patterns
+## Technology Stack
 
 ### Core Technologies
-- **.NET 8+**: Primary development framework with ASP.NET Core
-- **Cloud Platform**: Any major cloud provider (AWS, Azure, GCP) for infrastructure and services
-- **Relational Database**: SQL Server, PostgreSQL, or MySQL for transactional data with read replicas
-- **Document Database**: MongoDB, Amazon DocumentDB, Azure Cosmos DB, or Google Firestore for flexible schema requirements
-- **Message Broker**: Apache Kafka, RabbitMQ, Amazon SQS/SNS, Azure Service Bus, or Google Pub/Sub for reliable messaging
-- **Observability**: OpenTelemetry with Prometheus, Grafana, Jaeger, or cloud-native monitoring solutions
+- **Python 3.8+**: Primary programming language
+- **Flask**: Lightweight web framework
+- **SQLite3**: Embedded database
+- **SQLAlchemy**: ORM for database operations
+- **Jinja2**: Template engine (included with Flask)
+- **HTML/CSS/JavaScript**: Frontend interface
 
-### Architectural Patterns
-- **CQRS**: Command Query Responsibility Segregation for read/write optimization
-- **Event Sourcing**: For audit trails and temporal data analysis
-- **Saga Pattern**: For distributed transaction management
-- **Circuit Breaker**: For resilience in service-to-service communication
-- **API Gateway**: YARP, Kong, Istio, AWS API Gateway, Azure API Management, or Google Cloud Endpoints for service orchestration
+### Key Libraries
+- `Flask`: Web framework
+- `Flask-SQLAlchemy`: Database ORM
+- `python-dateutil`: Date/time handling
+- `pytest`: Testing framework (development)
 
-### Integration Patterns
-- **REST APIs**: Primary synchronous communication with OpenAPI 3.0 specs
-- **gRPC**: High-performance internal service communication
-- **Domain Events**: Asynchronous communication for business events
-- **Webhook Support**: External system integration capabilities
+## Database Schema
 
-## Key Principles for Contributors
+### Tables
 
-### Requirements Documentation
-1. **User-Centric Approach**: Always start with user needs and business outcomes
-2. **Progressive Detail**: Move from high-level overview to specific implementation details
-3. **Cross-References**: Maintain links between related requirements and decisions
-4. **Measurable Criteria**: Include specific, testable acceptance criteria
-5. **Non-Functional Coverage**: Address performance, security, usability, and operational concerns
+#### time_entries
+- `id`: Primary key
+- `date`: Date of work
+- `start_time`: Work start time
+- `end_time`: Work end time
+- `duration_hours`: Calculated duration
+- `description`: Activity description
+- `created_at`: Timestamp
 
-### Service Design Guidelines
-1. **Domain Boundaries**: Align services with business domains and bounded contexts
-2. **Data Ownership**: Each service owns its data and doesn't share databases
-3. **API Contracts**: Define clear, versioned APIs with comprehensive documentation
-4. **Event Design**: Use past-tense verbs for domain events (UserRegistered, OrderCompleted)
-5. **Error Handling**: Implement consistent error patterns and circuit breakers
+#### leave_days
+- `id`: Primary key
+- `date`: Date of leave
+- `leave_type`: 'vacation' or 'sick'
+- `description`: Optional notes
+- `created_at`: Timestamp
 
-### Security and Compliance
-1. **Security by Design**: Integrate security considerations from the start
-2. **Zero Trust**: Never trust, always verify approach
-3. **Data Protection**: GDPR, CCPA compliance with privacy by design
-4. **Audit Trails**: Comprehensive logging for compliance and debugging
-5. **Access Control**: Role-based and attribute-based access control patterns
+#### settings
+- `id`: Primary key
+- `key`: Setting name
+- `value`: Setting value
+- Example: `standard_hours_per_day`: 8, `standard_hours_per_week`: 40
 
-## Content Guidelines and Best Practices
+## Key Features and Business Logic
 
-### Writing Style
-- **Clear and Concise**: Use plain language appropriate for technical and business audiences
-- **Consistent Terminology**: Maintain a glossary of domain-specific terms
-- **Active Voice**: Prefer active voice for clarity and directness
-- **Structured Format**: Use headers, lists, and tables for scannable content
-- **Example-Driven**: Include concrete examples, code samples, and diagrams
+### Work Hours Tracking
+- Standard work day: 8 hours
+- Standard work week: 40 hours (Monday-Friday)
+- Overtime: Any hours over 8 in a day or 40 in a week
+- Track multiple time entries per day
 
-### Technical Documentation
-- **API Documentation**: OpenAPI 3.0 specifications with examples
-- **Data Models**: JSON schemas with validation rules and examples
-- **Integration Patterns**: Sequence diagrams and interaction patterns
-- **Error Scenarios**: Comprehensive error handling and recovery procedures
-- **Performance Metrics**: Specific, measurable performance requirements
+### Overtime Calculation
+- Daily overtime: Hours beyond 8 per day
+- Weekly overtime: Hours beyond 40 per week
+- Display in weekly and monthly reports
 
-### User Experience Documentation
-- **User Journeys**: End-to-end workflows with pain points and success metrics
-- **Accessibility**: WCAG 2.1 AA compliance with inclusive design principles
-- **Responsive Design**: Multi-device support with specific breakpoints
-- **Internationalization**: Multi-language and cultural adaptation considerations
+### Leave Management
+- Vacation days: Track with dates and descriptions
+- Sick leaves: Separate tracking from vacation
+- Calendar view of all leave days
+
+### Reporting
+- Weekly summary: Total hours, overtime, leave days
+- Monthly summary: Aggregated statistics
+- Activity log: Detailed list of all entries
+
+## Code Style Guidelines
+
+### Python Conventions
+- Follow PEP 8 style guide
+- Use type hints where appropriate
+- Docstrings for all functions and classes
+- Maximum line length: 88 characters (Black formatter)
+
+### Flask Best Practices
+- Use blueprints for route organization
+- Environment-based configuration
+- Proper error handling with try-except
+- Use Flask's context managers
+
+### Database Operations
+- Use SQLAlchemy ORM, avoid raw SQL
+- Proper session management
+- Commit transactions explicitly
+- Handle database errors gracefully
+
+### Frontend
+- Semantic HTML5
+- Responsive CSS (mobile-friendly)
+- Progressive enhancement (works without JS)
+- Clean, minimal design
+
+## Development Workflow
+
+### Setting Up Development Environment
+1. Create virtual environment: `python -m venv venv`
+2. Activate: `source venv/bin/activate` (Unix) or `venv\Scripts\activate` (Windows)
+3. Install dependencies: `pip install -r requirements.txt`
+4. Initialize database: `python init_db.py`
+5. Run app: `python run.py`
+
+### Running Tests
+```bash
+pytest tests/
+pytest tests/ -v  # Verbose output
+pytest tests/ --cov=app  # With coverage
+```
+
+### Code Quality
+- Use `black` for code formatting
+- Use `flake8` for linting
+- Use `mypy` for type checking (optional)
 
 ## When Contributing to This Repository
 
-### Adding New Services
-1. **Follow Template Structure**: Use existing service documentation as template
-2. **Define Domain Boundaries**: Clearly articulate service responsibilities
-3. **API Contracts**: Provide comprehensive API documentation
-4. **Integration Points**: Document how the service integrates with others
-5. **Non-Functional Requirements**: Address service-specific performance, security, and operational needs
+### Adding New Features
+1. **Database Changes**: Update models.py and create migration if needed
+2. **Route Handlers**: Add routes in routes.py with proper error handling
+3. **Templates**: Create/update HTML templates with consistent styling
+4. **Business Logic**: Add helper functions in utils.py
+5. **Tests**: Add tests for new functionality
 
-### Updating Requirements
-1. **Impact Analysis**: Consider effects on dependent services and systems
-2. **Stakeholder Review**: Ensure changes align with business objectives
-3. **Version Control**: Document changes and rationale
-4. **Cross-Reference Updates**: Update related documentation and contracts
-5. **Testing Implications**: Consider testing strategy changes
+### Code Review Checklist
+- [ ] Code follows PEP 8 style guide
+- [ ] Functions have docstrings
+- [ ] Error handling is implemented
+- [ ] Database operations are properly managed
+- [ ] Templates are mobile-responsive
+- [ ] Tests cover new functionality
+- [ ] No hardcoded values (use configuration)
 
-### Architecture Decisions
-1. **ADR Format**: Use Architecture Decision Records for significant choices
-2. **Context and Rationale**: Clearly explain the decision context and reasoning
-3. **Alternatives Considered**: Document options that were considered but rejected
-4. **Consequences**: Articulate both positive and negative consequences
-5. **Review Process**: Ensure appropriate stakeholder review and approval
+### Security Considerations
+- Input validation on all forms
+- SQL injection prevention (use ORM)
+- XSS prevention (Jinja2 auto-escaping)
+- CSRF protection for forms
+- Secure session configuration
 
-## Special Considerations
+## Common Tasks
 
-### Business Context
-- **Enterprise Environment**: Consider existing systems and corporate constraints
-- **Regulatory Requirements**: Address compliance needs early and comprehensively
-- **Stakeholder Alignment**: Balance technical excellence with business practicality
-- **Phased Delivery**: Support incremental delivery and feedback incorporation
+### Adding a New Route
+```python
+@app.route('/new-feature')
+def new_feature():
+    # Logic here
+    return render_template('new_feature.html')
+```
 
-### Technical Excellence
-- **Code Quality**: Emphasize testability, maintainability, and observability
-- **Performance**: Address scalability and performance from the design phase
-- **Resilience**: Build in fault tolerance and graceful degradation
-- **Monitoring**: Comprehensive observability and alerting strategies
+### Database Query Example
+```python
+from app.models import TimeEntry
+from datetime import datetime
 
-### Operational Readiness
-- **Deployment Strategy**: Consider blue-green deployments and canary releases
-- **Monitoring and Alerting**: Define comprehensive health checks and metrics
-- **Disaster Recovery**: Document backup, recovery, and business continuity procedures
-- **Capacity Planning**: Address scaling requirements and resource management
+# Get all entries for a date
+entries = TimeEntry.query.filter_by(
+    date=datetime.now().date()
+).all()
+```
 
-## Helpful Patterns and Examples
+### Calculating Overtime
+```python
+def calculate_overtime(total_hours, standard_hours=8):
+    """Calculate overtime hours."""
+    return max(0, total_hours - standard_hours)
+```
 
-### When asked about specific services:
-- Reference the appropriate service documentation in `docs/requirements/services/`
-- Consider integration patterns from `04-integration-patterns.md`
-- Check security requirements in `05-security-architecture.md`
-- Review shared contracts in `services/shared-contracts/`
+## Testing Strategy
 
-### When discussing architecture:
-- Reference the system overview in `01-system-overview.md`
-- Consider the capability roadmap in `02-system-capabilities.md`
-- Review global non-functional requirements in `03-global-nfr.md`
-- Check existing ADRs in `docs/decisions/`
+### Unit Tests
+- Test models and business logic
+- Test utility functions
+- Mock database operations
 
-### When addressing user experience:
-- Review UX principles in `user-experience/ux-principles.md`
-- Consider user journeys in `user-experience/user-journeys.md`
-- Check accessibility requirements and standards
-- Reference responsive design patterns and mobile considerations
+### Integration Tests
+- Test routes and views
+- Test database operations
+- Test form submissions
 
-This repository serves as both a template and a comprehensive example of professional requirements documentation for modern .NET microservices platforms. Contributors should maintain the high standard of documentation quality and architectural thinking demonstrated throughout the existing content.
+### Coverage Goals
+- Aim for 80%+ code coverage
+- Focus on critical business logic
+- Test edge cases and error conditions
+
+## Helpful Patterns
+
+### When working on time tracking features:
+- Always validate date/time inputs
+- Handle timezone considerations
+- Calculate durations accurately
+- Consider edge cases (midnight crossing, etc.)
+
+### When working on reports:
+- Aggregate data efficiently
+- Cache expensive calculations
+- Paginate large result sets
+- Format numbers consistently
+
+### When working on the UI:
+- Keep it simple and intuitive
+- Provide clear feedback on actions
+- Show validation errors clearly
+- Make forms easy to use
+
+This repository is focused on providing a simple, portable, and effective time tracking solution. Contributors should maintain code quality, ensure thorough testing, and keep the user experience smooth and intuitive.
