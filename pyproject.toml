@@ -9,9 +9,6 @@ description = "A portable Python time tracking application for managing work hou
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
-authors = [
-    {name = "GMouaad", email = ""},
-]
 keywords = ["time-tracking", "flask", "sqlite", "overtime", "work-hours"]
 classifiers = [
     "Development Status :: 3 - Alpha",
