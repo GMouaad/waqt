@@ -58,17 +58,17 @@ python run.py
 
 ```
 time-tracker/
-├── app/
-│   ├── __init__.py          # Flask app initialization
-│   ├── models.py            # Database models
-│   ├── routes.py            # Application routes
-│   ├── templates/           # HTML templates
-│   └── static/              # CSS, JS, images
-├── scripts/
-│   └── init_db.py           # Database initialization
+├── src/
+│   └── waqtracker/          # Main application package
+│       ├── __init__.py      # Flask app initialization
+│       ├── models.py        # Database models
+│       ├── routes.py        # Application routes
+│       ├── templates/       # HTML templates
+│       └── static/          # CSS, JS, images
 ├── tests/                   # Unit tests
 ├── requirements.txt         # Python dependencies
 ├── run.py                   # Application entry point
+├── init_db.py               # Database initialization
 └── README.md               # This file
 ```
 

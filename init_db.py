@@ -1,6 +1,6 @@
 """Initialize the database and create default settings."""
-from app import create_app, db
-from app.models import Settings
+from src.waqtracker import create_app, db
+from src.waqtracker.models import Settings
 
 def init_database():
     """Initialize the database with tables and default settings."""
