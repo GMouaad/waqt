@@ -25,6 +25,37 @@ This is a self-contained Flask-based time tracking application with no external 
 
 ## Installation
 
+### Option 1: Using Dev Container (Recommended)
+
+The easiest way to get started is using the pre-configured development container:
+
+1. **Prerequisites:**
+   - Install [VS Code](https://code.visualstudio.com/)
+   - Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
+   - Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+2. **Clone and open:**
+   ```bash
+   git clone https://github.com/GMouaad/time-tracker.git
+   cd time-tracker
+   code .
+   ```
+
+3. **Start the dev container:**
+   - When prompted, click "Reopen in Container"
+   - Or use Command Palette (F1) → "Dev Containers: Reopen in Container"
+   - Everything (dependencies, database) will be set up automatically!
+
+4. **Run the application:**
+   ```bash
+   python run.py
+   ```
+   Access at `http://localhost:5000`
+
+📚 **For detailed dev container documentation, see [docs/DEV_CONTAINER.md](docs/DEV_CONTAINER.md)**
+
+### Option 2: Manual Installation
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/GMouaad/time-tracker.git
