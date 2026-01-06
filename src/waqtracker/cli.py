@@ -1,7 +1,7 @@
 """CLI interface for waqtracker time tracking application."""
 
 import click
-from datetime import datetime, date, time
+from datetime import datetime
 from typing import Optional
 from . import create_app, db
 from .models import TimeEntry, LeaveDay
@@ -24,7 +24,7 @@ def get_app():
 @click.version_option(version="0.1.0", prog_name="waqt")
 def cli():
     """Waqt - Time tracking CLI for waqtracker application.
-    
+
     A command-line interface for tracking work hours, managing time entries,
     and generating reports.
     """
@@ -55,10 +55,10 @@ def cli():
 )
 def start(time: Optional[str], date: Optional[str], description: str):
     """Start time tracking for the current day.
-    
+
     Creates a new time entry with the specified or current time as the start time.
     The entry will remain open until you run 'waqt end'.
-    
+
     Examples:
         waqt start
         waqt start --time 09:00
@@ -97,10 +97,9 @@ def start(time: Optional[str], date: Optional[str], description: str):
 
         # Check if there's already an open entry for this date
         # Open entries have duration_hours == 0.0
-        open_entries = (
-            TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
-            .all()
-        )
+        open_entries = TimeEntry.query.filter_by(
+            date=entry_date, duration_hours=0.0
+        ).all()
 
         if open_entries:
             click.echo(
@@ -126,15 +125,11 @@ def start(time: Optional[str], date: Optional[str], description: str):
         db.session.add(entry)
         db.session.commit()
 
-        click.echo(
-            click.style("✓ Time tracking started!", fg="green", bold=True)
-        )
+        click.echo(click.style("✓ Time tracking started!", fg="green", bold=True))
         click.echo(f"Date: {entry_date}")
         click.echo(f"Start time: {start_time.strftime('%H:%M')}")
         click.echo(f"Description: {description}")
-        click.echo(
-            "\nRun 'waqt end' when you're done to record the session duration."
-        )
+        click.echo("\nRun 'waqt end' when you're done to record the session duration.")
 
 
 @cli.command()
@@ -154,10 +149,10 @@ def start(time: Optional[str], date: Optional[str], description: str):
 )
 def end(time: Optional[str], date: Optional[str]):
     """End time tracking for the current day.
-    
+
     Closes the most recent open time entry by setting the end time and
     calculating the duration.
-    
+
     Examples:
         waqt end
         waqt end --time 17:30
@@ -194,7 +189,8 @@ def end(time: Optional[str], date: Optional[str]):
         else:
             end_time = datetime.now().time()
 
-        # Find the most recent entry for today with duration 0 (our marker for open entries)
+        # Find the most recent entry for today with duration 0
+        # (our marker for open entries)
         open_entry = (
             TimeEntry.query.filter_by(date=entry_date)
             .filter_by(duration_hours=0.0)
@@ -246,10 +242,10 @@ def end(time: Optional[str], date: Optional[str]):
 )
 def summary(period: str, date: Optional[str]):
     """Summarize tracked time for the current week or month.
-    
+
     Displays statistics including total hours, overtime, working days,
     and leave days for the specified period.
-    
+
     Examples:
         waqt summary
         waqt summary --period month
@@ -312,18 +308,14 @@ def summary(period: str, date: Optional[str]):
 
         if not entries:
             click.echo(
-                click.style(
-                    "No time entries found for this period.", fg="yellow"
-                )
+                click.style("No time entries found for this period.", fg="yellow")
             )
         else:
             click.echo(f"Total Hours: {format_hours(stats['total_hours'])}")
             click.echo(f"Working Days: {stats['working_days']}")
 
             if period.lower() == "week":
-                click.echo(
-                    f"Standard Hours: {format_hours(stats['standard_hours'])}"
-                )
+                click.echo(f"Standard Hours: {format_hours(stats['standard_hours'])}")
                 click.echo(
                     f"Overtime: {format_hours(stats['overtime'])}",
                 )
@@ -335,9 +327,7 @@ def summary(period: str, date: Optional[str]):
                         )
                     )
             else:
-                click.echo(
-                    f"Expected Hours: {format_hours(stats['expected_hours'])}"
-                )
+                click.echo(f"Expected Hours: {format_hours(stats['expected_hours'])}")
                 click.echo(f"Overtime: {format_hours(stats['overtime'])}")
                 if stats["overtime"] > 0:
                     click.echo(
@@ -358,9 +348,7 @@ def summary(period: str, date: Optional[str]):
             click.echo("\n" + click.style("Recent Entries:", fg="cyan"))
             click.echo("-" * 50)
             for entry in entries[-5:]:  # Show last 5 entries
-                overtime_marker = (
-                    " ⚠" if entry.duration_hours > 8.0 else ""
-                )
+                overtime_marker = " ⚠" if entry.duration_hours > 8.0 else ""
                 click.echo(
                     f"{entry.date} | {entry.start_time.strftime('%H:%M')}-"
                     f"{entry.end_time.strftime('%H:%M')} | "
@@ -396,9 +384,9 @@ def sum(period: str, date: Optional[str]):
 @cli.command()
 def reference():
     """Display reference information and documentation.
-    
+
     [Placeholder for future expansion]
-    
+
     This command will provide quick reference documentation for time tracking
     workflows, shortcuts, and best practices.
     """
