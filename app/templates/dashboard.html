@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Dashboard</h2>
+    <p class="subtitle">Today is {{ current_date.strftime('%A, %B %d, %Y') }}</p>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>This Week</h3>
+            <div class="stat-number">{{ weekly_stats.total_hours }}h</div>
+            <p class="stat-label">Total Hours</p>
+        </div>
+        
+        <div class="stat-card">
+            <h3>Overtime</h3>
+            <div class="stat-number {% if weekly_stats.overtime > 0 %}text-warning{% endif %}">
+                {{ weekly_stats.overtime }}h
+            </div>
+            <p class="stat-label">This Week</p>
+        </div>
+        
+        <div class="stat-card">
+            <h3>Working Days</h3>
+            <div class="stat-number">{{ weekly_stats.working_days }}</div>
+            <p class="stat-label">This Week</p>
+        </div>
+        
+        <div class="stat-card">
+            <h3>Standard</h3>
+            <div class="stat-number">{{ weekly_stats.standard_hours }}h</div>
+            <p class="stat-label">Per Week</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-header">
+            <h3>Recent Time Entries</h3>
+            <a href="{{ url_for('main.time_entry') }}" class="btn btn-primary">+ Add Time Entry</a>
+        </div>
+        
+        {% if recent_entries %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Duration</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in recent_entries %}
+                    <tr>
+                        <td>{{ entry.date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ entry.start_time.strftime('%H:%M') }} - {{ entry.end_time.strftime('%H:%M') }}</td>
+                        <td>{{ "%.2f"|format(entry.duration_hours) }}h</td>
+                        <td>{{ entry.description }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('main.delete_time_entry', entry_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+                                <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <p>No time entries found. Start tracking your time!</p>
+                <a href="{{ url_for('main.time_entry') }}" class="btn btn-primary">Add Your First Entry</a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="section">
+        <div class="section-header">
+            <h3>Quick Actions</h3>
+        </div>
+        <div class="action-grid">
+            <a href="{{ url_for('main.time_entry') }}" class="action-card">
+                <span class="action-icon">⏱️</span>
+                <h4>Add Time Entry</h4>
+                <p>Log your work hours</p>
+            </a>
+            <a href="{{ url_for('main.reports') }}" class="action-card">
+                <span class="action-icon">📊</span>
+                <h4>View Reports</h4>
+                <p>Weekly & monthly summaries</p>
+            </a>
+            <a href="{{ url_for('main.leave') }}" class="action-card">
+                <span class="action-icon">🏖️</span>
+                <h4>Manage Leave</h4>
+                <p>Vacation & sick days</p>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+    <h2>Reports</h2>
+    
+    <div class="report-controls">
+        <div class="period-selector">
+            <a href="{{ url_for('main.reports', period='week', date=selected_date.isoformat()) }}" 
+               class="btn {% if period == 'week' %}btn-primary{% else %}btn-secondary{% endif %}">
+                Week View
+            </a>
+            <a href="{{ url_for('main.reports', period='month', date=selected_date.isoformat()) }}" 
+               class="btn {% if period == 'month' %}btn-primary{% else %}btn-secondary{% endif %}">
+                Month View
+            </a>
+        </div>
+        
+        <div class="date-navigator">
+            {% if period == 'week' %}
+                {% set prev_date = (start_date - timedelta(days=7)).isoformat() %}
+                {% set next_date = (start_date + timedelta(days=7)).isoformat() %}
+            {% else %}
+                {% set prev_date = (start_date - timedelta(days=28)).replace(day=1).isoformat() %}
+                {% set next_month = start_date.month + 1 if start_date.month < 12 else 1 %}
+                {% set next_year = start_date.year if start_date.month < 12 else start_date.year + 1 %}
+                {% set next_date = start_date.replace(month=next_month, year=next_year, day=1).isoformat() %}
+            {% endif %}
+            
+            <a href="{{ url_for('main.reports', period=period, date=prev_date) }}" class="btn btn-secondary">← Previous</a>
+            <span class="current-period">
+                {% if period == 'week' %}
+                    {{ start_date.strftime('%b %d') }} - {{ end_date.strftime('%b %d, %Y') }}
+                {% else %}
+                    {{ start_date.strftime('%B %Y') }}
+                {% endif %}
+            </span>
+            <a href="{{ url_for('main.reports', period=period, date=next_date) }}" class="btn btn-secondary">Next →</a>
+        </div>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Hours</h3>
+            <div class="stat-number">{{ stats.total_hours }}h</div>
+            <p class="stat-label">Worked</p>
+        </div>
+        
+        <div class="stat-card">
+            <h3>Overtime</h3>
+            <div class="stat-number {% if stats.overtime > 0 %}text-warning{% endif %}">
+                {{ stats.overtime }}h
+            </div>
+            <p class="stat-label">Over Standard</p>
+        </div>
+        
+        <div class="stat-card">
+            <h3>Working Days</h3>
+            <div class="stat-number">{{ stats.working_days }}</div>
+            <p class="stat-label">Days Worked</p>
+        </div>
+        
+        {% if period == 'month' %}
+        <div class="stat-card">
+            <h3>Leave Days</h3>
+            <div class="stat-number">{{ stats.vacation_days + stats.sick_days }}</div>
+            <p class="stat-label">{{ stats.vacation_days }} vacation, {{ stats.sick_days }} sick</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if entries %}
+        <div class="section">
+            <h3>Time Entries</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Duration</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                    <tr>
+                        <td>{{ entry.date.strftime('%Y-%m-%d (%a)') }}</td>
+                        <td>{{ entry.start_time.strftime('%H:%M') }} - {{ entry.end_time.strftime('%H:%M') }}</td>
+                        <td>{{ "%.2f"|format(entry.duration_hours) }}h</td>
+                        <td>{{ entry.description }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h3>Daily Summary</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Total Hours</th>
+                        <th>Overtime</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for date_key, day_entries in entries_by_date.items() %}
+                        {% set daily_total = day_entries|sum(attribute='duration_hours') %}
+                        {% set daily_overtime = [0, daily_total - 8]|max %}
+                    <tr>
+                        <td>{{ day_entries[0].date.strftime('%Y-%m-%d (%a)') }}</td>
+                        <td>{{ "%.2f"|format(daily_total) }}h</td>
+                        <td class="{% if daily_overtime > 0 %}text-warning{% endif %}">
+                            {{ "%.2f"|format(daily_overtime) }}h
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No time entries found for this period.</p>
+            <a href="{{ url_for('main.time_entry') }}" class="btn btn-primary">Add Time Entry</a>
+        </div>
+    {% endif %}
+    
+    {% if leave_days %}
+        <div class="section">
+            <h3>Leave Days</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leave in leave_days %}
+                    <tr>
+                        <td>{{ leave.date.strftime('%Y-%m-%d (%a)') }}</td>
+                        <td><span class="badge badge-{{ leave.leave_type }}">{{ leave.leave_type|capitalize }}</span></td>
+                        <td>{{ leave.description or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
