@@ -1,26 +1,55 @@
 #!/bin/bash
 # Startup script for Time Tracker application
+# Supports both uv (recommended) and pip (legacy)
 
 echo "🚀 Starting Time Tracker..."
 echo ""
 
+# Detect if uv is available
+UV_AVAILABLE=false
+if command -v uv &> /dev/null; then
+    UV_AVAILABLE=true
+    echo "✨ Using uv package manager (fast mode)"
+else
+    echo "📦 Using pip package manager (legacy mode)"
+    echo "💡 Tip: Install uv for 10-100x faster package management: https://github.com/astral-sh/uv"
+fi
+echo ""
+
 # Check if virtual environment exists
-if [ ! -d "venv" ]; then
+if [ ! -d "venv" ] && [ ! -d ".venv" ]; then
     echo "❌ Virtual environment not found!"
     echo "Creating virtual environment..."
-    python -m venv venv
+    if [ "$UV_AVAILABLE" = true ]; then
+        uv venv
+        VENV_DIR=".venv"
+    else
+        python -m venv venv
+        VENV_DIR="venv"
+    fi
     echo "✅ Virtual environment created"
     echo ""
+else
+    # Determine which venv directory exists
+    if [ -d ".venv" ]; then
+        VENV_DIR=".venv"
+    else
+        VENV_DIR="venv"
+    fi
 fi
 
 # Activate virtual environment
 echo "Activating virtual environment..."
-source venv/bin/activate
+source $VENV_DIR/bin/activate
 
 # Check if dependencies are installed
 if ! python -c "import flask" 2>/dev/null; then
     echo "📦 Installing dependencies..."
-    pip install -r requirements.txt
+    if [ "$UV_AVAILABLE" = true ]; then
+        uv pip install -e .
+    else
+        pip install -r requirements.txt
+    fi
     echo "✅ Dependencies installed"
     echo ""
 fi

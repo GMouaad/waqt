@@ -10,8 +10,9 @@ Before installing the Time Tracker application, ensure you have the following:
   - Check your Python version: `python --version` or `python3 --version`
   - Download from: https://www.python.org/downloads/
 
-- **pip**: Python package installer (usually comes with Python)
-  - Check if installed: `pip --version`
+- **uv** (Recommended): Modern, fast Python package manager
+  - Installation instructions below
+  - Or **pip**: Traditional Python package installer (legacy method)
 
 - **Git** (optional): For cloning the repository
   - Download from: https://git-scm.com/downloads
@@ -23,9 +24,55 @@ The Time Tracker application works on:
 - macOS
 - Windows 10/11
 
-## Installation Steps
+## Installation Methods
 
-### 1. Get the Source Code
+Choose one of the following installation methods:
+
+### Method 1: Using uv (Recommended - Fast & Modern)
+
+This is the **recommended** approach using the modern `uv` package manager, which is 10-100x faster than pip.
+
+### Method 2: Using pip (Legacy)
+
+Traditional installation method using pip. **Note**: This method is deprecated in favor of `uv`.
+
+---
+
+## Method 1: Installation with uv (Recommended)
+
+### Step 1: Install uv
+
+First, install the `uv` package manager:
+
+#### On Linux/macOS:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Or using pip:
+```bash
+pip install uv
+```
+
+#### On Windows:
+
+Using PowerShell:
+```powershell
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Or using pip:
+```powershell
+pip install uv
+```
+
+Verify installation:
+```bash
+uv --version
+```
+
+### Step 2: Get the Source Code
 
 #### Option A: Clone with Git (Recommended)
 
@@ -40,6 +87,104 @@ cd time-tracker
 2. Click "Code" → "Download ZIP"
 3. Extract the ZIP file
 4. Navigate to the extracted folder
+
+### Step 3: Create a Virtual Environment with uv
+
+`uv` automatically manages virtual environments. Create one with:
+
+```bash
+uv venv
+```
+
+Activate the virtual environment:
+
+#### On Linux/macOS:
+```bash
+source .venv/bin/activate
+```
+
+#### On Windows:
+```bash
+.venv\Scripts\activate
+```
+
+You should see `(.venv)` in your terminal prompt.
+
+### Step 4: Install Dependencies with uv
+
+Install all dependencies using `uv`:
+
+```bash
+uv pip install -e .
+```
+
+This installs:
+- Flask 3.0.0 (web framework)
+- Flask-SQLAlchemy 3.1.1 (database ORM)
+- python-dateutil 2.8.2 (date/time utilities)
+- Werkzeug 3.0.1 (WSGI utilities)
+
+**Benefits of uv:**
+- ⚡ 10-100x faster than pip
+- 🔒 Automatic dependency resolution
+- 📦 Built-in virtual environment management
+- 🚀 Significantly faster installation times
+
+### Step 5: Initialize the Database
+
+Create the SQLite database and set up default settings:
+
+```bash
+python init_db.py
+```
+
+You should see output like:
+```
+✓ Database tables created successfully!
+✓ Added setting: standard_hours_per_day = 8
+✓ Added setting: standard_hours_per_week = 40
+
+✅ Database initialization complete!
+You can now run the app with: python run.py
+```
+
+This creates a `time_tracker.db` file in your project directory.
+
+### Step 6: Run the Application
+
+Start the Flask development server:
+
+```bash
+python run.py
+```
+
+You should see output like:
+```
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in production.
+ * Running on http://0.0.0.0:5000
+```
+
+### Step 7: Access the Application
+
+Open your web browser and navigate to:
+
+```
+http://localhost:5000
+```
+
+You should see the Time Tracker dashboard!
+
+---
+
+## Method 2: Installation with pip (Legacy - Deprecated)
+
+> **⚠️ DEPRECATED**: This method is maintained for backward compatibility but is deprecated. Please use `uv` (Method 1) for better performance and modern tooling.
+
+### 1. Get the Source Code
+
+Follow the same instructions as Method 1, Step 2.
 
 ### 2. Create a Virtual Environment
 
@@ -69,61 +214,17 @@ With the virtual environment activated, install the required packages:
 pip install -r requirements.txt
 ```
 
-This installs:
-- Flask 3.0.0 (web framework)
-- Flask-SQLAlchemy 3.1.1 (database ORM)
-- python-dateutil 2.8.2 (date/time utilities)
-- Werkzeug 3.0.1 (WSGI utilities)
+### 4-7. Complete Setup
 
-### 4. Initialize the Database
-
-Create the SQLite database and set up default settings:
-
-```bash
-python init_db.py
-```
-
-You should see output like:
-```
-✓ Database tables created successfully!
-✓ Added setting: standard_hours_per_day = 8
-✓ Added setting: standard_hours_per_week = 40
-
-✅ Database initialization complete!
-You can now run the app with: python run.py
-```
-
-This creates a `time_tracker.db` file in your project directory.
-
-### 5. Run the Application
-
-Start the Flask development server:
-
-```bash
-python run.py
-```
-
-You should see output like:
-```
- * Serving Flask app 'app'
- * Debug mode: on
-WARNING: This is a development server. Do not use it in production.
- * Running on http://0.0.0.0:5000
-```
-
-### 6. Access the Application
-
-Open your web browser and navigate to:
-
-```
-http://localhost:5000
-```
-
-You should see the Time Tracker dashboard!
+Follow Steps 5-7 from Method 1 above to initialize the database and run the application.
 
 ## Quick Start Scripts
 
-For convenience, the project includes startup scripts that automate steps 2-5:
+For convenience, the project includes startup scripts that automate the installation and setup process.
+
+### Using uv (Recommended):
+
+The scripts now support both `uv` and `pip`. They will automatically detect and use `uv` if available.
 
 ### On Linux/macOS:
 
@@ -139,6 +240,7 @@ start.bat
 ```
 
 These scripts will:
+- Detect and use `uv` if available (falls back to pip)
 - Create a virtual environment (if not exists)
 - Activate the virtual environment
 - Install dependencies (if not installed)
@@ -208,9 +310,15 @@ To verify your installation is working correctly:
 
 ### Dependencies Won't Install
 
-**Problem**: pip install fails
+**Problem**: Package installation fails
 
-**Solution**:
+**Solution with uv**:
+- Update uv: `uv self update`
+- Check your internet connection
+- Clear cache: `uv cache clean`
+- Try installing with pip as fallback: `pip install -r requirements.txt`
+
+**Solution with pip (legacy)**:
 - Update pip: `pip install --upgrade pip`
 - Check your internet connection
 - Try installing packages individually:
@@ -220,15 +328,37 @@ To verify your installation is working correctly:
   pip install python-dateutil==2.8.2
   ```
 
+### uv Command Not Found
+
+**Problem**: `uv: command not found`
+
+**Solution**:
+- Ensure uv is installed: Follow Step 1 of Method 1
+- On Linux/macOS, restart your terminal or run: `source ~/.bashrc` or `source ~/.zshrc`
+- On Windows, restart PowerShell
+- Alternatively, use pip method (Method 2) as fallback
+
 ## Development Installation
 
 If you plan to contribute to the project, install development dependencies:
+
+### With uv (Recommended):
+
+```bash
+uv pip install -e ".[dev]"
+```
+
+### With pip (Legacy):
 
 ```bash
 pip install -r requirements-dev.txt
 ```
 
-This includes testing and code quality tools.
+This includes testing and code quality tools:
+- pytest 9.0.2 (testing framework)
+- pytest-cov 7.0.0 (coverage reporting)
+- flake8 7.0.0 (linting)
+- black 24.1.1 (code formatting)
 
 ## Uninstallation
 

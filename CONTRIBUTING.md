@@ -4,6 +4,53 @@ Thank you for your interest in contributing to the Time Tracker application!
 
 ## Development Setup
 
+### Recommended: Using uv
+
+The fastest and most modern way to set up the development environment:
+
+1. **Install uv**
+   ```bash
+   # Linux/macOS
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Windows (PowerShell)
+   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+   
+   # Or with pip
+   pip install uv
+   ```
+
+2. **Fork and Clone**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/time-tracker.git
+   cd time-tracker
+   ```
+
+3. **Create Virtual Environment**
+   ```bash
+   uv venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+4. **Install Dependencies (including dev dependencies)**
+   ```bash
+   uv pip install -e ".[dev]"
+   ```
+
+5. **Initialize Database**
+   ```bash
+   python init_db.py
+   ```
+
+6. **Run the Application**
+   ```bash
+   python run.py
+   ```
+
+### Legacy: Using pip (Deprecated)
+
+> **⚠️ DEPRECATED**: Consider using `uv` for better performance.
+
 1. **Fork and Clone**
    ```bash
    git clone https://github.com/YOUR_USERNAME/time-tracker.git
