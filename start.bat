@@ -17,8 +17,15 @@ if %errorlevel% equ 0 (
 )
 echo.
 
-REM Check if virtual environment exists
-if not exist "venv" if not exist ".venv" (
+REM Determine which venv directory exists or create new one
+set VENV_DIR=
+if exist ".venv" set VENV_DIR=.venv
+if exist "venv" (
+    if not defined VENV_DIR set VENV_DIR=venv
+)
+
+REM Create virtual environment if it doesn't exist
+if not defined VENV_DIR (
     echo Virtual environment not found!
     echo Creating virtual environment...
     if "%UV_AVAILABLE%"=="true" (
@@ -30,13 +37,6 @@ if not exist "venv" if not exist ".venv" (
     )
     echo Virtual environment created
     echo.
-) else (
-    REM Determine which venv directory exists
-    if exist ".venv" (
-        set VENV_DIR=.venv
-    ) else (
-        set VENV_DIR=venv
-    )
 )
 
 REM Activate virtual environment

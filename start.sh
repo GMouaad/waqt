@@ -16,8 +16,20 @@ else
 fi
 echo ""
 
+# Function to determine venv directory
+get_venv_dir() {
+    if [ -d ".venv" ]; then
+        echo ".venv"
+    elif [ -d "venv" ]; then
+        echo "venv"
+    else
+        echo ""
+    fi
+}
+
 # Check if virtual environment exists
-if [ ! -d "venv" ] && [ ! -d ".venv" ]; then
+VENV_DIR=$(get_venv_dir)
+if [ -z "$VENV_DIR" ]; then
     echo "❌ Virtual environment not found!"
     echo "Creating virtual environment..."
     if [ "$UV_AVAILABLE" = true ]; then
@@ -29,13 +41,6 @@ if [ ! -d "venv" ] && [ ! -d ".venv" ]; then
     fi
     echo "✅ Virtual environment created"
     echo ""
-else
-    # Determine which venv directory exists
-    if [ -d ".venv" ]; then
-        VENV_DIR=".venv"
-    else
-        VENV_DIR="venv"
-    fi
 fi
 
 # Activate virtual environment
