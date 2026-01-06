@@ -9,6 +9,7 @@ This is a self-contained Flask-based time tracking application with no external 
 ## Documentation
 
 - **[Installation Guide](docs/installation.md)** - Detailed installation instructions, prerequisites, and troubleshooting
+- **[UV Migration Guide](docs/UV_MIGRATION_GUIDE.md)** - Guide for migrating from pip to uv package manager
 - **[Usage Guide](docs/usage.md)** - Complete guide on how to use the application, workflows, and best practices
 
 ## Features
@@ -23,14 +24,47 @@ This is a self-contained Flask-based time tracking application with no external 
 
 ## Technology Stack
 
-- **Backend**: Flask (Python 3.8+)
+- **Backend**: Flask (Python 3.10+)
 - **Database**: SQLite3
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Portable**: No external services required
 
 ## Installation
 
-### Option 1: Using Dev Container (Recommended)
+### Option 1: Using uv (Recommended - Fast & Modern)
+
+The fastest way to get started is using `uv`, a modern Python package manager that's 10-100x faster than pip:
+
+1. **Install uv:**
+   ```bash
+   # Recommended: Install via pip
+   pip install uv
+   
+   # Alternative: Install via script (Linux/macOS)
+   # For security, review https://astral.sh/uv/install.sh before running
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Alternative: Install via script (Windows PowerShell)
+   # For security, review https://astral.sh/uv/install.ps1 before running
+   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+   ```
+
+2. **Clone and setup:**
+   ```bash
+   git clone https://github.com/GMouaad/time-tracker.git
+   cd time-tracker
+   uv venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   uv pip install -e .
+   python init_db.py
+   python run.py
+   ```
+
+3. **Access:** Open `http://localhost:5000`
+
+📚 **For detailed uv installation guide, see [docs/installation.md](docs/installation.md)**
+
+### Option 2: Using Dev Container (Recommended for Development)
 
 The easiest way to get started is using the pre-configured development container:
 
@@ -59,11 +93,15 @@ The easiest way to get started is using the pre-configured development container
 
 📚 **For detailed dev container documentation, see [docs/DEV_CONTAINER.md](docs/DEV_CONTAINER.md)**
 
-### Option 2: Manual Installation
+### Option 3: Manual Installation with pip (Legacy - Deprecated)
+
+> **⚠️ DEPRECATED**: This method is maintained for backward compatibility. Please use `uv` (Option 1) for better performance.
 
 For detailed installation instructions including troubleshooting, see the **[Installation Guide](docs/installation.md)**.
 
-### Quick Start
+### Quick Start (Legacy pip method)
+
+> **Note**: Consider using `uv` (Option 1) for faster installation.
 
 1. Clone the repository:
 ```bash

@@ -41,7 +41,7 @@
 		}
 	},
 
-	"postCreateCommand": "pip install -r requirements.txt -r requirements-dev.txt && python init_db.py",
+	"postCreateCommand": "uv pip install -e '.[dev]' && python init_db.py",
 
 	"remoteUser": "vscode",
 

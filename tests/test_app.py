@@ -1,18 +1,23 @@
 """Unit tests for the time tracker application."""
+
 import pytest
 from datetime import time, date
 from src.waqtracker import create_app, db
 from src.waqtracker.models import TimeEntry, LeaveDay, Settings
-from src.waqtracker.utils import calculate_duration, calculate_daily_overtime, get_week_bounds
+from src.waqtracker.utils import (
+    calculate_duration,
+    calculate_daily_overtime,
+    get_week_bounds,
+)
 
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
     app = create_app()
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    
+    app.config["TESTING"] = True
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+
     with app.app_context():
         db.create_all()
         yield app
@@ -29,7 +34,7 @@ def client(app):
 def test_app_creation(app):
     """Test that the app is created successfully."""
     assert app is not None
-    assert app.config['TESTING'] is True
+    assert app.config["TESTING"] is True
 
 
 def test_calculate_duration():
@@ -38,7 +43,7 @@ def test_calculate_duration():
     end = time(17, 0)
     duration = calculate_duration(start, end)
     assert duration == 8.0
-    
+
     # Test with minutes
     start = time(9, 30)
     end = time(17, 45)
@@ -51,11 +56,11 @@ def test_calculate_daily_overtime():
     # No overtime
     overtime = calculate_daily_overtime(8.0)
     assert overtime == 0.0
-    
+
     # With overtime
     overtime = calculate_daily_overtime(10.0)
     assert overtime == 2.0
-    
+
     # Under standard hours
     overtime = calculate_daily_overtime(6.0)
     assert overtime == 0.0
@@ -73,30 +78,30 @@ def test_get_week_bounds():
 
 def test_index_route(client):
     """Test the index/dashboard route."""
-    response = client.get('/')
+    response = client.get("/")
     assert response.status_code == 200
-    assert b'Dashboard' in response.data
+    assert b"Dashboard" in response.data
 
 
 def test_time_entry_form(client):
     """Test the time entry form page."""
-    response = client.get('/time-entry')
+    response = client.get("/time-entry")
     assert response.status_code == 200
-    assert b'Add Time Entry' in response.data
+    assert b"Add Time Entry" in response.data
 
 
 def test_reports_page(client):
     """Test the reports page."""
-    response = client.get('/reports')
+    response = client.get("/reports")
     assert response.status_code == 200
-    assert b'Reports' in response.data
+    assert b"Reports" in response.data
 
 
 def test_leave_page(client):
     """Test the leave management page."""
-    response = client.get('/leave')
+    response = client.get("/leave")
     assert response.status_code == 200
-    assert b'Leave Management' in response.data
+    assert b"Leave Management" in response.data
 
 
 def test_create_time_entry(app):
@@ -107,11 +112,11 @@ def test_create_time_entry(app):
             start_time=time(9, 0),
             end_time=time(17, 0),
             duration_hours=8.0,
-            description="Test work"
+            description="Test work",
         )
         db.session.add(entry)
         db.session.commit()
-        
+
         # Verify it was saved
         saved_entry = TimeEntry.query.first()
         assert saved_entry is not None
@@ -123,30 +128,28 @@ def test_create_leave_day(app):
     """Test creating a leave day in the database."""
     with app.app_context():
         leave = LeaveDay(
-            date=date(2024, 1, 15),
-            leave_type='vacation',
-            description='Family vacation'
+            date=date(2024, 1, 15), leave_type="vacation", description="Family vacation"
         )
         db.session.add(leave)
         db.session.commit()
-        
+
         # Verify it was saved
         saved_leave = LeaveDay.query.first()
         assert saved_leave is not None
-        assert saved_leave.leave_type == 'vacation'
-        assert saved_leave.description == 'Family vacation'
+        assert saved_leave.leave_type == "vacation"
+        assert saved_leave.description == "Family vacation"
 
 
 def test_settings_model(app):
     """Test the settings model."""
     with app.app_context():
         # Set a setting
-        Settings.set_setting('test_key', 'test_value')
-        
+        Settings.set_setting("test_key", "test_value")
+
         # Get the setting
-        value = Settings.get_setting('test_key')
-        assert value == 'test_value'
-        
+        value = Settings.get_setting("test_key")
+        assert value == "test_value"
+
         # Get non-existent setting with default
-        value = Settings.get_setting('nonexistent', 'default')
-        assert value == 'default'
+        value = Settings.get_setting("nonexistent", "default")
+        assert value == "default"
