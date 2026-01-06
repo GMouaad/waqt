@@ -24,7 +24,7 @@ This is a self-contained Flask-based time tracking application with no external 
 
 ## Technology Stack
 
-- **Backend**: Flask (Python 3.8+)
+- **Backend**: Flask (Python 3.10+)
 - **Database**: SQLite3
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Portable**: No external services required

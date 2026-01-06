@@ -6,7 +6,7 @@ This guide will help you install and set up the Time Tracker application on your
 
 Before installing the Time Tracker application, ensure you have the following:
 
-- **Python 3.8 or higher**: The application requires Python 3.8+
+- **Python 3.10 or higher**: The application requires Python 3.10+
   - Check your Python version: `python --version` or `python3 --version`
   - Download from: https://www.python.org/downloads/
 
