@@ -1,0 +1,162 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      use_existing_notes:
+        description: 'Keep the AI-generated notes from the draft release'
+        required: false
+        type: boolean
+        default: true
+      release_notes:
+        description: 'Release notes (ignored if use_existing_notes is true)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout (for gh CLI context)
+        uses: actions/checkout@v4
+
+      - name: Find latest draft release
+        id: draft
+        run: |
+          DRAFT=$(gh release list --json tagName,isDraft \
+            -q '[.[] | select(.isDraft)] | .[0].tagName')
+          if [ -z "$DRAFT" ] || [ "$DRAFT" = "null" ]; then
+            echo "::error::No draft release found! Push to main first to create a release candidate."
+            exit 1
+          fi
+          echo "tag=$DRAFT" >> $GITHUB_OUTPUT
+          echo "Found draft release: $DRAFT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Get draft release info
+        id: info
+        run: |
+          SHA=$(gh release view ${{ steps.draft.outputs.tag }} \
+            --json targetCommitish -q '.targetCommitish')
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+          echo "Commit: $SHA"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Verify Build passed
+        run: |
+          echo "Checking latest Build status on main branch..."
+
+          # Get the latest Build run on main branch
+          STATUS=$(gh run list \
+            --branch main \
+            --workflow "Build" \
+            --json conclusion,status \
+            --limit 1 \
+            -q '.[0].conclusion')
+
+          echo "Build conclusion: $STATUS"
+
+          if [ "$STATUS" != "success" ]; then
+            echo "::error::Build did not pass on main branch"
+            echo "Status was: $STATUS"
+            echo ""
+            echo "The release candidate cannot be published until Build passes."
+            exit 1
+          fi
+          echo "Build passed!"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Build release body
+        env:
+          USE_EXISTING: ${{ inputs.use_existing_notes }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+          TAG: ${{ steps.draft.outputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get the release notes content
+          if [ "$USE_EXISTING" = "true" ]; then
+            echo "Using existing notes from draft release..."
+            # Fetch existing draft body and extract content before the --- separator
+            EXISTING=$(gh release view "$TAG" --json body -q '.body')
+            # Extract everything up to the --- line (the AI notes section)
+            NOTES_CONTENT=$(echo "$EXISTING" | sed '/^---$/,$d' | sed '/^[[:space:]]*$/d')
+            if [ -n "$NOTES_CONTENT" ]; then
+              echo "Found existing notes"
+            else
+              echo "No existing notes found, will use minimal body"
+            fi
+          else
+            echo "Using provided release notes..."
+            if [ -n "$RELEASE_NOTES" ]; then
+              NOTES_CONTENT="## What's Changed
+
+          $RELEASE_NOTES"
+            else
+              NOTES_CONTENT=""
+            fi
+          fi
+
+          # Build final body with install instructions
+          {
+            if [ -n "$NOTES_CONTENT" ]; then
+              echo "$NOTES_CONTENT"
+              echo ""
+              echo "---"
+              echo ""
+            fi
+            echo "### Install"
+            echo ""
+            echo "**Download Executable:**"
+            echo ""
+            echo "Download the zip file for your platform below:"
+            echo "- **Linux (x64)**: \`waqtracker-linux-amd64.zip\`"
+            echo "- **macOS (Intel)**: \`waqtracker-macos-amd64.zip\`"
+            echo "- **macOS (Apple Silicon)**: \`waqtracker-macos-arm64.zip\`"
+            echo "- **Windows (x64)**: \`waqtracker-windows-amd64.zip\`"
+            echo ""
+            echo "Extract the zip file and run the executable:"
+            echo '```bash'
+            echo "# Linux/macOS"
+            echo "unzip waqtracker-*.zip"
+            echo "chmod +x waqtracker  # macOS/Linux only"
+            echo "./waqtracker"
+            echo ""
+            echo "# Windows PowerShell"
+            echo "Expand-Archive waqtracker-windows-amd64.zip"
+            echo ".\\waqtracker.exe"
+            echo '```'
+            echo ""
+            echo "**Install from Source:**"
+            echo '```bash'
+            echo "git clone https://github.com/GMouaad/time-tracker.git"
+            echo "cd time-tracker"
+            echo "uv venv && source .venv/bin/activate"
+            echo "uv pip install -e ."
+            echo "python run.py"
+            echo '```'
+            echo ""
+            echo "See https://github.com/GMouaad/time-tracker for more info."
+          } > body.md
+
+          echo "Release body:"
+          cat body.md
+
+      - name: Publish release
+        run: |
+          gh release edit ${{ steps.draft.outputs.tag }} \
+            --title "waqtracker ${{ steps.draft.outputs.tag }}" \
+            --notes-file body.md \
+            --draft=false \
+            --latest
+          echo ""
+          echo "Published ${{ steps.draft.outputs.tag }} as latest release!"
+          echo "View at: https://github.com/${{ github.repository }}/releases/tag/${{ steps.draft.outputs.tag }}"
+        env:
+          GH_TOKEN: ${{ github.token }}

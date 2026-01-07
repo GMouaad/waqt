@@ -13,10 +13,11 @@ from .utils import (
     calculate_duration,
     format_hours,
 )
+from ._version import VERSION
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="waqt")
+@click.version_option(version=VERSION, prog_name="waqt")
 def cli():
     """Waqt - Time tracking CLI for waqtracker application.
 
