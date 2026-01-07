@@ -102,8 +102,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         preview = document.createElement('div');
                         preview.id = 'duration-preview';
                         preview.style.marginTop = '0.5rem';
-                        preview.style.color = '#3498db';
                         preview.style.fontWeight = 'bold';
+                        preview.className = 'text-info';
                         endTimeInput.parentElement.appendChild(preview);
                     }
                     preview.textContent = `Duration: ${durationText}`;

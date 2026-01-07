@@ -13,6 +13,7 @@
     --shadow: rgba(0, 0, 0, 0.1);
     --accent-primary: #3498db;
     --accent-secondary: #2980b9;
+    --warning-color: #f39c12;
     --success-bg: #d4edda;
     --success-border: #c3e6cb;
     --success-text: #155724;
@@ -41,6 +42,7 @@
     --shadow: rgba(0, 0, 0, 0.3);
     --accent-primary: #4da6e0;
     --accent-secondary: #3a8bc9;
+    --warning-color: #f5a742;
     --success-bg: #1e4620;
     --success-border: #2d5a2f;
     --success-text: #7bc67e;
@@ -445,7 +447,7 @@ main {
 
 /* Utility Classes */
 .text-warning {
-    color: #f39c12 !important;
+    color: var(--warning-color) !important;
 }
 
 .text-info {
