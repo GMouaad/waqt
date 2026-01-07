@@ -16,6 +16,7 @@ This is a self-contained Flask-based time tracking application with no external 
 
 ## Features
 
+- **One-Click Timer**: Interactive dashboard timer with Start, Stop, Pause, and Resume controls for real-time tracking
 - **Work Hours Tracking**: Track daily work hours (8 hours/day, 40 hours/week standard)
 - **Overtime Calculation**: Automatically calculate overtime hours
 - **Vacation Days**: Track and manage vacation days

@@ -48,10 +48,30 @@ start.bat
 
 Press `Ctrl+C` in the terminal where the application is running.
 
+## Dashboard Timer
+
+The dashboard now features a one-click timer for seamless time tracking.
+
+### Starting the Timer
+1. On the Dashboard, click **"▶ Start Timer"**.
+2. The timer will begin counting up immediately.
+3. The status indicator will pulse green to show tracking is active.
+4. By default, the entry description is set to "Work".
+
+### Pausing and Resuming
+- **Pause**: Click **"⏸ Pause"** if you need to take a break. This stops the current entry in the database and updates the status indicator to orange.
+- **Resume**: Click **"▶ Resume"** to start a new entry. The timer will continue from where it left off visually (by starting a new session).
+
+### Stopping the Timer
+- Click **"■ Stop"** when you are finished with your work session.
+- The entry will be saved to the database.
+- The dashboard will automatically refresh to show your new entry in the "Recent Time Entries" table.
+
 ## Dashboard Overview
 
 The dashboard is your home page and shows:
 
+- **Timer Control Panel**: Quick-start and manage your current work session.
 - **Current Week Stats**: 
   - Total hours worked this week
   - Overtime hours accumulated
@@ -69,195 +89,33 @@ The dashboard is your home page and shows:
 ### Navigation Menu
 
 - **Dashboard**: Overview and recent activity
-- **Time Entry**: Log work hours
+- **Time Entry**: Log work hours manually
 - **Leave**: Manage vacation and sick days
 - **Reports**: View weekly and monthly summaries
 
 ## Tracking Work Hours
 
-### Adding a Time Entry
+### Using the Timer (Recommended)
+The easiest way to track time is using the **Dashboard Timer**. It automatically records your start and end times with a single click.
 
+### Adding a Time Entry Manually
 1. Click **"Add Time Entry"** from the dashboard or navigation menu
-
-2. Fill in the form:
-   - **Date**: The date you worked (defaults to today)
-   - **Start Time**: When you started work (e.g., 09:00)
-   - **End Time**: When you finished work (e.g., 17:30)
-   - **Description**: What you worked on (e.g., "Developed login feature")
-
-3. Click **"Save Entry"**
-
-The system automatically calculates:
-- Duration in hours
-- Daily overtime (hours beyond 8)
-- Weekly overtime (hours beyond 40 for the week)
-
-### Example Time Entry
-
-```
-Date: 2026-01-06
-Start Time: 09:00
-End Time: 18:00
-Description: Fixed bug #123 and updated documentation
-
-Result: 9 hours total, 1 hour overtime
-```
-
-### Editing Time Entries
-
-Currently, entries are permanent once saved. To correct an entry:
-1. Note the incorrect entry details
-2. Add a correcting entry with negative hours if needed
-3. Or manually edit the database file `time_tracker.db` (advanced users)
-
-### Best Practices for Time Entries
-
-- **Be Specific**: Use clear descriptions (e.g., "Client meeting - Project X" not just "Meeting")
-- **Log Daily**: Enter time at the end of each workday while it's fresh
-- **Include Breaks**: If you track breaks separately, note them in the description
-- **Multiple Entries**: You can add multiple entries per day for different activities
-
-## Managing Leave Days
-
-### Recording Vacation Days
-
-1. Navigate to **"Leave"** in the menu
-
-2. Select the leave type: **Vacation**
-
-3. Enter:
-   - **Start Date**: First day of vacation
-   - **End Date**: Last day of vacation
-   - **Description**: Optional notes (e.g., "Summer vacation")
-
-4. Click **"Submit"**
-
-### Recording Sick Leave
-
-1. Navigate to **"Leave"** in the menu
-
-2. Select the leave type: **Sick Leave**
-
-3. Enter:
-   - **Date**: The sick day
-   - **Description**: Optional notes (e.g., "Doctor's appointment")
-
-4. Click **"Submit"**
-
-### Viewing Leave History
-
-The Leave page shows:
-- All recorded vacation days
-- All sick leave days
-- Total days for each type
-- Calendar view of leave (if implemented)
-
-### Leave Day Examples
-
-**Single Vacation Day:**
-```
-Type: Vacation
-Start Date: 2026-01-15
-End Date: 2026-01-15
-Description: Personal day
-```
-
-**Week-Long Vacation:**
-```
-Type: Vacation
-Start Date: 2026-07-01
-End Date: 2026-07-05
-Description: Summer holiday
-```
-
-## Viewing Reports
-
-### Weekly Reports
-
-1. Go to **"Reports"** → **"Weekly Overview"**
-
-2. View statistics:
-   - Total hours worked
-   - Standard hours target (40)
-   - Overtime hours
-   - Daily breakdown
-   - Average hours per day
-
-3. Navigate between weeks using date selectors
-
-### Monthly Reports
-
-1. Go to **"Reports"** → **"Monthly Overview"**
-
-2. View aggregated data:
-   - Total hours for the month
-   - Total overtime
-   - Days worked
-   - Average hours per day
-   - Week-by-week breakdown
-
-### Activity Log
-
-View all time entries with filtering options:
-- Filter by date range
-- Filter by description keywords
-- Sort by date or duration
-- Export options (if implemented)
-
-## Understanding Overtime Calculations
-
-### Standard Work Schedule
-
-The Time Tracker uses these defaults:
-- **Standard Day**: 8 hours
-- **Standard Week**: 40 hours (Monday-Friday)
-
-### Daily Overtime
-
-Overtime is calculated for each day:
-```
-Daily Overtime = Total Hours - 8 hours
-```
-
-**Example:**
-- Work 9.5 hours → 1.5 hours overtime
-- Work 7 hours → 0 hours overtime (no negative overtime)
-
-### Weekly Overtime
-
-Weekly overtime considers the full week:
-```
-Weekly Overtime = Total Weekly Hours - 40 hours
-```
-
-**Example Week:**
-```
-Monday:    8 hours
-Tuesday:   9 hours
-Wednesday: 8 hours
-Thursday:  10 hours
-Friday:    7 hours
------------------------
-Total:     42 hours
-Overtime:  2 hours
-```
-
-### Overtime Tracking
-
-- Overtime accumulates and is displayed in reports
-- Daily and weekly overtime are tracked separately
-- Use reports to see overtime trends over time
-
+...
 ## Common Workflows
 
 ### Daily Routine
 
+**Start of Workday:**
+1. Open Time Tracker dashboard.
+2. Click **"▶ Start Timer"**.
+
+**During the Day:**
+1. Use **"⏸ Pause"** and **"▶ Resume"** for breaks.
+
 **End of Workday:**
-1. Open Time Tracker
-2. Click "Add Time Entry"
-3. Enter today's date, start/end times, and description
-4. Save entry
-5. Check dashboard to see weekly progress
+1. Click **"■ Stop"**.
+2. Verify the entries in the "Recent Time Entries" table.
+3. Check dashboard to see weekly progress.
 
 ### Weekly Review
 
