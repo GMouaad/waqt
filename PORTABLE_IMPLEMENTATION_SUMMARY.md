@@ -117,20 +117,31 @@ The build process works as follows:
 
 ### Running the Executable
 
-Users can run the executable in two ways:
+Users can use the same `waqtracker` executable in two ways, depending on whether
+command-line arguments are provided:
 
-1. **Web Application** (no arguments):
+1. **Web Application mode** (no arguments):
    ```bash
    ./waqtracker
    ```
-   This starts the Flask web server on `http://localhost:5000`
+   This starts the Flask web server on `http://localhost:5000`.
 
-2. **CLI Commands** (with arguments):
+2. **CLI mode** (with arguments):
+   When invoked with arguments, the executable does **not** start the web server;
+   instead, it forwards the arguments to the internal `waqt` CLI tool.
+
    ```bash
+   # Using the bundled executable in CLI mode
    ./waqtracker --version
    ./waqtracker start
    ./waqtracker end
    ./waqtracker summary
+
+   # Equivalent usage when running the CLI directly (Python environment)
+   waqt --version
+   waqt start
+   waqt end
+   waqt summary
    ```
 
 ## Testing

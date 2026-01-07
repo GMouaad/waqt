@@ -22,17 +22,32 @@ def main():
     """Main entry point that determines whether to run CLI or web app."""
     # If no arguments or only --help/--version, show combined help
     if len(sys.argv) == 1:
+        # Determine appropriate CLI invocation name
+        if getattr(sys, "frozen", False):
+            cli_name = os.path.basename(sys.executable)
+        else:
+            cli_name = "waqt"
+        
         # No arguments - start the web application
         print("Starting waqtracker web application...")
         print("Access the application at: http://localhost:5000")
         print("\nPress Ctrl+C to stop the server.")
-        print("\nTo use the CLI, run: waqt <command>")
-        print("For CLI help, run: waqt --help")
+        print(f"\nTo use the CLI, run: {cli_name} <command>")
+        print(f"For CLI help, run: {cli_name} --help")
         print("-" * 50)
         
-        app = create_app()
-        debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
-        app.run(debug=debug_mode, host="0.0.0.0", port=5000)
+        try:
+            app = create_app()
+            debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+            # Bind to localhost only for security (prevents external access)
+            app.run(debug=debug_mode, host="127.0.0.1", port=5000)
+        except Exception as e:
+            print(f"\n❌ Error starting application: {e}", file=sys.stderr)
+            print("\nPlease check that:")
+            print("  - Port 5000 is not already in use")
+            print("  - You have write permissions in the current directory")
+            print("  - All required dependencies are available")
+            sys.exit(1)
     else:
         # Arguments provided - run CLI
         cli()

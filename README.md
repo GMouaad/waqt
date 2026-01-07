@@ -58,7 +58,13 @@ The easiest way to get started is to download a pre-built executable for your pl
 
 3. **Access:** Open `http://localhost:5000` in your browser
 
-The executable includes both the web app and CLI. Run without arguments to start the web server, or use `waqt` commands for CLI access.
+**CLI Usage:** When running the standalone executable, pass CLI commands directly as arguments:
+```bash
+./waqtracker --version      # Check version
+./waqtracker start          # Start time tracking
+./waqtracker end            # End time tracking
+./waqtracker summary        # View summary
+```
 
 ### Option 2: Using uv (Recommended - Fast & Modern)
 

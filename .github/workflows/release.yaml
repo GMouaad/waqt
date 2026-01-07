@@ -50,28 +50,67 @@ jobs:
 
       - name: Verify Build passed
         run: |
-          echo "Checking latest Build status on main branch..."
+          echo "Checking latest Dev Build status on main branch..."
 
-          # Get the latest Build run on main branch
+          # Get the latest Dev Build run on main branch
           STATUS=$(gh run list \
             --branch main \
-            --workflow "Build" \
+            --workflow "Dev Build" \
             --json conclusion,status \
             --limit 1 \
             -q '.[0].conclusion')
 
-          echo "Build conclusion: $STATUS"
+          echo "Dev Build conclusion: $STATUS"
 
           if [ "$STATUS" != "success" ]; then
-            echo "::error::Build did not pass on main branch"
+            echo "::error::Dev Build did not pass on main branch"
             echo "Status was: $STATUS"
             echo ""
-            echo "The release candidate cannot be published until Build passes."
+            echo "The release candidate cannot be published until Dev Build passes."
             exit 1
           fi
-          echo "Build passed!"
+          echo "Dev Build passed!"
         env:
           GH_TOKEN: ${{ github.token }}
+
+      - name: Verify release artifacts exist
+        env:
+          TAG: ${{ steps.draft.outputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Verifying expected artifacts exist on draft release: $TAG"
+
+          ASSETS=$(gh release view "$TAG" --json assets -q '.assets[].name')
+
+          if [ -z "$ASSETS" ]; then
+            echo "::error::No artifacts found on the draft release $TAG"
+            exit 1
+          fi
+
+          echo "Found artifacts:"
+          echo "$ASSETS"
+
+          EXPECTED_ARTIFACTS=(
+            "waqtracker-linux-amd64.zip"
+            "waqtracker-macos-amd64.zip"
+            "waqtracker-macos-arm64.zip"
+            "waqtracker-windows-amd64.zip"
+          )
+
+          missing=0
+          for expected in "${EXPECTED_ARTIFACTS[@]}"; do
+            if ! echo "$ASSETS" | grep -Fxq "$expected"; then
+              echo "::error::Missing expected artifact on release $TAG: $expected"
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::One or more expected artifacts are missing. Aborting release."
+            exit 1
+          fi
+
+          echo "All expected artifacts are present on draft release $TAG."
 
       - name: Build release body
         env:
