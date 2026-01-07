@@ -1,7 +1,9 @@
 """Utility functions for time tracking calculations."""
 
+import csv
+import io
 from datetime import datetime, timedelta
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from .models import TimeEntry, LeaveDay
 
 
@@ -156,3 +158,71 @@ def format_hours(hours: float) -> str:
     h = int(hours)
     m = int((hours - h) * 60)
     return f"{h}:{m:02d}"
+
+
+def export_time_entries_to_csv(
+    entries: List[TimeEntry],
+    start_date: Optional[datetime.date] = None,
+    end_date: Optional[datetime.date] = None,
+) -> str:
+    """
+    Export time entries to CSV format.
+
+    Args:
+        entries: List of TimeEntry objects to export
+        start_date: Optional start date for the export period
+        end_date: Optional end date for the export period
+
+    Returns:
+        CSV content as a string
+    """
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write header
+    headers = [
+        "Date",
+        "Day of Week",
+        "Start Time",
+        "End Time",
+        "Duration (Hours)",
+        "Duration (HH:MM)",
+        "Description",
+        "Overtime",
+        "Created At",
+    ]
+    writer.writerow(headers)
+
+    # Write data rows
+    for entry in entries:
+        # Calculate overtime for the day
+        overtime = calculate_daily_overtime(entry.duration_hours)
+
+        row = [
+            entry.date.isoformat(),
+            entry.date.strftime("%A"),
+            entry.start_time.strftime("%H:%M"),
+            entry.end_time.strftime("%H:%M"),
+            f"{entry.duration_hours:.2f}",
+            format_hours(entry.duration_hours),
+            entry.description,
+            f"{overtime:.2f}",
+            entry.created_at.isoformat() if entry.created_at else "",
+        ]
+        writer.writerow(row)
+
+    # Add summary statistics if there are entries
+    if entries:
+        writer.writerow([])  # Empty row
+        writer.writerow(["Summary Statistics"])
+        writer.writerow(["Period", f"{start_date or 'All'} to {end_date or 'All'}"])
+        writer.writerow(["Total Entries", len(entries)])
+        total_hours = sum(entry.duration_hours for entry in entries)
+        writer.writerow(["Total Hours", f"{total_hours:.2f}"])
+        writer.writerow(["Total Hours (HH:MM)", format_hours(total_hours)])
+        working_days = len(set(entry.date for entry in entries))
+        writer.writerow(["Working Days", working_days])
+        total_overtime = sum(calculate_daily_overtime(entry.duration_hours) for entry in entries)
+        writer.writerow(["Total Overtime", f"{total_overtime:.2f}"])
+
+    return output.getvalue()
