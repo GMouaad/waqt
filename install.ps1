@@ -27,7 +27,8 @@ if ([System.Environment]::Is64BitOperatingSystem) {
     # Check processor architecture using environment variable for better performance
     $ProcessorArch = $env:PROCESSOR_ARCHITECTURE
     if ($ProcessorArch -eq "ARM64") {
-        $Arch = "arm64"
+        # No native Windows ARM64 build is available; fall back to amd64 binary
+        Write-Warn "ARM64 Windows detected; using amd64 build (no native arm64 build available)."
     }
 }
 Write-Info "Detected architecture: $Arch"
@@ -60,28 +61,30 @@ Write-Info "Downloading $Url..."
 try {
     New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
     Invoke-WebRequest -Uri $Url -OutFile $ZipPath
-} catch {
-    Write-Err "Failed to download $Url. $_"
-}
 
-# Extract
-Write-Info "Extracting..."
-Expand-Archive -Path $ZipPath -DestinationPath $TempDir -Force
+    # Extract
+    Write-Info "Extracting..."
+    Expand-Archive -Path $ZipPath -DestinationPath $TempDir -Force
 
-# Install
-Write-Info "Installing to $InstallDir..."
-New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-Move-Item -Path (Join-Path $TempDir "waqtracker.exe") -Destination (Join-Path $InstallDir "waqtracker.exe") -Force
+    # Install
+    Write-Info "Installing to $InstallDir..."
+    New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+    Move-Item -Path (Join-Path $TempDir "waqtracker.exe") -Destination (Join-Path $InstallDir "waqtracker.exe") -Force
 
-# Create a batch wrapper for 'waqt' command
-$WaqtBatch = @"
+    # Create a batch wrapper for 'waqt' command
+    $WaqtBatch = @"
 @echo off
 "%~dp0waqtracker.exe" %*
 "@
-$WaqtBatch | Out-File -FilePath (Join-Path $InstallDir "waqt.cmd") -Encoding ASCII
-
-# Cleanup
-Remove-Item -Recurse -Force $TempDir
+    $WaqtBatch | Out-File -FilePath (Join-Path $InstallDir "waqt.cmd") -Encoding ASCII
+} catch {
+    Write-Err "Installation failed. $_"
+} finally {
+    # Cleanup
+    if (Test-Path $TempDir) {
+        Remove-Item -Recurse -Force $TempDir -ErrorAction SilentlyContinue
+    }
+}
 
 # Add to PATH
 if ($env:GITHUB_ACTIONS) {

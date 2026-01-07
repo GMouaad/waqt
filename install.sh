@@ -44,10 +44,29 @@ detect_os() {
 
 # Detect architecture
 detect_arch() {
-    case "$(uname -m)" in
-        x86_64|amd64)  echo "amd64" ;;
-        arm64|aarch64) echo "arm64" ;;
-        *)             error "Unsupported architecture: $(uname -m)" ;;
+    local arch
+    local os
+    arch="$(uname -m)"
+    os="$(uname -s)"
+
+    case "$arch" in
+        x86_64|amd64)
+            echo "amd64"
+            ;;
+        arm64|aarch64)
+            # macOS ARM64 is supported, but Linux ARM64 does not have a prebuilt binary yet
+            case "$os" in
+                Linux*)
+                    error "Linux ARM64 is not currently supported by the automatic installer. Please install Waqt manually by following the instructions at https://github.com/GMouaad/waqt#installation."
+                    ;;
+                *)
+                    echo "arm64"
+                    ;;
+            esac
+            ;;
+        *)
+            error "Unsupported architecture: $(uname -m)"
+            ;;
     esac
 }
 
@@ -112,6 +131,9 @@ main() {
     DOWNLOAD_PATH="${TMPDIR}/waqt-download-$$"
     mkdir -p "$DOWNLOAD_PATH"
 
+    # Setup cleanup trap
+    trap 'rm -rf "$DOWNLOAD_PATH"' EXIT ERR
+
     if ! curl -fsSL "$URL" -o "${DOWNLOAD_PATH}/${FILENAME}"; then
         error "Failed to download ${URL}"
     fi
@@ -130,7 +152,7 @@ main() {
     # Create symlink for 'waqt' command
     ln -sf "${INSTALL_DIR}/waqtracker" "${INSTALL_DIR}/waqt"
 
-    # Cleanup
+    # Cleanup (trap will also handle this on exit)
     rm -rf "$DOWNLOAD_PATH"
 
     # Verify installation
@@ -179,28 +201,28 @@ add_to_path() {
             else
                 config_file="$HOME/.bashrc"
             fi
-            path_line='export PATH="$HOME/.waqt/bin:$PATH"'
+            path_line="export PATH=\"$INSTALL_DIR:\$PATH\""
             ;;
         zsh)
             config_file="${ZDOTDIR:-$HOME}/.zshrc"
-            path_line='export PATH="$HOME/.waqt/bin:$PATH"'
+            path_line="export PATH=\"$INSTALL_DIR:\$PATH\""
             ;;
         fish)
             config_file="${XDG_CONFIG_HOME:-$HOME/.config}/fish/config.fish"
-            path_line='fish_add_path $HOME/.waqt/bin'
+            path_line="fish_add_path $INSTALL_DIR"
             ;;
         *)
             # Fallback to .profile for other POSIX shells
             config_file="$HOME/.profile"
-            path_line='export PATH="$HOME/.waqt/bin:$PATH"'
+            path_line="export PATH=\"$INSTALL_DIR:\$PATH\""
             ;;
     esac
 
     # Create config file directory if needed
     mkdir -p "$(dirname "$config_file")"
 
-    # Check if already added - use more specific pattern to avoid false positives
-    if [[ -f "$config_file" ]] && grep -qF '$HOME/.waqt/bin' "$config_file" 2>/dev/null; then
+    # Check if already added - check for the actual INSTALL_DIR
+    if [[ -f "$config_file" ]] && grep -qF "$INSTALL_DIR" "$config_file" 2>/dev/null; then
         info "PATH already configured in $config_file"
         return
     fi
