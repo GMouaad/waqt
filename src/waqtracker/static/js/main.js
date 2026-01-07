@@ -1,3 +1,71 @@
+// Theme Management
+(function() {
+    // Get theme from localStorage or system preference
+    function getPreferredTheme() {
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            return storedTheme;
+        }
+        
+        // Check system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        
+        return 'light';
+    }
+    
+    // Update theme icon
+    function updateThemeIcon(theme) {
+        const themeIcon = document.getElementById('theme-icon');
+        if (themeIcon) {
+            themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+    }
+    
+    // Apply theme to document
+    function applyTheme(theme, isManual = false) {
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        // Only store in localStorage if manually changed by user
+        if (isManual) {
+            localStorage.setItem('theme', theme);
+        }
+        
+        updateThemeIcon(theme);
+    }
+    
+    // Initialize theme immediately to prevent FOUC
+    const initialTheme = getPreferredTheme();
+    document.documentElement.setAttribute('data-theme', initialTheme);
+    
+    // Set up theme toggle button when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update icon after DOM is ready
+        updateThemeIcon(initialTheme);
+        
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                applyTheme(newTheme, true);
+            });
+        }
+        
+        // Listen for system theme changes
+        const prefersDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        prefersDarkQuery.addEventListener('change', function(e) {
+            // Only auto-switch if user hasn't manually set a preference
+            const hasManualPreference = localStorage.getItem('theme') !== null;
+            if (!hasManualPreference) {
+                applyTheme(e.matches ? 'dark' : 'light', false);
+            }
+        });
+    });
+})();
+
 // Simple JavaScript for time tracker app
 
 // Auto-dismiss flash messages after 5 seconds
@@ -43,9 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!preview) {
                         preview = document.createElement('div');
                         preview.id = 'duration-preview';
-                        preview.style.marginTop = '0.5rem';
-                        preview.style.color = '#3498db';
-                        preview.style.fontWeight = 'bold';
+                        preview.className = 'duration-preview';
                         endTimeInput.parentElement.appendChild(preview);
                     }
                     preview.textContent = `Duration: ${durationText}`;
