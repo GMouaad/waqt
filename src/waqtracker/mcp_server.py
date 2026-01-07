@@ -44,8 +44,15 @@ Overtime is automatically calculated for hours beyond the standard.
 )
 
 
-# Initialize Flask app for database access
-app = create_app()
+# Global app instance for the MCP server, initialized lazily
+_app = None
+
+def get_app():
+    """Get or create the Flask app instance."""
+    global _app
+    if _app is None:
+        _app = create_app()
+    return _app
 
 
 def _get_open_entry_for_date(entry_date):
@@ -105,6 +112,7 @@ def start(
         start(time="09:00")
         start(date="2024-01-15", time="09:30", description="Morning session")
     """
+    app = get_app()
     with app.app_context():
         # Parse date
         if date:
@@ -180,6 +188,7 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
         end(time="17:30")
         end(date="2024-01-15", time="18:00")
     """
+    app = get_app()
     with app.app_context():
         # Parse date
         if date:
@@ -256,6 +265,7 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
         summary(period="month")
         summary(period="week", date="2024-01-15")
     """
+    app = get_app()
     with app.app_context():
         # Validate period
         if period.lower() not in ["week", "month"]:
@@ -366,6 +376,7 @@ def list_entries(
         list_entries(period="month")
         list_entries(period="all", limit=10)
     """
+    app = get_app()
     with app.app_context():
         # Validate period
         if period.lower() not in ["week", "month", "all"]:
@@ -456,6 +467,7 @@ def export_entries(
         export_entries(period="week")
         export_entries(period="month", date="2024-01-15")
     """
+    app = get_app()
     with app.app_context():
         # Validate format
         if export_format.lower() != "csv":

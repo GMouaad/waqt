@@ -7,14 +7,14 @@ from pathlib import Path
 
 
 def test_mcp_server_entry_point_exists():
-    """Test that waqt-mcp entry point is installed."""
+    """Test that waqtracker is installed."""
     result = subprocess.run(
-        [sys.executable, "-m", "pip", "show", "waqtracker"],
+        [sys.executable, "-c", "import importlib.metadata; print(importlib.metadata.version('waqtracker'))"],
         capture_output=True,
         text=True,
     )
     assert result.returncode == 0
-    assert "waqtracker" in result.stdout
+    assert result.stdout.strip() != ""
 
 
 def test_mcp_server_starts():
