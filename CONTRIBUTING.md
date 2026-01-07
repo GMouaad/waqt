@@ -41,12 +41,12 @@ The fastest and most modern way to set up the development environment:
 
 5. **Initialize Database**
    ```bash
-   python init_db.py
+   python -m waqtracker.scripts.init_db
    ```
 
 6. **Run the Application**
    ```bash
-   python run.py
+   python -m waqtracker.wsgi
    ```
 
 ### Legacy: Using pip (Deprecated)
@@ -67,18 +67,17 @@ The fastest and most modern way to set up the development environment:
 
 3. **Install Dependencies**
    ```bash
-   pip install -r requirements.txt
-   pip install -r requirements-dev.txt  # For development tools
+   pip install -e ".[dev]"
    ```
 
 4. **Initialize Database**
    ```bash
-   python init_db.py
+   python -m waqtracker.scripts.init_db
    ```
 
 5. **Run the Application**
    ```bash
-   python run.py
+   python -m waqtracker.wsgi
    ```
 
 ## Running Tests
@@ -124,11 +123,11 @@ pytest tests/ --cov=src.waqtracker  # With coverage report
   - `models.py` - Database models
   - `routes.py` - Route handlers
   - `utils.py` - Helper functions
+  - `wsgi.py` - Application entry point
+  - `scripts/` - Utility scripts (init_db, etc.)
   - `templates/` - HTML templates
   - `static/` - CSS, JS, images
 - `tests/` - Test files
-- `run.py` - Application entry point
-- `init_db.py` - Database initialization
 
 ## Features to Contribute
 
