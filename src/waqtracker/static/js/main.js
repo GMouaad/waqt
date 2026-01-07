@@ -136,6 +136,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let timerInterval;
         let elapsedSeconds = 0;
         let lastTickTime = null;
+        let alertDismissed = false;
+        let alertBanner = null;
 
         function formatTime(seconds) {
             const h = Math.floor(seconds / 3600);
@@ -275,9 +277,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Session Alert Logic
-        let alertDismissed = false;
-        let alertBanner = null;
-
         function checkSessionAlert() {
             // Don't check if user dismissed the alert
             if (alertDismissed) {

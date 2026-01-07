@@ -119,10 +119,10 @@ def test_session_alert_over_8_hours(client, app):
         
         # Create an active entry started 9 hours ago
         now = datetime.now()
-        start_time = (now - timedelta(hours=9)).time()
+        start_dt = now - timedelta(hours=9)
         entry = TimeEntry(
-            date=now.date(),
-            start_time=start_time,
+            date=start_dt.date(),
+            start_time=start_dt.time(),
             end_time=now.time(),
             duration_hours=0.0,
             is_active=True,
@@ -151,10 +151,10 @@ def test_session_alert_with_pauses(client, app):
         # Create an active entry started 10 hours ago with 2.5 hours of pauses
         # So actual work time is 7.5 hours, should not alert
         now = datetime.now()
-        start_time = (now - timedelta(hours=10)).time()
+        start_dt = now - timedelta(hours=10)
         entry = TimeEntry(
-            date=now.date(),
-            start_time=start_time,
+            date=start_dt.date(),
+            start_time=start_dt.time(),
             end_time=now.time(),
             duration_hours=0.0,
             is_active=True,
@@ -183,10 +183,10 @@ def test_session_alert_custom_threshold(client, app):
         
         # Create an active entry started 9 hours ago
         now = datetime.now()
-        start_time = (now - timedelta(hours=9)).time()
+        start_dt = now - timedelta(hours=9)
         entry = TimeEntry(
-            date=now.date(),
-            start_time=start_time,
+            date=start_dt.date(),
+            start_time=start_dt.time(),
             end_time=now.time(),
             duration_hours=0.0,
             is_active=True,
