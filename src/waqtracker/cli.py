@@ -10,14 +10,9 @@ from .utils import (
     get_month_bounds,
     calculate_weekly_stats,
     calculate_monthly_stats,
+    calculate_duration,
     format_hours,
 )
-
-
-def get_app():
-    """Create and return the Flask app instance."""
-    app = create_app()
-    return app
 
 
 @click.group()
@@ -64,7 +59,7 @@ def start(time: Optional[str], date: Optional[str], description: str):
         waqt start --time 09:00
         waqt start --date 2024-01-15 --time 09:30 --description "Morning session"
     """
-    app = get_app()
+    app = create_app()
     with app.app_context():
         # Parse date
         if date:
@@ -77,7 +72,7 @@ def start(time: Optional[str], date: Optional[str], description: str):
                         fg="red",
                     )
                 )
-                return
+                raise click.exceptions.Exit(1)
         else:
             entry_date = datetime.now().date()
 
@@ -91,7 +86,7 @@ def start(time: Optional[str], date: Optional[str], description: str):
                         f"Error: Invalid time format '{time}'. Use HH:MM.", fg="red"
                     )
                 )
-                return
+                raise click.exceptions.Exit(1)
         else:
             start_time = datetime.now().time()
 
@@ -108,12 +103,12 @@ def start(time: Optional[str], date: Optional[str], description: str):
         if open_entries:
             click.echo(
                 click.style(
-                    f"Warning: There's already an open time entry for {entry_date}.",
-                    fg="yellow",
+                    f"Error: There's already an open time entry for {entry_date}.",
+                    fg="red",
                 )
             )
             click.echo("Please run 'waqt end' first to close it.")
-            return
+            raise click.exceptions.Exit(1)
 
         # Create a new entry with start time
         # end_time is set to start_time as a temporary marker for open entries
@@ -163,7 +158,7 @@ def end(time: Optional[str], date: Optional[str]):
         waqt end --time 17:30
         waqt end --date 2024-01-15 --time 18:00
     """
-    app = get_app()
+    app = create_app()
     with app.app_context():
         # Parse date
         if date:
@@ -176,7 +171,7 @@ def end(time: Optional[str], date: Optional[str]):
                         fg="red",
                     )
                 )
-                return
+                raise click.exceptions.Exit(1)
         else:
             entry_date = datetime.now().date()
 
@@ -190,7 +185,7 @@ def end(time: Optional[str], date: Optional[str]):
                         f"Error: Invalid time format '{time}'. Use HH:MM.", fg="red"
                     )
                 )
-                return
+                raise click.exceptions.Exit(1)
         else:
             end_time = datetime.now().time()
 
@@ -210,11 +205,9 @@ def end(time: Optional[str], date: Optional[str]):
                 )
             )
             click.echo("Run 'waqt start' first to begin tracking time.")
-            return
+            raise click.exceptions.Exit(1)
 
         # Calculate duration
-        from .utils import calculate_duration
-
         duration = calculate_duration(open_entry.start_time, end_time)
 
         # Update the entry
@@ -256,7 +249,7 @@ def summary(period: str, date: Optional[str]):
         waqt summary --period month
         waqt sum -p week -d 2024-01-15
     """
-    app = get_app()
+    app = create_app()
     with app.app_context():
         # Parse date
         if date:
@@ -269,7 +262,7 @@ def summary(period: str, date: Optional[str]):
                         fg="red",
                     )
                 )
-                return
+                raise click.exceptions.Exit(1)
         else:
             ref_date = datetime.now().date()
 
@@ -288,17 +281,16 @@ def summary(period: str, date: Optional[str]):
             .all()
         )
 
-        # Query leave days for the period
-        leave_days = (
-            LeaveDay.query.filter(LeaveDay.date >= start_date)
-            .filter(LeaveDay.date <= end_date)
-            .all()
-        )
-
         # Calculate statistics
         if period.lower() == "week":
             stats = calculate_weekly_stats(entries)
         else:
+            # Query leave days only for monthly statistics
+            leave_days = (
+                LeaveDay.query.filter(LeaveDay.date >= start_date)
+                .filter(LeaveDay.date <= end_date)
+                .all()
+            )
             stats = calculate_monthly_stats(entries, leave_days)
 
         # Display summary
@@ -342,8 +334,8 @@ def summary(period: str, date: Optional[str]):
                         )
                     )
 
-                # Show leave days
-                if leave_days:
+                # Show leave days (only available for monthly summary)
+                if stats.get("vacation_days", 0) > 0 or stats.get("sick_days", 0) > 0:
                     click.echo("\nLeave Days:")
                     click.echo(f"  Vacation: {stats['vacation_days']}")
                     click.echo(f"  Sick: {stats['sick_days']}")
@@ -365,25 +357,7 @@ def summary(period: str, date: Optional[str]):
 
 
 # Create alias for summary command
-@cli.command()
-@click.option(
-    "--period",
-    "-p",
-    type=click.Choice(["week", "month"], case_sensitive=False),
-    default="week",
-    help="Summary period (default: week)",
-)
-@click.option(
-    "--date",
-    "-d",
-    type=str,
-    default=None,
-    help="Date for the period in YYYY-MM-DD format (default: today)",
-)
-def sum(period: str, date: Optional[str]):
-    """Alias for 'summary' command."""
-    ctx = click.get_current_context()
-    ctx.invoke(summary, period=period, date=date)
+cli.add_command(summary, "sum")
 
 
 @cli.command()

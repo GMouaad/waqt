@@ -95,7 +95,7 @@ def test_start_command_invalid_time_format(runner, app):
     """Test start command with invalid time format."""
     with app.app_context():
         result = runner.invoke(cli, ["start", "--time", "invalid"])
-        assert result.exit_code == 0
+        assert result.exit_code != 0
         assert "Invalid time format" in result.output
 
 
@@ -103,7 +103,7 @@ def test_start_command_invalid_date_format(runner, app):
     """Test start command with invalid date format."""
     with app.app_context():
         result = runner.invoke(cli, ["start", "--date", "invalid"])
-        assert result.exit_code == 0
+        assert result.exit_code != 0
         assert "Invalid date format" in result.output
 
 
@@ -115,7 +115,7 @@ def test_start_command_duplicate(runner, app):
 
         # Try to create another one
         result = runner.invoke(cli, ["start", "--time", "10:00"])
-        assert result.exit_code == 0
+        assert result.exit_code != 0
         assert "already an open time entry" in result.output
 
 
@@ -142,7 +142,7 @@ def test_end_command_without_start(runner, app):
     """Test end command when no entry exists."""
     with app.app_context():
         result = runner.invoke(cli, ["end", "--time", "17:00"])
-        assert result.exit_code == 0
+        assert result.exit_code != 0
         assert "No open time entry found" in result.output
 
 
