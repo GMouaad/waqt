@@ -49,6 +49,44 @@ Overtime is automatically calculated for hours beyond the standard.
 app = create_app()
 
 
+def _get_open_entry_for_date(entry_date):
+    """Get the most recent open time entry for a specific date.
+    
+    Open entries are identified by:
+    - duration_hours == 0.0
+    - end_time == start_time (marker for unclosed entries)
+    
+    Args:
+        entry_date: Date to check for open entries
+    
+    Returns:
+        TimeEntry object if found, None otherwise
+    """
+    return (
+        TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
+        .filter(TimeEntry.end_time == TimeEntry.start_time)
+        .order_by(TimeEntry.created_at.desc())
+        .first()
+    )
+
+
+def _has_open_entry_for_date(entry_date):
+    """Check if there's an open time entry for a specific date.
+    
+    Args:
+        entry_date: Date to check
+    
+    Returns:
+        Boolean indicating if an open entry exists
+    """
+    open_entries = (
+        TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
+        .filter(TimeEntry.end_time == TimeEntry.start_time)
+        .all()
+    )
+    return len(open_entries) > 0
+
+
 @mcp.tool()
 def start(
     time: Optional[str] = None,
@@ -99,13 +137,7 @@ def start(
             start_time = datetime.now().time()
 
         # Check if there's already an open entry for this date
-        open_entries = (
-            TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
-            .filter(TimeEntry.end_time == TimeEntry.start_time)
-            .all()
-        )
-
-        if open_entries:
+        if _has_open_entry_for_date(entry_date):
             return {
                 "status": "error",
                 "message": f"There's already an open time entry for {entry_date}. "
@@ -180,12 +212,7 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
             end_time = datetime.now().time()
 
         # Find the most recent open entry for this date
-        open_entry = (
-            TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
-            .filter(TimeEntry.end_time == TimeEntry.start_time)
-            .order_by(TimeEntry.created_at.desc())
-            .first()
-        )
+        open_entry = _get_open_entry_for_date(entry_date)
 
         if not open_entry:
             return {
