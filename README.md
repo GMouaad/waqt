@@ -227,6 +227,55 @@ waqt summary --date 2024-01-15
 waqt sum -p week
 ```
 
+#### Export Time Entries
+Export your time tracking data to CSV:
+```bash
+# Export all entries
+waqt export
+
+# Export current week
+waqt export --period week
+
+# Export specific month
+waqt export --period month --date 2024-01-15
+
+# Export with custom filename
+waqt export --output my_report.csv
+
+# Export week to specific file
+waqt export -p week -o weekly_report.csv
+```
+
+#### Configuration Management
+Manage application configuration settings:
+```bash
+# List all configuration options
+waqt config list
+
+# Get a specific configuration value
+waqt config get weekly_hours
+
+# Set a configuration value
+waqt config set weekly_hours 35
+waqt config set pause_duration_minutes 60
+waqt config set auto_end true
+
+# Reset a configuration to default
+waqt config reset weekly_hours
+```
+
+**Available Configuration Options:**
+- `weekly_hours`: Expected weekly working hours (default: 40)
+- `standard_hours_per_day`: Standard working hours per day (default: 8)
+- `pause_duration_minutes`: Default pause/break duration in minutes (default: 45)
+- `auto_end`: Feature flag for auto-ending work sessions (default: false)
+
+**Configuration Features:**
+- All settings persist in the database
+- Configuration changes immediately affect calculations
+- Values are validated before being saved
+- Non-default values are marked with an asterisk (*) in list output
+
 #### Reference (Placeholder)
 Display reference information:
 ```bash
