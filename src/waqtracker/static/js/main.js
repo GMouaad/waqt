@@ -1,9 +1,13 @@
 // Theme Management
 (function() {
+    // Track if user has manually changed theme
+    let hasManualPreference = false;
+    
     // Get theme from localStorage or system preference
     function getPreferredTheme() {
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
+            hasManualPreference = true;
             return storedTheme;
         }
         
@@ -16,9 +20,13 @@
     }
     
     // Apply theme to document
-    function applyTheme(theme) {
+    function applyTheme(theme, isManual = false) {
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+        
+        if (isManual) {
+            localStorage.setItem('theme', theme);
+            hasManualPreference = true;
+        }
         
         // Update theme toggle icon
         const themeIcon = document.getElementById('theme-icon');
@@ -33,8 +41,11 @@
     
     // Set up theme toggle button when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-        // Update icon after DOM is ready
-        applyTheme(initialTheme);
+        // Update icon after DOM is ready (without writing to localStorage again)
+        const themeIcon = document.getElementById('theme-icon');
+        if (themeIcon) {
+            themeIcon.textContent = initialTheme === 'dark' ? '☀️' : '🌙';
+        }
         
         const themeToggle = document.getElementById('theme-toggle');
         
@@ -42,21 +53,16 @@
             themeToggle.addEventListener('click', function() {
                 const currentTheme = document.documentElement.getAttribute('data-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                applyTheme(newTheme);
+                applyTheme(newTheme, true);
             });
         }
         
         // Listen for system theme changes
         if (window.matchMedia) {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-                // Only auto-switch if user hasn't manually set a preference that differs from system
-                const storedTheme = localStorage.getItem('theme');
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                const systemTheme = e.matches ? 'dark' : 'light';
-                
-                // Auto-switch only if no stored preference or stored preference matches system
-                if (!storedTheme || currentTheme === systemTheme) {
-                    applyTheme(systemTheme);
+                // Only auto-switch if user hasn't manually set a preference
+                if (!hasManualPreference) {
+                    applyTheme(e.matches ? 'dark' : 'light', false);
                 }
             });
         }

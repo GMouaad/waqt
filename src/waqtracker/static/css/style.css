@@ -126,10 +126,16 @@ body {
     transition: color 0.3s;
     display: flex;
     align-items: center;
+    border-radius: 4px;
 }
 
 .theme-toggle:hover {
     color: var(--accent-primary);
+}
+
+.theme-toggle:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
 }
 
 /* Main Content */
