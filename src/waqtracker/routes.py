@@ -3,7 +3,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
 from datetime import datetime, timedelta
 from . import db
-from .models import TimeEntry, LeaveDay
+from .models import TimeEntry, LeaveDay, Settings
 from .utils import (
     calculate_duration,
     calculate_weekly_stats,
@@ -56,6 +56,53 @@ def timer_status():
         })
     
     return jsonify({"active": False})
+
+
+@bp.route("/api/timer/session-alert-check")
+def session_alert_check():
+    """Check if session alert should be shown."""
+    # Get the alert feature flag
+    alert_enabled = Settings.get_bool("alert_on_max_work_session", default=False)
+    
+    if not alert_enabled:
+        return jsonify({"alert": False, "enabled": False})
+    
+    # Get current timer entry
+    entry = get_open_entry()
+    if not entry:
+        return jsonify({"alert": False, "enabled": True, "reason": "no_active_timer"})
+    
+    # Don't alert if timer is paused
+    if entry.last_pause_start_time is not None:
+        return jsonify({"alert": False, "enabled": True, "reason": "timer_paused"})
+    
+    # Calculate current session duration in hours
+    start_dt = datetime.combine(entry.date, entry.start_time)
+    now = datetime.now()
+    current_duration_seconds = max(0, (now - start_dt).total_seconds() - (entry.accumulated_pause_seconds or 0))
+    current_duration_hours = current_duration_seconds / 3600.0
+    
+    # Get the maximum session hours threshold
+    max_session_hours = Settings.get_float("max_work_session_hours", default=10.0)
+    
+    # Alert if session exceeds 8 hours and is approaching the max threshold
+    # We consider "approaching" as when session is > 8 hours
+    if current_duration_hours > 8.0:
+        return jsonify({
+            "alert": True,
+            "enabled": True,
+            "current_hours": round(current_duration_hours, 2),
+            "max_hours": max_session_hours,
+            "exceeded_standard": True
+        })
+    
+    return jsonify({
+        "alert": False, 
+        "enabled": True, 
+        "current_hours": round(current_duration_hours, 2),
+        "max_hours": max_session_hours
+    })
+
 
 
 @bp.route("/api/timer/start", methods=["POST"])

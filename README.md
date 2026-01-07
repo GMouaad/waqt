@@ -17,12 +17,14 @@ This is a self-contained Flask-based time tracking application with no external 
 ## Features
 
 - **One-Click Timer**: Interactive dashboard timer with Start, Stop, Pause, and Resume controls for real-time tracking
+- **Session Alerts**: Configurable alerts when work sessions exceed 8 hours (helps comply with labor laws)
 - **Work Hours Tracking**: Track daily work hours (8 hours/day, 40 hours/week standard)
 - **Overtime Calculation**: Automatically calculate overtime hours
 - **Vacation Days**: Track and manage vacation days
 - **Sick Leaves**: Record sick leave days
 - **Work Activities**: Log detailed work activities and tasks
 - **Reports**: View weekly and monthly overtime summaries
+- **Configuration**: Customizable settings via CLI for work hours, alerts, and more
 - **CLI Tool**: Command-line interface (`waqt`) for quick time tracking from the terminal
 - **MCP Server**: Model Context Protocol server for AI assistant integration
 

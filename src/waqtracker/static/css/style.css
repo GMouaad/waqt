@@ -652,3 +652,64 @@ footer p {
     gap: 1rem;
     flex-wrap: wrap;
 }
+/* Session Alert Banner */
+.session-alert-banner {
+    background-color: var(--warning-color);
+    color: #fff;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px var(--shadow);
+    animation: slideDown 0.3s ease-out;
+}
+
+.session-alert-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.session-alert-icon {
+    font-size: 1.5rem;
+}
+
+.session-alert-text {
+    flex-grow: 1;
+}
+
+.session-alert-title {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.session-alert-message {
+    font-size: 0.9rem;
+}
+
+.session-alert-dismiss {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.session-alert-dismiss:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
