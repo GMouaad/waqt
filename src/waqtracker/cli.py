@@ -515,6 +515,8 @@ CONFIG_DEFAULTS = {
     "weekly_hours": "40",
     "pause_duration_minutes": "45",
     "auto_end": "false",
+    "alert_on_max_work_session": "false",
+    "max_work_session_hours": "10",
 }
 
 # Configuration value types for automatic type handling
@@ -523,6 +525,8 @@ CONFIG_TYPES = {
     "weekly_hours": "float",
     "pause_duration_minutes": "int",
     "auto_end": "bool",
+    "alert_on_max_work_session": "bool",
+    "max_work_session_hours": "float",
 }
 
 CONFIG_DESCRIPTIONS = {
@@ -530,6 +534,8 @@ CONFIG_DESCRIPTIONS = {
     "weekly_hours": "Expected weekly working hours (default: 40)",
     "pause_duration_minutes": "Default pause/break duration in minutes (default: 45)",
     "auto_end": "Feature flag: Auto-end work session after 8h 45m (default: false)",
+    "alert_on_max_work_session": "Feature flag: Alert when session exceeds 8 hours and approaches max limit (default: false)",
+    "max_work_session_hours": "Maximum work session hours threshold for alerts (default: 10)",
 }
 
 CONFIG_VALIDATORS = {
@@ -538,6 +544,9 @@ CONFIG_VALIDATORS = {
     "pause_duration_minutes": lambda v: 0 <= int(v) <= 480,
     "auto_end": lambda v: isinstance(v, str)
     and v.lower() in ("true", "false", "1", "0", "yes", "no", "on", "off"),
+    "alert_on_max_work_session": lambda v: isinstance(v, str)
+    and v.lower() in ("true", "false", "1", "0", "yes", "no", "on", "off"),
+    "max_work_session_hours": lambda v: 1 <= float(v) <= 24,
 }
 
 CONFIG_VALIDATION_MESSAGES = {
@@ -545,6 +554,8 @@ CONFIG_VALIDATION_MESSAGES = {
     "weekly_hours": "Must be greater than 0 and at most 168 hours",
     "pause_duration_minutes": "Must be between 0 and 480 minutes (8 hours)",
     "auto_end": "Must be a boolean value (true/false, yes/no, 1/0, on/off)",
+    "alert_on_max_work_session": "Must be a boolean value (true/false, yes/no, 1/0, on/off)",
+    "max_work_session_hours": "Must be between 1 and 24 hours",
 }
 
 

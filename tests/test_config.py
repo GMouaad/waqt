@@ -22,6 +22,8 @@ def app():
             ("weekly_hours", "40"),
             ("pause_duration_minutes", "45"),
             ("auto_end", "false"),
+            ("alert_on_max_work_session", "false"),
+            ("max_work_session_hours", "10"),
         ]
         for key, value in default_settings:
             Settings.set_setting(key, value)
@@ -358,3 +360,69 @@ def test_config_workflow_set_get_reset(runner, app):
         result4 = runner.invoke(cli, ["config", "get", "pause_duration_minutes"])
         assert result4.exit_code == 0
         assert "Value: 45" in result4.output
+
+
+def test_config_set_alert_on_max_work_session(runner, app):
+    """Test setting alert_on_max_work_session feature flag."""
+    with app.app_context():
+        result = runner.invoke(cli, ["config", "set", "alert_on_max_work_session", "true"])
+        assert result.exit_code == 0
+        assert "Configuration updated!" in result.output
+        assert "New value: true" in result.output
+
+        # Verify value was actually changed in the database
+        value = Settings.get_bool("alert_on_max_work_session")
+        assert value is True
+
+
+def test_config_set_max_work_session_hours(runner, app):
+    """Test setting max_work_session_hours threshold."""
+    with app.app_context():
+        result = runner.invoke(cli, ["config", "set", "max_work_session_hours", "12"])
+        assert result.exit_code == 0
+        assert "Configuration updated!" in result.output
+        assert "New value: 12" in result.output
+
+        # Verify value was actually changed in the database
+        value = Settings.get_float("max_work_session_hours")
+        assert value == 12.0
+
+
+def test_config_set_max_work_session_hours_invalid(runner, app):
+    """Test setting max_work_session_hours to invalid value."""
+    with app.app_context():
+        # Too high
+        result = runner.invoke(cli, ["config", "set", "max_work_session_hours", "25"])
+        assert result.exit_code != 0
+        assert "Invalid value" in result.output or "Must be between" in result.output
+
+        # Too low
+        result = runner.invoke(cli, ["config", "set", "max_work_session_hours", "0"])
+        assert result.exit_code != 0
+        assert "Invalid value" in result.output or "Must be between" in result.output
+
+
+def test_config_reset_alert_on_max_work_session(runner, app):
+    """Test resetting alert_on_max_work_session to default."""
+    with app.app_context():
+        # First change the value
+        runner.invoke(cli, ["config", "set", "alert_on_max_work_session", "true"])
+
+        # Now reset it
+        result = runner.invoke(cli, ["config", "reset", "alert_on_max_work_session"])
+        assert result.exit_code == 0
+        assert "Configuration reset to default!" in result.output
+        assert "Default value: false" in result.output
+
+        # Verify value was reset
+        value = Settings.get_bool("alert_on_max_work_session")
+        assert value is False
+
+
+def test_config_list_includes_new_settings(runner, app):
+    """Test that config list includes the new session alert settings."""
+    with app.app_context():
+        result = runner.invoke(cli, ["config", "list"])
+        assert result.exit_code == 0
+        assert "alert_on_max_work_session" in result.output
+        assert "max_work_session_hours" in result.output

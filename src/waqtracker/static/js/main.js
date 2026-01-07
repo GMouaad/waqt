@@ -269,5 +269,74 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+
+        // Session Alert Logic
+        let alertDismissed = false;
+        let alertBanner = null;
+
+        function checkSessionAlert() {
+            // Don't check if user dismissed the alert
+            if (alertDismissed) {
+                return;
+            }
+
+            fetch('/api/timer/session-alert-check')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.alert && data.enabled) {
+                        showSessionAlert(data);
+                    } else {
+                        hideSessionAlert();
+                    }
+                })
+                .catch(err => console.error('Error checking session alert:', err));
+        }
+
+        function showSessionAlert(data) {
+            // Don't create duplicate banners
+            if (alertBanner) {
+                return;
+            }
+
+            const timerPanel = document.querySelector('.timer-control-panel');
+            if (!timerPanel) {
+                return;
+            }
+
+            alertBanner = document.createElement('div');
+            alertBanner.className = 'session-alert-banner';
+            alertBanner.innerHTML = `
+                <div class="session-alert-content">
+                    <div class="session-alert-icon">⚠️</div>
+                    <div class="session-alert-text">
+                        <div class="session-alert-title">Long Work Session Alert</div>
+                        <div class="session-alert-message">
+                            You've been working for ${data.current_hours} hours. 
+                            Maximum recommended session is ${data.max_hours} hours. 
+                            Consider taking a break!
+                        </div>
+                    </div>
+                </div>
+                <button class="session-alert-dismiss" id="dismiss-session-alert">Dismiss</button>
+            `;
+
+            timerPanel.parentNode.insertBefore(alertBanner, timerPanel);
+
+            document.getElementById('dismiss-session-alert').addEventListener('click', () => {
+                alertDismissed = true;
+                hideSessionAlert();
+            });
+        }
+
+        function hideSessionAlert() {
+            if (alertBanner) {
+                alertBanner.remove();
+                alertBanner = null;
+            }
+        }
+
+        // Check for session alert every 60 seconds
+        checkSessionAlert();
+        setInterval(checkSessionAlert, 60000);
     }
 });
