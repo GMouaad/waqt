@@ -1,7 +1,6 @@
 """CLI interface for waqtracker time tracking application."""
 
 import click
-import sys
 from datetime import datetime
 from typing import Optional
 from . import create_app, db

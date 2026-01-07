@@ -2,7 +2,7 @@
 
 import csv
 import io
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import List, Dict, Tuple, Optional
 from .models import TimeEntry, LeaveDay
 
@@ -162,8 +162,8 @@ def format_hours(hours: float) -> str:
 
 def export_time_entries_to_csv(
     entries: List[TimeEntry],
-    start_date: Optional[datetime.date] = None,
-    end_date: Optional[datetime.date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
 ) -> str:
     """
     Export time entries to CSV format.
