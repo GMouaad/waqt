@@ -112,9 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!preview) {
                         preview = document.createElement('div');
                         preview.id = 'duration-preview';
-                        preview.style.marginTop = '0.5rem';
-                        preview.style.fontWeight = 'bold';
-                        preview.className = 'text-info';
+                        preview.className = 'duration-preview';
                         endTimeInput.parentElement.appendChild(preview);
                     }
                     preview.textContent = `Duration: ${durationText}`;
