@@ -93,6 +93,11 @@ def start(time: Optional[str], date: Optional[str], description: str):
         else:
             start_time = datetime.now().time()
 
+        # Validate and normalize description
+        description = description.strip() if description else ""
+        if not description:
+            description = "Work session"
+
         # Check if there's already an open entry for this date
         # Open entries are identified by:
         # - duration_hours == 0.0 and end_time == start_time

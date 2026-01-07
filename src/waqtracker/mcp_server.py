@@ -138,6 +138,11 @@ def start(
         else:
             start_time = datetime.now().time()
 
+        # Validate and normalize description
+        description = description.strip() if description else ""
+        if not description:
+            description = "Work session"
+
         # Check if there's already an open entry for this date
         if _has_open_entry_for_date(entry_date):
             return {

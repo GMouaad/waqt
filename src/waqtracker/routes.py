@@ -68,7 +68,9 @@ def start_timer():
             return jsonify({"success": False, "message": "Timer already running"}), 400
             
         data = request.get_json() or {}
-        description = data.get("description", "Work")
+        description = data.get("description", "").strip()
+        if not description:
+            description = "Work"
         
         now = datetime.now()
         
