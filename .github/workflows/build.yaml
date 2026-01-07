@@ -70,17 +70,22 @@ jobs:
 
       - name: Determine version and git SHA
         id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_GIT_SHA: ${{ inputs.git_sha }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            VERSION="${{ inputs.version }}"
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
           else
-            VERSION="0.1.${{ github.run_number }}-dev"
+            VERSION="0.1.${GITHUB_RUN_NUMBER}-dev"
           fi
           
-          if [ -n "${{ inputs.git_sha }}" ]; then
-            GIT_SHA="${{ inputs.git_sha }}"
+          if [ -n "$INPUT_GIT_SHA" ]; then
+            GIT_SHA="$INPUT_GIT_SHA"
           else
-            GIT_SHA="${{ github.sha }}"
+            GIT_SHA="$GITHUB_SHA"
           fi
           
           echo "version=$VERSION" >> $GITHUB_OUTPUT
