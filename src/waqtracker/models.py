@@ -19,6 +19,7 @@ class TimeEntry(db.Model):
     duration_hours = db.Column(db.Float, nullable=False)
     accumulated_pause_seconds = db.Column(db.Float, default=0.0)
     last_pause_start_time = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 

@@ -97,7 +97,8 @@ def test_accumulated_pause_calculation(client, app):
             duration_hours=0.0,
             description="Manual Entry",
             last_pause_start_time=pause_start,
-            accumulated_pause_seconds=0.0
+            accumulated_pause_seconds=0.0,
+            is_active=True
         )
         db.session.add(entry)
         db.session.commit()

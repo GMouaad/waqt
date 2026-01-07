@@ -20,10 +20,9 @@ bp = Blueprint("main", __name__)
 def get_open_entry():
     """Get the currently running timer entry if any."""
     today = datetime.now().date()
-    # Find entry with duration=0 AND end_time=start_time (marker for open entry)
+    # Find entry with is_active=True
     return (
-        TimeEntry.query.filter_by(date=today, duration_hours=0.0)
-        .filter(TimeEntry.end_time == TimeEntry.start_time)
+        TimeEntry.query.filter_by(date=today, is_active=True)
         .order_by(TimeEntry.created_at.desc())
         .first()
     )
@@ -79,6 +78,7 @@ def start_timer():
             start_time=now.time(),
             end_time=now.time(),  # Marker for open entry
             duration_hours=0.0,   # Marker for open entry
+            is_active=True,
             description=description
         )
         
@@ -190,6 +190,7 @@ def stop_timer():
         
         entry.end_time = end_time
         entry.duration_hours = duration_hours
+        entry.is_active = False
         
         db.session.commit()
         

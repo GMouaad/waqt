@@ -59,8 +59,7 @@ def _get_open_entry_for_date(entry_date):
     """Get the most recent open time entry for a specific date.
     
     Open entries are identified by:
-    - duration_hours == 0.0
-    - end_time == start_time (marker for unclosed entries)
+    - is_active == True
     
     Args:
         entry_date: Date to check for open entries
@@ -69,8 +68,7 @@ def _get_open_entry_for_date(entry_date):
         TimeEntry object if found, None otherwise
     """
     return (
-        TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
-        .filter(TimeEntry.end_time == TimeEntry.start_time)
+        TimeEntry.query.filter_by(date=entry_date, is_active=True)
         .order_by(TimeEntry.created_at.desc())
         .first()
     )
@@ -157,6 +155,7 @@ def start(
             start_time=start_time,
             end_time=start_time,  # Marker: same as start_time for open entries
             duration_hours=0.0,  # Marker: 0.0 for open entries
+            is_active=True,
             description=description,
         )
 
@@ -235,6 +234,7 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
         # Update the entry
         open_entry.end_time = end_time
         open_entry.duration_hours = duration
+        open_entry.is_active = False
         db.session.commit()
 
         return {
