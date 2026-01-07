@@ -3,22 +3,22 @@
 {% block title %}Reports - Time Tracker{% endblock %}
 
 {% block content %}
-<div class="reports-page">
+<div class="reports-page" data-testid="reports-page">
     <h2>Reports</h2>
     
     <div class="report-controls">
-        <div class="period-selector">
+        <div class="period-selector" data-testid="period-selector">
             <a href="{{ url_for('main.reports', period='week', date=selected_date.isoformat()) }}" 
-               class="btn {% if period == 'week' %}btn-primary{% else %}btn-secondary{% endif %}">
+               class="btn {% if period == 'week' %}btn-primary{% else %}btn-secondary{% endif %}" data-testid="btn-week-view">
                 Week View
             </a>
             <a href="{{ url_for('main.reports', period='month', date=selected_date.isoformat()) }}" 
-               class="btn {% if period == 'month' %}btn-primary{% else %}btn-secondary{% endif %}">
+               class="btn {% if period == 'month' %}btn-primary{% else %}btn-secondary{% endif %}" data-testid="btn-month-view">
                 Month View
             </a>
         </div>
         
-        <div class="date-navigator">
+        <div class="date-navigator" data-testid="date-navigator">
             {% if period == 'week' %}
                 {% set prev_date = (start_date - timedelta(days=7)).isoformat() %}
                 {% set next_date = (start_date + timedelta(days=7)).isoformat() %}
@@ -29,26 +29,26 @@
                 {% set next_date = start_date.replace(month=next_month, year=next_year, day=1).isoformat() %}
             {% endif %}
             
-            <a href="{{ url_for('main.reports', period=period, date=prev_date) }}" class="btn btn-secondary">← Previous</a>
-            <span class="current-period">
+            <a href="{{ url_for('main.reports', period=period, date=prev_date) }}" class="btn btn-secondary" data-testid="btn-prev-period">← Previous</a>
+            <span class="current-period" data-testid="current-period">
                 {% if period == 'week' %}
                     {{ start_date.strftime('%b %d') }} - {{ end_date.strftime('%b %d, %Y') }}
                 {% else %}
                     {{ start_date.strftime('%B %Y') }}
                 {% endif %}
             </span>
-            <a href="{{ url_for('main.reports', period=period, date=next_date) }}" class="btn btn-secondary">Next →</a>
+            <a href="{{ url_for('main.reports', period=period, date=next_date) }}" class="btn btn-secondary" data-testid="btn-next-period">Next →</a>
         </div>
     </div>
     
     <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card" data-testid="stat-total-hours">
             <h3>Total Hours</h3>
             <div class="stat-number">{{ stats.total_hours }}h</div>
             <p class="stat-label">Worked</p>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card" data-testid="stat-overtime">
             <h3>Overtime</h3>
             <div class="stat-number {% if stats.overtime > 0 %}text-warning{% endif %}">
                 {{ stats.overtime }}h
@@ -56,14 +56,14 @@
             <p class="stat-label">Over Standard</p>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card" data-testid="stat-working-days">
             <h3>Working Days</h3>
             <div class="stat-number">{{ stats.working_days }}</div>
             <p class="stat-label">Days Worked</p>
         </div>
         
         {% if period == 'month' %}
-        <div class="stat-card">
+        <div class="stat-card" data-testid="stat-leave-days">
             <h3>Leave Days</h3>
             <div class="stat-number">{{ stats.vacation_days + stats.sick_days }}</div>
             <p class="stat-label">{{ stats.vacation_days }} vacation, {{ stats.sick_days }} sick</p>
@@ -74,7 +74,7 @@
     {% if entries %}
         <div class="section">
             <h3>Time Entries</h3>
-            <table class="data-table">
+            <table class="data-table" data-testid="entries-table">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -98,7 +98,7 @@
         
         <div class="section">
             <h3>Daily Summary</h3>
-            <table class="data-table">
+            <table class="data-table" data-testid="daily-summary-table">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -122,7 +122,7 @@
             </table>
         </div>
     {% else %}
-        <div class="empty-state">
+        <div class="empty-state" data-testid="empty-entries">
             <p>No time entries found for this period.</p>
             <a href="{{ url_for('main.time_entry') }}" class="btn btn-primary">Add Time Entry</a>
         </div>
@@ -131,7 +131,7 @@
     {% if leave_days %}
         <div class="section">
             <h3>Leave Days</h3>
-            <table class="data-table">
+            <table class="data-table" data-testid="leave-days-table">
                 <thead>
                     <tr>
                         <th>Date</th>

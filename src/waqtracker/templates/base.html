@@ -7,16 +7,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar" data-testid="navbar">
         <div class="container">
-            <h1 class="logo">⏱️ Time Tracker</h1>
+            <h1 class="logo" data-testid="logo">⏱️ Time Tracker</h1>
             <ul class="nav-links">
-                <li><a href="{{ url_for('main.index') }}" {% if request.endpoint == 'main.index' %}class="active"{% endif %}>Dashboard</a></li>
-                <li><a href="{{ url_for('main.time_entry') }}" {% if request.endpoint == 'main.time_entry' %}class="active"{% endif %}>Add Time</a></li>
-                <li><a href="{{ url_for('main.reports') }}" {% if request.endpoint == 'main.reports' %}class="active"{% endif %}>Reports</a></li>
-                <li><a href="{{ url_for('main.leave') }}" {% if request.endpoint == 'main.leave' %}class="active"{% endif %}>Leave</a></li>
+                <li><a href="{{ url_for('main.index') }}" data-testid="nav-dashboard" {% if request.endpoint == 'main.index' %}class="active"{% endif %}>Dashboard</a></li>
+                <li><a href="{{ url_for('main.time_entry') }}" data-testid="nav-time-entry" {% if request.endpoint == 'main.time_entry' %}class="active"{% endif %}>Add Time</a></li>
+                <li><a href="{{ url_for('main.reports') }}" data-testid="nav-reports" {% if request.endpoint == 'main.reports' %}class="active"{% endif %}>Reports</a></li>
+                <li><a href="{{ url_for('main.leave') }}" data-testid="nav-leave" {% if request.endpoint == 'main.leave' %}class="active"{% endif %}>Leave</a></li>
                 <li>
-                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                    <button id="theme-toggle" class="theme-toggle" data-testid="theme-toggle" aria-label="Toggle theme">
                         <span id="theme-icon">🌙</span>
                     </button>
                 </li>
@@ -27,9 +27,9 @@
     <main class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="flash-messages">
+                <div class="flash-messages" data-testid="flash-messages">
                     {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}">
+                        <div class="flash flash-{{ category }}" data-testid="flash-{{ category }}">
                             {{ message }}
                         </div>
                     {% endfor %}
