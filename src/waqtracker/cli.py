@@ -461,9 +461,7 @@ def export(period: str, date: Optional[str], output: Optional[str], export_forma
         entries = get_time_entries_for_period(start_date, end_date)
 
         if not entries:
-            click.echo(
-                click.style("No time entries found to export.", fg="yellow")
-            )
+            click.echo(click.style("No time entries found to export.", fg="yellow"))
             raise click.exceptions.Exit(0)
 
         # Generate CSV content
@@ -492,9 +490,7 @@ def export(period: str, date: Optional[str], output: Optional[str], export_forma
             click.echo(f"Total hours: {format_hours(total_hours)}")
 
         except IOError as e:
-            click.echo(
-                click.style(f"Error writing to file: {str(e)}", fg="red")
-            )
+            click.echo(click.style(f"Error writing to file: {str(e)}", fg="red"))
             raise click.exceptions.Exit(1)
 
 
@@ -532,7 +528,8 @@ CONFIG_VALIDATORS = {
     "standard_hours_per_week": lambda v: 0 < float(v) <= 168,
     "weekly_hours": lambda v: 0 < float(v) <= 168,
     "pause_duration_minutes": lambda v: 0 <= int(v) <= 480,
-    "auto_end": lambda v: v.lower() in ("true", "false", "1", "0", "yes", "no", "on", "off"),
+    "auto_end": lambda v: v.lower()
+    in ("true", "false", "1", "0", "yes", "no", "on", "off"),
 }
 
 CONFIG_VALIDATION_MESSAGES = {
@@ -720,7 +717,9 @@ def config_reset(key: str):
         # Set to default value
         Settings.set_setting(key, default_value)
 
-        click.echo(click.style("✓ Configuration reset to default!", fg="green", bold=True))
+        click.echo(
+            click.style("✓ Configuration reset to default!", fg="green", bold=True)
+        )
         click.echo(f"Key: {key}")
         click.echo(f"Old value: {old_value}")
         click.echo(f"Default value: {default_value}")

@@ -198,7 +198,9 @@ def test_config_set_invalid_pause_duration_negative(runner, app):
     """Test setting pause duration to an invalid value (below minimum)."""
     with app.app_context():
         # Note: Click interprets negative numbers as options, so we test -1 using quotes
-        result = runner.invoke(cli, ["config", "set", "pause_duration_minutes", "--", "-5"])
+        result = runner.invoke(
+            cli, ["config", "set", "pause_duration_minutes", "--", "-5"]
+        )
         # This will still be caught by validation since -5 < 0
         assert result.exit_code != 0
 

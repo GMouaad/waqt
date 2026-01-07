@@ -198,9 +198,7 @@ def get_time_entries_for_period(
     """
     query = TimeEntry.query
     if start_date and end_date:
-        query = query.filter(
-            TimeEntry.date >= start_date, TimeEntry.date <= end_date
-        )
+        query = query.filter(TimeEntry.date >= start_date, TimeEntry.date <= end_date)
     elif start_date:
         # Support filtering from start_date onwards
         query = query.filter(TimeEntry.date >= start_date)
