@@ -76,17 +76,8 @@ jobs:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
-          if [ -n "$INPUT_VERSION" ]; then
-            VERSION="$INPUT_VERSION"
-          else
-            VERSION="0.1.${GITHUB_RUN_NUMBER}-dev"
-          fi
-          
-          if [ -n "$INPUT_GIT_SHA" ]; then
-            GIT_SHA="$INPUT_GIT_SHA"
-          else
-            GIT_SHA="$GITHUB_SHA"
-          fi
+          VERSION="${INPUT_VERSION:-0.1.${GITHUB_RUN_NUMBER}-dev}"
+          GIT_SHA="${INPUT_GIT_SHA:-$GITHUB_SHA}"
           
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "git_sha=$GIT_SHA" >> $GITHUB_OUTPUT
