@@ -96,8 +96,8 @@ jobs:
 
       - name: Inject version info
         run: |
-          sed -i.bak "s/^VERSION = .*/VERSION = \"${{ steps.version.outputs.version }}\"/" src/waqtracker/_version.py
-          sed -i.bak "s/^GIT_SHA = .*/GIT_SHA = \"${{ steps.version.outputs.git_sha }}\"/" src/waqtracker/_version.py
+          sed -i.bak "s|^VERSION = .*|VERSION = \"${{ steps.version.outputs.version }}\"|" src/waqtracker/_version.py
+          sed -i.bak "s|^GIT_SHA = .*|GIT_SHA = \"${{ steps.version.outputs.git_sha }}\"|" src/waqtracker/_version.py
           sed -i.bak "s|^REPO_URL = .*|REPO_URL = \"https://github.com/${{ github.repository }}\"|" src/waqtracker/_version.py
           rm -f src/waqtracker/_version.py.bak
           cat src/waqtracker/_version.py
