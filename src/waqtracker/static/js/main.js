@@ -27,12 +27,15 @@
         }
     }
     
-    // Initialize theme on page load
+    // Initialize theme immediately to prevent FOUC
     const initialTheme = getPreferredTheme();
-    applyTheme(initialTheme);
+    document.documentElement.setAttribute('data-theme', initialTheme);
     
     // Set up theme toggle button when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
+        // Update icon after DOM is ready
+        applyTheme(initialTheme);
+        
         const themeToggle = document.getElementById('theme-toggle');
         
         if (themeToggle) {
@@ -46,10 +49,14 @@
         // Listen for system theme changes
         if (window.matchMedia) {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-                // Only auto-switch if user hasn't manually set a preference
+                // Only auto-switch if user hasn't manually set a preference that differs from system
                 const storedTheme = localStorage.getItem('theme');
-                if (!storedTheme) {
-                    applyTheme(e.matches ? 'dark' : 'light');
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const systemTheme = e.matches ? 'dark' : 'light';
+                
+                // Auto-switch only if no stored preference or stored preference matches system
+                if (!storedTheme || currentTheme === systemTheme) {
+                    applyTheme(systemTheme);
                 }
             });
         }
