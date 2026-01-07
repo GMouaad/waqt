@@ -4,22 +4,34 @@ import csv
 import io
 from datetime import datetime, timedelta, date
 from typing import List, Dict, Tuple, Optional
-from .models import TimeEntry, LeaveDay
+from .models import TimeEntry, LeaveDay, Settings
+
+
+def get_standard_hours_per_day() -> float:
+    """Get the configured standard hours per day from settings."""
+    return Settings.get_float("standard_hours_per_day", 8.0)
+
+
+def get_standard_hours_per_week() -> float:
+    """Get the configured standard hours per week from settings."""
+    return Settings.get_float("weekly_hours", 40.0)
 
 
 def calculate_daily_overtime(
-    duration_hours: float, standard_hours: float = 8.0
+    duration_hours: float, standard_hours: Optional[float] = None
 ) -> float:
     """
     Calculate overtime hours for a single day.
 
     Args:
         duration_hours: Total hours worked in the day
-        standard_hours: Standard work hours per day (default: 8)
+        standard_hours: Standard work hours per day (default: from settings or 8)
 
     Returns:
         Overtime hours (0 if no overtime)
     """
+    if standard_hours is None:
+        standard_hours = get_standard_hours_per_day()
     return max(0, duration_hours - standard_hours)
 
 
@@ -85,18 +97,20 @@ def get_month_bounds(date: datetime.date) -> Tuple[datetime.date, datetime.date]
 
 
 def calculate_weekly_stats(
-    entries: List[TimeEntry], standard_hours: float = 40.0
+    entries: List[TimeEntry], standard_hours: Optional[float] = None
 ) -> Dict:
     """
     Calculate weekly statistics from time entries.
 
     Args:
         entries: List of TimeEntry objects for the week
-        standard_hours: Standard work hours per week (default: 40)
+        standard_hours: Standard work hours per week (default: from settings or 40)
 
     Returns:
         Dictionary with total_hours, overtime, and working_days
     """
+    if standard_hours is None:
+        standard_hours = get_standard_hours_per_week()
     total_hours = sum(entry.duration_hours for entry in entries)
     overtime = max(0, total_hours - standard_hours)
     working_days = len(set(entry.date for entry in entries))
@@ -131,8 +145,9 @@ def calculate_monthly_stats(
     )
     sick_days = len([leave for leave in leave_days if leave.leave_type == "sick"])
 
-    # Calculate expected hours (working_days * 8)
-    expected_hours = working_days * 8.0
+    # Calculate expected hours using configured standard hours per day
+    standard_hours_per_day = get_standard_hours_per_day()
+    expected_hours = working_days * standard_hours_per_day
     overtime = max(0, total_hours - expected_hours)
 
     return {
