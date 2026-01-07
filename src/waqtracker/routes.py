@@ -11,6 +11,7 @@ from .utils import (
     get_week_bounds,
     get_month_bounds,
     export_time_entries_to_csv,
+    get_time_entries_for_period,
 )
 
 bp = Blueprint("main", __name__)
@@ -285,13 +286,8 @@ def export_csv():
             start_date = None
             end_date = None
 
-        # Query entries
-        query = TimeEntry.query
-        if start_date and end_date:
-            query = query.filter(
-                TimeEntry.date >= start_date, TimeEntry.date <= end_date
-            )
-        entries = query.order_by(TimeEntry.date.asc()).all()
+        # Query entries using utility function
+        entries = get_time_entries_for_period(start_date, end_date)
 
         if not entries:
             flash("No time entries found to export.", "warning")

@@ -160,6 +160,28 @@ def format_hours(hours: float) -> str:
     return f"{h}:{m:02d}"
 
 
+def get_time_entries_for_period(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> List[TimeEntry]:
+    """
+    Get time entries for a specific date range.
+
+    Args:
+        start_date: Optional start date (inclusive)
+        end_date: Optional end date (inclusive)
+
+    Returns:
+        List of TimeEntry objects, ordered by date ascending
+    """
+    query = TimeEntry.query
+    if start_date and end_date:
+        query = query.filter(
+            TimeEntry.date >= start_date, TimeEntry.date <= end_date
+        )
+    return query.order_by(TimeEntry.date.asc()).all()
+
+
 def export_time_entries_to_csv(
     entries: List[TimeEntry],
     start_date: Optional[date] = None,
@@ -215,7 +237,14 @@ def export_time_entries_to_csv(
     if entries:
         writer.writerow([])  # Empty row
         writer.writerow(["Summary Statistics"])
-        writer.writerow(["Period", f"{start_date or 'All'} to {end_date or 'All'}"])
+        
+        # Format period display
+        if start_date and end_date:
+            period_str = f"{start_date} to {end_date}"
+        else:
+            period_str = "All time entries"
+        
+        writer.writerow(["Period", period_str])
         writer.writerow(["Total Entries", len(entries)])
         total_hours = sum(entry.duration_hours for entry in entries)
         writer.writerow(["Total Hours", f"{total_hours:.2f}"])

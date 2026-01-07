@@ -13,6 +13,7 @@ from .utils import (
     calculate_duration,
     format_hours,
     export_time_entries_to_csv,
+    get_time_entries_for_period,
 )
 from ._version import VERSION
 
@@ -455,13 +456,8 @@ def export(period: str, date: Optional[str], output: Optional[str], format: str)
             end_date = None
             period_name = "all"
 
-        # Query entries
-        query = TimeEntry.query
-        if start_date and end_date:
-            query = query.filter(TimeEntry.date >= start_date).filter(
-                TimeEntry.date <= end_date
-            )
-        entries = query.order_by(TimeEntry.date.asc()).all()
+        # Query entries using utility function
+        entries = get_time_entries_for_period(start_date, end_date)
 
         if not entries:
             click.echo(

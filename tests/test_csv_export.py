@@ -124,6 +124,17 @@ def test_export_csv_summary_statistics(app, sample_entries):
         assert "Total Hours" in csv_content
         assert "Working Days" in csv_content
         assert "Total Overtime" in csv_content
+        assert "2024-01-15 to 2024-01-17" in csv_content
+
+
+def test_export_csv_all_entries_period(app, sample_entries):
+    """Test that CSV export shows 'All time entries' when no date range given."""
+    with app.app_context():
+        entries = TimeEntry.query.all()
+        csv_content = export_time_entries_to_csv(entries)
+
+        assert "Summary Statistics" in csv_content
+        assert "All time entries" in csv_content
 
 
 def test_export_csv_route_success(client, app, sample_entries):
