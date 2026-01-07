@@ -2,9 +2,53 @@
 
 This guide will help you install and set up the Waqt application on your system.
 
+## Quick Install (Recommended)
+
+The fastest way to get started is using our automated installer scripts:
+
+### Linux/macOS
+```bash
+curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash
+```
+
+### Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1 | iex
+```
+
+These installers will:
+- Automatically detect your OS and architecture
+- Download the latest stable release
+- Install to `~/.waqt/bin` (Unix) or `%LOCALAPPDATA%\waqt` (Windows)
+- Add the installation directory to your PATH
+- Verify the installation with `waqt --version`
+
+**Install development build (prerelease):**
+```bash
+# Linux/macOS
+curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash -s -- --prerelease
+
+# Windows PowerShell
+iex "& { $(irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1) } -Prerelease"
+```
+
+After installation, use these commands:
+```bash
+waqt --version      # Check version
+waqtracker          # Start the web server (http://localhost:5555)
+waqt start          # Start time tracking from CLI
+waqt summary        # View summary
+```
+
+**Security Note:** Review the installer scripts before running:
+- [install.sh](../install.sh) for Linux/macOS
+- [install.ps1](../install.ps1) for Windows
+
+---
+
 ## Prerequisites
 
-Before installing the Waqt application, ensure you have the following:
+For manual or source installation, ensure you have the following:
 
 - **Python 3.10 or higher**: The application requires Python 3.10+
   - Check your Python version: `python --version` or `python3 --version`
