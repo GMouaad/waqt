@@ -6,7 +6,7 @@
     <title>Waqt - Time Tracking Application</title>
     <meta name="description" content="A portable Python time tracking application for managing work hours, overtime, vacation days, sick leaves, and work activities.">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
     <nav class="navbar">
@@ -17,7 +17,7 @@
                     <span>Waqt</span>
                 </a>
             </div>
-            <button class="nav-toggle" id="navToggle">
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -27,7 +27,7 @@
                 <li><a href="installation.html">Installation</a></li>
                 <li><a href="usage.html">Usage</a></li>
                 <li><a href="documentation.html">Documentation</a></li>
-                <li><a href="https://github.com/GMouaad/waqt" target="_blank"><i class="fab fa-github"></i> GitHub</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></li>
             </ul>
         </div>
     </nav>
@@ -40,7 +40,7 @@
                 <p class="hero-description">A portable Python time tracking application for managing work hours, overtime, vacation days, sick leaves, and work activities.</p>
                 <div class="hero-buttons">
                     <a href="installation.html" class="btn btn-primary">Get Started</a>
-                    <a href="https://github.com/GMouaad/waqt" class="btn btn-secondary" target="_blank">View on GitHub</a>
+                    <a href="https://github.com/GMouaad/waqt" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">View on GitHub</a>
                 </div>
             </div>
         </div>
@@ -107,11 +107,11 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2024 Waqt Contributors. Licensed under the MIT License.</p>
+            <p>&copy; <span id="copyright-year">2024</span> Waqt Contributors. Licensed under the MIT License.</p>
             <p>Made with ❤️ by the Waqt Contributors</p>
             <div class="footer-links">
-                <a href="https://github.com/GMouaad/waqt" target="_blank"><i class="fab fa-github"></i></a>
-                <a href="https://github.com/GMouaad/waqt/issues" target="_blank"><i class="fas fa-bug"></i></a>
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
             </div>
         </div>
     </footer>

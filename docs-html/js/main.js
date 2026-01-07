@@ -11,7 +11,9 @@ if (navToggle && navMenu) {
     const navLinks = document.querySelectorAll('.nav-menu a');
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
+            if (navMenu) {
+                navMenu.classList.remove('active');
+            }
         });
     });
 }
@@ -30,7 +32,10 @@ tabButtons.forEach(button => {
         
         // Add active class to clicked button and corresponding content
         button.classList.add('active');
-        document.getElementById(tabName).classList.add('active');
+        const targetContent = document.getElementById(tabName);
+        if (targetContent) {
+            targetContent.classList.add('active');
+        }
     });
 });
 
@@ -78,7 +83,9 @@ copyButtons.forEach(button => {
                 console.error('Fallback copy failed: ', err);
             }
             
-            document.body.removeChild(textArea);
+            if (textArea.parentNode) {
+                textArea.parentNode.removeChild(textArea);
+            }
         }
     });
 });
@@ -108,4 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         observer.observe(el);
     });
+    
+    // Set current year in footer
+    const yearSpan = document.getElementById('copyright-year');
+    if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+    }
 });
