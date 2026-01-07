@@ -2,17 +2,19 @@
 const navToggle = document.getElementById('navToggle');
 const navMenu = document.getElementById('navMenu');
 
-navToggle.addEventListener('click', () => {
-    navMenu.classList.toggle('active');
-});
-
-// Close mobile menu when clicking a link
-const navLinks = document.querySelectorAll('.nav-menu a');
-navLinks.forEach(link => {
-    link.addEventListener('click', () => {
-        navMenu.classList.remove('active');
+if (navToggle && navMenu) {
+    navToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('active');
     });
-});
+
+    // Close mobile menu when clicking a link
+    const navLinks = document.querySelectorAll('.nav-menu a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+        });
+    });
+}
 
 // Tab switching
 const tabButtons = document.querySelectorAll('.tab-button');
@@ -81,46 +83,6 @@ copyButtons.forEach(button => {
     });
 });
 
-// Smooth scrolling for anchor links (for older browsers)
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        const href = this.getAttribute('href');
-        if (href === '#') return;
-        
-        e.preventDefault();
-        const target = document.querySelector(href);
-        
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
-
-// Active nav link on scroll
-window.addEventListener('scroll', () => {
-    let current = '';
-    const sections = document.querySelectorAll('section, header');
-    
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        const sectionHeight = section.clientHeight;
-        
-        if (window.pageYOffset >= sectionTop - 100) {
-            current = section.getAttribute('id');
-        }
-    });
-    
-    navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === `#${current}`) {
-            link.classList.add('active');
-        }
-    });
-});
-
 // Animate elements on scroll (simple fade-in effect)
 const observerOptions = {
     threshold: 0.1,
@@ -138,7 +100,7 @@ const observer = new IntersectionObserver((entries) => {
 
 // Observe all feature cards, doc cards, and usage cards
 document.addEventListener('DOMContentLoaded', () => {
-    const animatedElements = document.querySelectorAll('.feature-card, .doc-card, .usage-card, .install-method');
+    const animatedElements = document.querySelectorAll('.feature-card, .doc-card, .usage-card, .install-method, .step-card, .guide-card');
     
     animatedElements.forEach(el => {
         el.style.opacity = '0';
