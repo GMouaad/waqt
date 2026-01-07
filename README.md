@@ -20,6 +20,7 @@ This is a self-contained Flask-based time tracking application with no external 
 - **Sick Leaves**: Record sick leave days
 - **Work Activities**: Log detailed work activities and tasks
 - **Reports**: View weekly and monthly overtime summaries
+- **CLI Tool**: Command-line interface (`waqt`) for quick time tracking from the terminal
 
 
 ## Technology Stack
@@ -136,7 +137,76 @@ python run.py
 - Linux/macOS: `./start.sh`
 - Windows: `start.bat`
 
-## Usage
+## CLI Usage (`waqt`)
+
+The `waqt` command-line tool provides a quick and convenient way to track time from your terminal.
+
+### Available Commands
+
+#### Start Tracking Time
+Start a new time tracking session for today:
+```bash
+# Start tracking now with default description
+waqt start
+
+# Start tracking at a specific time
+waqt start --time 09:00
+
+# Start with custom description
+waqt start --time 09:00 --description "Working on feature X"
+
+# Start for a specific date
+waqt start --date 2024-01-15 --time 09:00
+```
+
+#### End Tracking Time
+End the current tracking session:
+```bash
+# End tracking now
+waqt end
+
+# End at a specific time
+waqt end --time 17:30
+
+# End for a specific date
+waqt end --date 2024-01-15 --time 18:00
+```
+
+#### View Summary
+Get a summary of your tracked time:
+```bash
+# Weekly summary (default)
+waqt summary
+
+# Monthly summary
+waqt summary --period month
+
+# Summary for a specific date
+waqt summary --date 2024-01-15
+
+# Short alias
+waqt sum -p week
+```
+
+#### Reference (Placeholder)
+Display reference information:
+```bash
+waqt reference
+```
+
+### Example Workflow
+```bash
+# Morning: Start tracking
+waqt start --time 09:00 --description "Daily work"
+
+# Evening: End tracking
+waqt end --time 17:30
+
+# View weekly summary
+waqt summary
+```
+
+## Web Interface Usage
 
 For detailed usage instructions, workflows, and examples, see the **[Usage Guide](docs/usage.md)**.
 
