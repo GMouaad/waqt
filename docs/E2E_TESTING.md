@@ -109,7 +109,7 @@ All interactive elements have `data-testid` attributes for reliable test selecti
 
 ### Navigation
 - `navbar` - Main navigation bar
-- `logo` - Time Tracker logo
+- `logo` - Waqt logo
 - `nav-dashboard` - Dashboard navigation link
 - `nav-time-entry` - Time Entry navigation link
 - `nav-reports` - Reports navigation link

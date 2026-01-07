@@ -9,8 +9,8 @@ def test_homepage_loads(page, live_server):
     """Test that the homepage loads successfully."""
     page.goto(live_server)
     
-    # Check that the page title contains "Time Tracker"
-    assert "Time Tracker" in page.title()
+    # Check that the page title contains "Waqt"
+    assert "Waqt" in page.title()
     
     # Check for key navigation elements
     assert page.get_by_test_id("navbar").is_visible()

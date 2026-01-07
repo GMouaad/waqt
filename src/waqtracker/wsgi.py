@@ -1,4 +1,4 @@
-"""Main entry point for the Time Tracker application."""
+"""Main entry point for the Waqt application."""
 
 from waqtracker import create_app
 import os

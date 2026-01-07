@@ -4,7 +4,7 @@ This guide will help you install and set up the Waqt application on your system.
 
 ## Prerequisites
 
-Before installing the Time Tracker application, ensure you have the following:
+Before installing the Waqt application, ensure you have the following:
 
 - **Python 3.10 or higher**: The application requires Python 3.10+
   - Check your Python version: `python --version` or `python3 --version`
@@ -179,7 +179,7 @@ Open your web browser and navigate to:
 http://localhost:5555
 ```
 
-You should see the Time Tracker dashboard!
+You should see the Waqt dashboard!
 
 ---
 
@@ -366,7 +366,7 @@ This includes testing and code quality tools:
 
 ## Uninstallation
 
-To remove the Time Tracker application:
+To remove the Waqt application:
 
 1. Deactivate virtual environment: `deactivate`
 2. Delete the project folder
@@ -374,7 +374,7 @@ To remove the Time Tracker application:
 
 ## Next Steps
 
-Once installed, proceed to the [Usage Guide](usage.md) to learn how to use the Time Tracker application effectively.
+Once installed, proceed to the [Usage Guide](usage.md) to learn how to use the Waqt application effectively.
 
 ## Migrating from pip to uv
 

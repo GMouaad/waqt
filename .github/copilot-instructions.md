@@ -1,4 +1,4 @@
-# Copilot Instructions for Time Tracker App
+# Copilot Instructions for Waqt App
 
 ## Project Overview
 This repository contains a portable Python time tracking application built with Flask and SQLite. The app helps users track work hours, overtime, vacation days, sick leaves, and work activities without requiring any external services.

@@ -106,7 +106,7 @@ The easiest way to track time is using the **Dashboard Timer**. It automatically
 ### Daily Routine
 
 **Start of Workday:**
-1. Open Time Tracker dashboard.
+1. Open Waqt dashboard.
 2. Click **"▶ Start Timer"**.
 
 **During the Day:**
