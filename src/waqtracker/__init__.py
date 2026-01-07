@@ -30,12 +30,23 @@ def create_app():
         )
     app.config["SECRET_KEY"] = secret_key
     
+    # Ensure instance folder exists
+    try:
+        os.makedirs(app.instance_path, exist_ok=True)
+    except Exception:
+        pass
+    
     # Configuration - Database URI
-    # Allow override via environment variable
-    database_uri = os.environ.get(
-        "SQLALCHEMY_DATABASE_URI", "sqlite:///time_tracker.db"
-    )
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
+    # Default to instance folder for portability, with legacy support for root folder
+    if not os.environ.get("SQLALCHEMY_DATABASE_URI"):
+        db_path = os.path.join(app.instance_path, "time_tracker.db")
+        # Legacy support: if it exists in root but not in instance, use root
+        if not os.path.exists(db_path) and os.path.exists("time_tracker.db"):
+            db_path = os.path.abspath("time_tracker.db")
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("SQLALCHEMY_DATABASE_URI")
+
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Initialize database
@@ -59,7 +70,9 @@ def create_app():
                 sys.path.insert(0, project_root)
             
             from migrations.run_migrations import run_migrations
-            run_migrations(app.config["SQLALCHEMY_DATABASE_URI"])
+            # Pass the absolute path to ensure we're migrating the same file SQLAlchemy is using
+            actual_db_path = app.config["SQLALCHEMY_DATABASE_URI"].replace("sqlite:///", "")
+            run_migrations(actual_db_path)
         except ImportError:
             # If migrations folder is missing, we just skip it
             pass

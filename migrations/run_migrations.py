@@ -17,19 +17,25 @@ def run_migrations(db_path=None):
         db_path = get_db_path()
             
     if not db_path:
-        # If we can't find it, it might not be created yet.
-        # This is fine if db.create_all() is about to run.
         return
 
     # Handle file:// URI if passed from SQLAlchemy config
     if db_path.startswith("sqlite:///"):
         db_path = db_path.replace("sqlite:///", "")
-        # Handle relative paths in SQLAlchemy URIs which might need adjustment
+        # Handle relative paths in SQLAlchemy URIs
         if not os.path.isabs(db_path):
-            # Try to find it relative to current dir or instance dir
-            if not os.path.exists(db_path):
-                if os.path.exists(os.path.join("instance", db_path)):
-                    db_path = os.path.join("instance", db_path)
+            # Flask-SQLAlchemy 3+ puts relative dbs in instance folder
+            instance_path = os.path.join(os.getcwd(), "instance", db_path)
+            root_path = os.path.join(os.getcwd(), db_path)
+            
+            if os.path.exists(instance_path):
+                db_path = instance_path
+            elif os.path.exists(root_path):
+                db_path = root_path
+            else:
+                # If neither exists, db.create_all() likely hasn't created it yet
+                # or it's about to be created in instance/ (default)
+                db_path = instance_path
 
     if not os.path.exists(db_path):
         return
@@ -38,6 +44,13 @@ def run_migrations(db_path=None):
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+
+        # Check if the main table exists before proceeding
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='time_entries'")
+        if not cursor.fetchone():
+            print("  Table 'time_entries' not found. Skipping migrations (likely a new database).")
+            conn.close()
+            return
 
         # Define migrations
         migrations = [
