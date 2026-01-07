@@ -55,7 +55,7 @@ jobs:
     
     - name: Initialize database
       run: |
-        python init_db.py
+        python -m waqtracker.scripts.init_db
     
     - name: Run tests
       run: |

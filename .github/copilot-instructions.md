@@ -29,6 +29,8 @@ time-tracker/
 │       ├── __init__.py      # Flask app factory
 │       ├── models.py        # SQLAlchemy models
 │       ├── routes.py        # Route handlers
+│       ├── wsgi.py          # WSGI entry point
+│       ├── scripts/         # Utility scripts (init_db, etc.)
 │       ├── utils.py         # Helper functions
 │       ├── templates/       # Jinja2 HTML templates
 │       │   ├── base.html
@@ -41,9 +43,7 @@ time-tracker/
 │           └── js/
 ├── migrations/              # Database migration scripts
 ├── tests/                   # Unit and integration tests
-├── init_db.py               # Database initialization
-├── requirements.txt         # Python dependencies
-└── run.py                   # Application entry point
+├── pyproject.toml           # Project dependencies
 ```
 
 ## Technology Stack
@@ -146,9 +146,9 @@ time-tracker/
 ### Setting Up Development Environment
 1. Create virtual environment: `python -m venv venv`
 2. Activate: `source venv/bin/activate` (Unix) or `venv\Scripts\activate` (Windows)
-3. Install dependencies: `pip install -r requirements.txt`
-4. Initialize database: `python init_db.py`
-5. Run app: `python run.py`
+3. Install dependencies: `pip install -e .`
+4. Initialize database: `python -m waqtracker.scripts.init_db`
+5. Run app: `python -m waqtracker.wsgi`
 
 ### Running Tests
 ```bash

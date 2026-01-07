@@ -39,7 +39,7 @@ start.bat
 
 2. Run the application:
    ```bash
-   python run.py
+   python -m waqtracker.wsgi
    ```
 
 3. Open your browser to `http://localhost:5555`
@@ -235,21 +235,9 @@ GROUP BY month;
 You can automate time entry creation with scripts:
 
 ```python
-from app import create_app, db
-from app.models import TimeEntry
+from waqtracker import create_app, db
+from waqtracker.models import TimeEntry
 from datetime import datetime, time
-
-app = create_app()
-with app.app_context():
-    entry = TimeEntry(
-        date=datetime.now().date(),
-        start_time=time(9, 0),
-        end_time=time(17, 0),
-        duration_hours=8.0,
-        description="Automated entry"
-    )
-    db.session.add(entry)
-    db.session.commit()
 ```
 
 ## Troubleshooting
