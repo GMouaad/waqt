@@ -79,7 +79,7 @@ def session_alert_check():
     # Calculate current session duration in hours
     start_dt = datetime.combine(entry.date, entry.start_time)
     now = datetime.now()
-    current_duration_seconds = (now - start_dt).total_seconds() - (entry.accumulated_pause_seconds or 0)
+    current_duration_seconds = max(0, (now - start_dt).total_seconds() - (entry.accumulated_pause_seconds or 0))
     current_duration_hours = current_duration_seconds / 3600.0
     
     # Get the maximum session hours threshold

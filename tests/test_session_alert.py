@@ -158,7 +158,7 @@ def test_session_alert_with_pauses(client, app):
             end_time=now.time(),
             duration_hours=0.0,
             is_active=True,
-            accumulated_pause_seconds=9000.0,  # 2.5 hours
+            accumulated_pause_seconds=2.5 * 3600,  # 2.5 hours in seconds
             description="Test Work"
         )
         db.session.add(entry)

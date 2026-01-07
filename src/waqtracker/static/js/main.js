@@ -221,6 +221,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     // Start from 0
                     setTimerState('running', 0, 'Work');
+                    // Reset alert dismissal for new session
+                    alertDismissed = false;
                 } else {
                     alert('Failed to start timer: ' + data.message);
                 }
@@ -233,6 +235,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     setTimerState('stopped');
+                    // Reset alert dismissal when timer stops
+                    alertDismissed = false;
                     // Reload to update the list of entries
                     window.location.reload();
                 } else {
@@ -311,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="session-alert-text">
                         <div class="session-alert-title">Long Work Session Alert</div>
                         <div class="session-alert-message">
-                            You've been working for ${data.current_hours} hours. 
+                            You've been working for ${data.current_hours.toFixed(1)} hours. 
                             Maximum recommended session is ${data.max_hours} hours. 
                             Consider taking a break!
                         </div>
