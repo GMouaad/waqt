@@ -6,8 +6,17 @@ or as a PyInstaller executable. It provides both CLI and web app functionality.
 
 import sys
 import os
-from . import create_app
-from .cli import cli
+
+# Handle both package and frozen execution
+if getattr(sys, 'frozen', False):
+    # Running as frozen executable (PyInstaller)
+    import waqtracker
+    from waqtracker import create_app
+    from waqtracker.cli import cli
+else:
+    # Running as package
+    from . import create_app
+    from .cli import cli
 
 
 def main():
