@@ -67,10 +67,6 @@ jobs:
       run: |
         pytest tests/ -v --tb=short
     
-    - name: Run E2E tests
-      run: |
-        pytest tests/ -v -m e2e --tb=short
-    
     - name: Test application startup
       run: |
         timeout 10s python run.py || code=$?; if [ $code -eq 124 ]; then echo "App started successfully"; else exit $code; fi

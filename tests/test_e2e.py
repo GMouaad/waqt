@@ -111,11 +111,11 @@ def test_delete_time_entry(page, live_server):
     delete_button = page.locator('[data-testid^="btn-delete-entry-"]').first
     delete_button.click()
     
-    # Wait a moment for the action to complete
-    page.wait_for_timeout(500)
+    # Wait for the success message to appear
+    flash_success = page.get_by_test_id("flash-success")
+    flash_success.wait_for(state="visible")
     
     # Check for success message
-    flash_success = page.get_by_test_id("flash-success")
     assert flash_success.is_visible()
     assert "deleted" in flash_success.text_content().lower()
 
@@ -203,7 +203,9 @@ def test_reports_navigation(page, live_server):
     
     # Click next period
     page.get_by_test_id("btn-next-period").click()
-    page.wait_for_timeout(500)
+    
+    # Wait for the period text to change
+    page.get_by_test_id("current-period").wait_for(state="attached")
     
     # Period should have changed
     new_period = page.get_by_test_id("current-period").text_content()
@@ -211,9 +213,9 @@ def test_reports_navigation(page, live_server):
     
     # Click previous period twice to go back
     page.get_by_test_id("btn-prev-period").click()
-    page.wait_for_timeout(500)
+    page.get_by_test_id("current-period").wait_for(state="attached")
     page.get_by_test_id("btn-prev-period").click()
-    page.wait_for_timeout(500)
+    page.get_by_test_id("current-period").wait_for(state="attached")
     
     # Should be in a different period than we started
     final_period = page.get_by_test_id("current-period").text_content()
@@ -302,7 +304,9 @@ def test_complete_user_flow(page, live_server):
     page.on("dialog", lambda dialog: dialog.accept())
     delete_button = page.locator('[data-testid^="btn-delete-entry-"]').first
     delete_button.click()
-    page.wait_for_timeout(500)
+    
+    # Wait for the success message to appear
+    page.get_by_test_id("flash-success").wait_for(state="visible")
     
     # Verify deletion success
     assert page.get_by_test_id("flash-success").is_visible()

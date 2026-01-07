@@ -3,7 +3,6 @@
 import pytest
 import os
 import tempfile
-from datetime import datetime
 from pathlib import Path
 
 # Try to import playwright, but don't fail if it's not installed
@@ -11,14 +10,16 @@ try:
     from playwright.sync_api import sync_playwright
     PLAYWRIGHT_AVAILABLE = True
     
-    # Check if browsers are installed by checking for browser executables
-    playwright_dir = Path.home() / ".cache" / "ms-playwright"
-    chromium_dirs = list(playwright_dir.glob("chromium*")) if playwright_dir.exists() else []
-    PLAYWRIGHT_BROWSERS_INSTALLED = len(chromium_dirs) > 0 and any(
-        (d / "chrome-linux" / "chrome").exists() or 
-        (d / "chrome-headless-shell-linux64" / "chrome-headless-shell").exists()
-        for d in chromium_dirs
-    )
+    # Check if browsers are installed by trying to launch Chromium via Playwright.
+    # This relies on Playwright's own cross-platform browser detection instead of
+    # hardcoding platform-specific installation paths.
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            browser.close()
+            PLAYWRIGHT_BROWSERS_INSTALLED = True
+    except Exception:
+        PLAYWRIGHT_BROWSERS_INSTALLED = False
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
     PLAYWRIGHT_BROWSERS_INSTALLED = False
@@ -46,24 +47,6 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "e2e" in item.keywords:
             item.add_marker(skip_e2e)
-
-
-@pytest.fixture(scope="session")
-def browser_type_launch_args():
-    """Configure browser launch arguments."""
-    return {
-        "headless": True,
-        "args": ["--disable-dev-shm-usage"]
-    }
-
-
-@pytest.fixture(scope="session")
-def browser_context_args():
-    """Configure browser context arguments."""
-    return {
-        "viewport": {"width": 1280, "height": 720},
-        "ignore_https_errors": True
-    }
 
 
 @pytest.fixture(scope="function")

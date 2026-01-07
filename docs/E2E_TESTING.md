@@ -202,17 +202,13 @@ The GitHub Actions workflow (`.github/workflows/python-ci.yml`) automatically:
 - name: Run tests
   run: |
     pytest tests/ -v --tb=short
-
-- name: Run E2E tests
-  run: |
-    pytest tests/ -v -m e2e --tb=short
 ```
 
 ## Test Structure
 
 ### Fixtures (tests/conftest.py)
 
-- `app`: Creates a test Flask application with in-memory database
+- `app`: Creates a test Flask application with a temporary SQLite database file
 - `live_server`: Starts a live Flask server on a random port for E2E tests
 - `browser_instance`: Creates a Playwright browser instance
 - `page`: Creates a new browser page for each test
