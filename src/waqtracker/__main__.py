@@ -10,7 +10,6 @@ import os
 # Handle both package and frozen execution
 if getattr(sys, 'frozen', False):
     # Running as frozen executable (PyInstaller)
-    import waqtracker
     from waqtracker import create_app
     from waqtracker.cli import cli
 else:
