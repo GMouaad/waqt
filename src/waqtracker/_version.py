@@ -7,4 +7,4 @@ During builds, this file is updated with the actual build version and Git SHA.
 
 VERSION = "0.1.0"
 GIT_SHA = "unknown"
-REPO_URL = "https://github.com/GMouaad/time-tracker"
+REPO_URL = "https://github.com/GMouaad/waqt"

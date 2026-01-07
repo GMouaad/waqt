@@ -23,7 +23,7 @@ This repository contains a portable Python time tracking application built with 
 
 ### Directory Layout
 ```
-time-tracker/
+waqt/
 ├── src/
 │   └── waqtracker/          # Main application package
 │       ├── __init__.py      # Flask app factory

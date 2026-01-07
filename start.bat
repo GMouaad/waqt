@@ -1,8 +1,8 @@
 @echo off
-REM Startup script for Time Tracker application (Windows)
+REM Startup script for Waqt application (Windows)
 REM Supports both uv (recommended) and pip (legacy)
 
-echo Starting Time Tracker...
+echo Starting Waqt...
 echo.
 
 REM Detect if uv is available

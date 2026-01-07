@@ -1,6 +1,6 @@
 # Usage Guide
 
-This guide explains how to use the Time Tracker application to manage your work hours, overtime, and leave days.
+This guide explains how to use the Waqt application to manage your work hours, overtime, and leave days.
 
 ## Table of Contents
 
@@ -278,7 +278,7 @@ If you need assistance:
 1. Check this usage guide thoroughly
 2. Review the [Installation Guide](installation.md) for setup issues
 3. See the project [README](../README.md) for quick reference
-4. Open an issue on GitHub: https://github.com/GMouaad/time-tracker/issues
+4. Open an issue on GitHub: https://github.com/GMouaad/waqt/issues
 
 ## What's Next?
 

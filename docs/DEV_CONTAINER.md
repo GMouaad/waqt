@@ -26,8 +26,8 @@ A development container is a Docker container specifically configured for develo
 
 2. **Open the Project:**
    ```bash
-   git clone https://github.com/GMouaad/time-tracker.git
-   cd time-tracker
+   git clone https://github.com/GMouaad/waqt.git
+   cd waqt
    code .
    ```
 

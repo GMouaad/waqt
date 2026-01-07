@@ -1,4 +1,4 @@
-# Time Tracker
+# Waqt
 
 A portable Python time tracking application for managing work hours, overtime, vacation days, sick leaves, and work activities.
 
@@ -41,7 +41,7 @@ This is a self-contained Flask-based time tracking application with no external 
 The easiest way to get started is to download a pre-built executable for your platform:
 
 1. **Download the latest release:**
-   - Go to the [Releases page](https://github.com/GMouaad/time-tracker/releases)
+   - Go to the [Releases page](https://github.com/GMouaad/waqt/releases)
    - Download the zip file for your platform:
      - **Linux (x64)**: `waqtracker-linux-amd64.zip`
      - **macOS (Intel)**: `waqtracker-macos-amd64.zip`
@@ -92,8 +92,8 @@ The fastest way to get started from source is using `uv`, a modern Python packag
 
 2. **Clone and setup:**
    ```bash
-   git clone https://github.com/GMouaad/time-tracker.git
-   cd time-tracker
+   git clone https://github.com/GMouaad/waqt.git
+   cd waqt
    uv venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    uv pip install -e .
@@ -115,8 +115,8 @@ The easiest way to get started is using the pre-configured development container
 
 2. **Clone and open:**
    ```bash
-   git clone https://github.com/GMouaad/time-tracker.git
-   cd time-tracker
+   git clone https://github.com/GMouaad/waqt.git
+   cd waqt
    code .
    ```
 
@@ -147,8 +147,8 @@ For detailed installation instructions including troubleshooting, see the **[Ins
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/GMouaad/time-tracker.git
-cd time-tracker
+git clone https://github.com/GMouaad/waqt.git
+cd waqt
 ```
 
 2. Create a virtual environment:
@@ -355,7 +355,7 @@ For detailed usage instructions, workflows, and examples, see the **[Usage Guide
 ## Project Structure
 
 ```
-time-tracker/
+waqt/
 ├── src/
 │   └── waqtracker/          # Main application package
 │       ├── __init__.py      # Flask app initialization
