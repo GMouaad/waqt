@@ -127,6 +127,60 @@ def test_export_csv_summary_statistics(app, sample_entries):
         assert "2024-01-15 to 2024-01-17" in csv_content
 
 
+def test_export_csv_multiple_entries_same_day(app):
+    """Test CSV export with multiple entries for the same day."""
+    with app.app_context():
+        # Create multiple entries for the same day
+        entries = [
+            TimeEntry(
+                date=date(2024, 1, 15),
+                start_time=time(9, 0),
+                end_time=time(12, 0),
+                duration_hours=3.0,
+                description="Morning session",
+            ),
+            TimeEntry(
+                date=date(2024, 1, 15),
+                start_time=time(13, 0),
+                end_time=time(18, 0),
+                duration_hours=5.0,
+                description="Afternoon session",
+            ),
+            TimeEntry(
+                date=date(2024, 1, 15),
+                start_time=time(19, 0),
+                end_time=time(21, 0),
+                duration_hours=2.0,
+                description="Evening session",
+            ),
+        ]
+        for entry in entries:
+            db.session.add(entry)
+        db.session.commit()
+
+        all_entries = TimeEntry.query.all()
+        csv_content = export_time_entries_to_csv(all_entries)
+
+        # Parse CSV
+        reader = csv.DictReader(io.StringIO(csv_content))
+        rows = list(reader)
+
+        # All three entries should be present
+        assert len(rows) >= 3
+
+        # Overtime should be calculated based on total daily hours (3+5+2=10, so 2 hours overtime)
+        # All entries for the same day should show the same overtime value
+        day_entries = [r for r in rows if r["Date"] == "2024-01-15"]
+        assert len(day_entries) == 3
+
+        # All entries for the same day should have the same overtime (2.00 hours)
+        for entry in day_entries:
+            assert entry["Overtime"] == "2.00"
+
+        # Verify total overtime in summary
+        assert "Total Overtime,2.00" in csv_content or "Total Overtime,2.0" in csv_content
+
+
 def test_export_csv_all_entries_period(app, sample_entries):
     """Test that CSV export shows 'All time entries' when no date range given."""
     with app.app_context():
@@ -180,6 +234,20 @@ def test_export_csv_route_no_entries(client, app):
         # Should redirect with warning message
         assert response.status_code == 200
         assert b"No time entries found" in response.data
+
+
+def test_export_csv_route_invalid_date(client, app, sample_entries):
+    """Test CSV export with invalid date format via web route."""
+    with app.app_context():
+        # Request with invalid date should fallback to current date with warning
+        response = client.get(
+            "/export/csv?period=week&date=invalid-date", follow_redirects=False
+        )
+
+        # Should still succeed but with fallback behavior
+        # Since we can't easily check flash messages without following redirects,
+        # we verify it doesn't crash
+        assert response.status_code in [200, 302]
 
 
 def test_cli_export_command_basic(runner, app, sample_entries, tmp_path):

@@ -409,11 +409,12 @@ def reference():
 @click.option(
     "--format",
     "-f",
+    "export_format",
     type=click.Choice(["csv"], case_sensitive=False),
     default="csv",
     help="Export format (default: csv)",
 )
-def export(period: str, date: Optional[str], output: Optional[str], format: str):
+def export(period: str, date: Optional[str], output: Optional[str], export_format: str):
     """Export time entries to CSV file.
 
     Export your time tracking data to a CSV file for use in spreadsheet

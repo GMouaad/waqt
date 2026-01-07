@@ -303,7 +303,10 @@ def export_csv():
 
         # Generate filename
         if start_date and end_date:
-            filename = f"time_entries_{start_date}_{end_date}.csv"
+            filename = (
+                f"time_entries_{start_date.strftime('%Y%m%d')}_"
+                f"{end_date.strftime('%Y%m%d')}.csv"
+            )
         else:
             filename = f"time_entries_all_{datetime.now().strftime('%Y%m%d')}.csv"
 
@@ -314,6 +317,13 @@ def export_csv():
             headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
+    except IOError as e:
+        # Handle file system errors
+        flash(f"Error writing CSV file: {str(e)}", "error")
+        return redirect(url_for("main.reports"))
     except Exception as e:
-        flash(f"Error exporting to CSV: {str(e)}", "error")
+        # Log unexpected errors for debugging
+        import logging
+        logging.error(f"Unexpected error during CSV export: {str(e)}", exc_info=True)
+        flash("An unexpected error occurred during export. Please try again.", "error")
         return redirect(url_for("main.reports"))
