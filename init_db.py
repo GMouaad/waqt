@@ -16,7 +16,9 @@ def init_database():
         # Add default settings if they don't exist
         default_settings = [
             ("standard_hours_per_day", "8"),
-            ("standard_hours_per_week", "40"),
+            ("weekly_hours", "40"),
+            ("pause_duration_minutes", "45"),
+            ("auto_end", "false"),
         ]
 
         for key, value in default_settings:

@@ -1,7 +1,10 @@
 """Database models for time tracking application."""
 
+import logging
 from datetime import datetime, timezone
 from . import db
+
+logger = logging.getLogger(__name__)
 
 
 class TimeEntry(db.Model):
@@ -86,3 +89,47 @@ class Settings(db.Model):
             setting = Settings(key=key, value=str(value))
             db.session.add(setting)
         db.session.commit()
+
+    @staticmethod
+    def get_all_settings():
+        """Get all settings as a dictionary."""
+        settings = Settings.query.all()
+        return {s.key: s.value for s in settings}
+
+    @staticmethod
+    def get_int(key, default=None):
+        """Get a setting value as integer."""
+        value = Settings.get_setting(key, default)
+        if value is None:
+            return None
+        try:
+            return int(value)
+        except (ValueError, TypeError) as e:
+            logger.warning(
+                f"Failed to convert setting '{key}' value '{value}' to int: {e}. "
+                f"Returning default: {default}"
+            )
+            return default
+
+    @staticmethod
+    def get_float(key, default=None):
+        """Get a setting value as float."""
+        value = Settings.get_setting(key, default)
+        if value is None:
+            return None
+        try:
+            return float(value)
+        except (ValueError, TypeError) as e:
+            logger.warning(
+                f"Failed to convert setting '{key}' value '{value}' to float: {e}. "
+                f"Returning default: {default}"
+            )
+            return default
+
+    @staticmethod
+    def get_bool(key, default=False):
+        """Get a setting value as boolean."""
+        value = Settings.get_setting(key)
+        if value is None:
+            return default
+        return value.lower() in ("true", "1", "yes", "on")

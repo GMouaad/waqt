@@ -54,15 +54,15 @@ def test_calculate_duration():
 def test_calculate_daily_overtime():
     """Test overtime calculation."""
     # No overtime
-    overtime = calculate_daily_overtime(8.0)
+    overtime = calculate_daily_overtime(8.0, standard_hours=8.0)
     assert overtime == 0.0
 
     # With overtime
-    overtime = calculate_daily_overtime(10.0)
+    overtime = calculate_daily_overtime(10.0, standard_hours=8.0)
     assert overtime == 2.0
 
     # Under standard hours
-    overtime = calculate_daily_overtime(6.0)
+    overtime = calculate_daily_overtime(6.0, standard_hours=8.0)
     assert overtime == 0.0
 
 
