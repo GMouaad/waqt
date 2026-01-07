@@ -29,7 +29,13 @@ def create_app():
             "Set the SECRET_KEY environment variable for production deployments."
         )
     app.config["SECRET_KEY"] = secret_key
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///time_tracker.db"
+    
+    # Configuration - Database URI
+    # Allow override via environment variable
+    database_uri = os.environ.get(
+        "SQLALCHEMY_DATABASE_URI", "sqlite:///time_tracker.db"
+    )
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Initialize database

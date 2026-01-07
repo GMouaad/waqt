@@ -29,6 +29,7 @@ dependencies = [
     "python-dateutil==2.8.2",
     "Werkzeug==3.0.1",
     "click>=8.0.0",
+    "mcp>=1.0.0",
 ]
 
 [project.optional-dependencies]
@@ -45,6 +46,7 @@ build = [
 
 [project.scripts]
 waqt = "waqtracker.cli:main"
+waqt-mcp = "waqtracker.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/GMouaad/time-tracker"

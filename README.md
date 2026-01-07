@@ -11,6 +11,7 @@ This is a self-contained Flask-based time tracking application with no external 
 - **[Installation Guide](docs/installation.md)** - Detailed installation instructions, prerequisites, and troubleshooting
 - **[UV Migration Guide](docs/UV_MIGRATION_GUIDE.md)** - Guide for migrating from pip to uv package manager
 - **[Usage Guide](docs/usage.md)** - Complete guide on how to use the application, workflows, and best practices
+- **[MCP Guide](docs/MCP_GUIDE.md)** - Model Context Protocol server documentation for AI assistant integration
 - **[E2E Testing Guide](docs/E2E_TESTING.md)** - Playwright end-to-end testing documentation and best practices
 
 ## Features
@@ -22,6 +23,7 @@ This is a self-contained Flask-based time tracking application with no external 
 - **Work Activities**: Log detailed work activities and tasks
 - **Reports**: View weekly and monthly overtime summaries
 - **CLI Tool**: Command-line interface (`waqt`) for quick time tracking from the terminal
+- **MCP Server**: Model Context Protocol server for AI assistant integration
 
 
 ## Technology Stack
@@ -293,6 +295,43 @@ waqt end --time 17:30
 # View weekly summary
 waqt summary
 ```
+
+## MCP Server Usage
+
+The `waqt-mcp` server provides Model Context Protocol (MCP) support for AI assistant integration. This allows AI tools like Claude to interact with your time tracking data.
+
+### Quick Start
+
+```bash
+# Run the MCP server
+waqt-mcp
+```
+
+### Available Tools
+
+The MCP server exposes these tools to AI assistants:
+- `start` - Start time tracking
+- `end` - End time tracking  
+- `summary` - Get time summaries (week/month)
+- `list_entries` - List time entries
+- `export_entries` - Export data to CSV
+
+### Example Configuration for Claude Desktop
+
+Add to your Claude Desktop configuration (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "waqtracker": {
+      "command": "waqt-mcp",
+      "env": {}
+    }
+  }
+}
+```
+
+📚 **For detailed MCP documentation, see [docs/MCP_GUIDE.md](docs/MCP_GUIDE.md)**
 
 ## Web Interface Usage
 
