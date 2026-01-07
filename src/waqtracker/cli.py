@@ -16,6 +16,15 @@ from .utils import (
     get_time_entries_for_period,
 )
 from ._version import VERSION
+from .config import (
+    CONFIG_DEFAULTS,
+    CONFIG_TYPES,
+    CONFIG_DESCRIPTIONS,
+    CONFIG_VALIDATORS,
+    CONFIG_VALIDATION_MESSAGES,
+    validate_config_value,
+    normalize_bool_value,
+)
 
 
 @click.group()
@@ -509,56 +518,6 @@ def config():
     pass
 
 
-# Configuration defaults and validation rules
-CONFIG_DEFAULTS = {
-    "standard_hours_per_day": "8",
-    "weekly_hours": "40",
-    "pause_duration_minutes": "45",
-    "auto_end": "false",
-    "alert_on_max_work_session": "false",
-    "max_work_session_hours": "10",
-}
-
-# Configuration value types for automatic type handling
-CONFIG_TYPES = {
-    "standard_hours_per_day": "float",
-    "weekly_hours": "float",
-    "pause_duration_minutes": "int",
-    "auto_end": "bool",
-    "alert_on_max_work_session": "bool",
-    "max_work_session_hours": "float",
-}
-
-CONFIG_DESCRIPTIONS = {
-    "standard_hours_per_day": "Standard working hours per day (default: 8)",
-    "weekly_hours": "Expected weekly working hours (default: 40)",
-    "pause_duration_minutes": "Default pause/break duration in minutes (default: 45)",
-    "auto_end": "Feature flag: Auto-end work session after 8h 45m (default: false)",
-    "alert_on_max_work_session": "Feature flag: Alert when session exceeds 8 hours and approaches max limit (default: false)",
-    "max_work_session_hours": "Maximum work session hours threshold for alerts (default: 10)",
-}
-
-CONFIG_VALIDATORS = {
-    "standard_hours_per_day": lambda v: 0 < float(v) <= 24,
-    "weekly_hours": lambda v: 0 < float(v) <= 168,
-    "pause_duration_minutes": lambda v: 0 <= int(v) <= 480,
-    "auto_end": lambda v: isinstance(v, str)
-    and v.lower() in ("true", "false", "1", "0", "yes", "no", "on", "off"),
-    "alert_on_max_work_session": lambda v: isinstance(v, str)
-    and v.lower() in ("true", "false", "1", "0", "yes", "no", "on", "off"),
-    "max_work_session_hours": lambda v: 1 <= float(v) <= 24,
-}
-
-CONFIG_VALIDATION_MESSAGES = {
-    "standard_hours_per_day": "Must be greater than 0 and at most 24 hours",
-    "weekly_hours": "Must be greater than 0 and at most 168 hours",
-    "pause_duration_minutes": "Must be between 0 and 480 minutes (8 hours)",
-    "auto_end": "Must be a boolean value (true/false, yes/no, 1/0, on/off)",
-    "alert_on_max_work_session": "Must be a boolean value (true/false, yes/no, 1/0, on/off)",
-    "max_work_session_hours": "Must be between 1 and 24 hours",
-}
-
-
 @config.command("list")
 def config_list():
     """Display all configuration options and their current values.
@@ -658,38 +617,21 @@ def config_set(key: str, value: str):
                 click.echo(f"  - {k}")
             raise click.exceptions.Exit(1)
 
-        # Validate the value
-        validator = CONFIG_VALIDATORS.get(key)
-        if validator:
-            try:
-                if not validator(value):
-                    click.echo(
-                        click.style(
-                            f"Error: Invalid value for '{key}'.",
-                            fg="red",
-                        )
-                    )
-                    validation_msg = CONFIG_VALIDATION_MESSAGES.get(
-                        key, "Value validation failed"
-                    )
-                    click.echo(f"{validation_msg}")
-                    raise click.exceptions.Exit(1)
-            except (ValueError, TypeError) as e:
-                click.echo(
-                    click.style(
-                        f"Error: Invalid value for '{key}': {str(e)}",
-                        fg="red",
-                    )
+        # Validate the value using shared validation logic
+        is_valid, error_message = validate_config_value(key, value)
+        if not is_valid:
+            click.echo(
+                click.style(
+                    f"Error: Invalid value for '{key}'.",
+                    fg="red",
                 )
-                validation_msg = CONFIG_VALIDATION_MESSAGES.get(
-                    key, "Value validation failed"
-                )
-                click.echo(f"{validation_msg}")
-                raise click.exceptions.Exit(1)
+            )
+            click.echo(f"{error_message}")
+            raise click.exceptions.Exit(1)
 
         # Normalize boolean values for all boolean type configs
         if CONFIG_TYPES.get(key) == "bool":
-            value = "true" if value.lower() in ("true", "1", "yes", "on") else "false"
+            value = normalize_bool_value(value)
 
         # Get old value for display
         old_value = Settings.get_setting(key, CONFIG_DEFAULTS[key])
