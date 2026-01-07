@@ -1,6 +1,6 @@
 """Main entry point for the Time Tracker application."""
 
-from src.waqtracker import create_app
+from waqtracker import create_app
 import os
 
 app = create_app()

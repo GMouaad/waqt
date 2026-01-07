@@ -75,7 +75,7 @@ if errorlevel 1 (
 REM Check if database exists
 if not exist "time_tracker.db" (
     echo Initializing database...
-    python init_db.py
+    python -m waqtracker.scripts.init_db
     echo.
 )
 
@@ -87,4 +87,4 @@ echo.
 echo Press Ctrl+C to stop the server
 echo.
 
-python run.py
+python -m waqtracker.wsgi
