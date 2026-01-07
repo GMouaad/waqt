@@ -240,6 +240,83 @@ from waqtracker.models import TimeEntry
 from datetime import datetime, time
 ```
 
+## Configuration
+
+The application supports various configuration options to customize its behavior. All settings are stored in the database and can be managed using the CLI.
+
+### Viewing Configuration
+
+To see all available configuration options:
+
+```bash
+waqt config list
+```
+
+To view a specific setting:
+
+```bash
+waqt config get <setting_name>
+```
+
+### Available Settings
+
+#### Standard Work Hours
+- **`standard_hours_per_day`**: Number of hours considered standard work per day (default: 8)
+- **`weekly_hours`**: Expected weekly working hours (default: 40)
+
+#### Timer Settings
+- **`pause_duration_minutes`**: Default pause/break duration in minutes (default: 45)
+- **`auto_end`**: Feature flag to auto-end work session after 8h 45m (default: false)
+
+#### Session Alert Settings
+- **`alert_on_max_work_session`**: Enable alerts when work sessions exceed 8 hours and approach the maximum limit (default: false)
+- **`max_work_session_hours`**: Maximum work session hours threshold for alerts (default: 10)
+
+### Modifying Settings
+
+To change a setting:
+
+```bash
+waqt config set <setting_name> <value>
+```
+
+Examples:
+
+```bash
+# Enable session alerts
+waqt config set alert_on_max_work_session true
+
+# Set maximum session threshold to 12 hours
+waqt config set max_work_session_hours 12
+
+# Change weekly hours target
+waqt config set weekly_hours 35
+```
+
+### Resetting Settings
+
+To reset a setting to its default value:
+
+```bash
+waqt config reset <setting_name>
+```
+
+### Session Alert Feature
+
+The session alert feature helps prevent excessive work sessions by showing a warning banner in the UI when:
+1. The feature is enabled (`alert_on_max_work_session` is `true`)
+2. An active timer has been running for more than 8 hours
+3. The session is approaching the configured maximum threshold
+
+**How it works:**
+- The alert appears automatically in the dashboard when conditions are met
+- It shows current session hours and the maximum recommended threshold
+- Users can dismiss the alert, but it will reappear on the next check (every 60 seconds)
+- The alert only shows when the UI is open and a session is actively running
+- Pausing the timer hides the alert
+
+**Use case:** In some countries, labor laws prohibit working more than 10 hours in a single session. This feature helps users stay compliant by providing timely reminders.
+
 ## Troubleshooting
 
 ### Time Entry Issues
