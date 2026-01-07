@@ -39,6 +39,7 @@ time-tracker/
 │       └── static/          # CSS, JS, images
 │           ├── css/
 │           └── js/
+├── migrations/              # Database migration scripts
 ├── tests/                   # Unit and integration tests
 ├── init_db.py               # Database initialization
 ├── requirements.txt         # Python dependencies
@@ -71,6 +72,9 @@ time-tracker/
 - `start_time`: Work start time
 - `end_time`: Work end time
 - `duration_hours`: Calculated duration
+- `accumulated_pause_seconds`: Total pause duration in seconds
+- `last_pause_start_time`: Timestamp when current pause started
+- `is_active`: Boolean flag for active timer status
 - `description`: Activity description
 - `created_at`: Timestamp
 
@@ -94,6 +98,7 @@ time-tracker/
 - Standard work week: 40 hours (Monday-Friday)
 - Overtime: Any hours over 8 in a day or 40 in a week
 - Track multiple time entries per day
+- **Pause/Resume**: Pause active timers and resume them later, excluding break time from duration
 
 ### Overtime Calculation
 - Daily overtime: Hours beyond 8 per day
