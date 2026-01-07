@@ -44,16 +44,22 @@ Overtime is automatically calculated for hours beyond the standard.
 )
 
 
-# Initialize Flask app for database access
-app = create_app()
+# Global app instance for the MCP server, initialized lazily
+_app = None
+
+def get_app():
+    """Get or create the Flask app instance."""
+    global _app
+    if _app is None:
+        _app = create_app()
+    return _app
 
 
 def _get_open_entry_for_date(entry_date):
     """Get the most recent open time entry for a specific date.
     
     Open entries are identified by:
-    - duration_hours == 0.0
-    - end_time == start_time (marker for unclosed entries)
+    - is_active == True
     
     Args:
         entry_date: Date to check for open entries
@@ -62,8 +68,7 @@ def _get_open_entry_for_date(entry_date):
         TimeEntry object if found, None otherwise
     """
     return (
-        TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
-        .filter(TimeEntry.end_time == TimeEntry.start_time)
+        TimeEntry.query.filter_by(date=entry_date, is_active=True)
         .order_by(TimeEntry.created_at.desc())
         .first()
     )
@@ -105,6 +110,7 @@ def start(
         start(time="09:00")
         start(date="2024-01-15", time="09:30", description="Morning session")
     """
+    app = get_app()
     with app.app_context():
         # Parse date
         if date:
@@ -130,6 +136,11 @@ def start(
         else:
             start_time = datetime.now().time()
 
+        # Validate and normalize description
+        description = description.strip() if description else ""
+        if not description:
+            description = "Work session"
+
         # Check if there's already an open entry for this date
         if _has_open_entry_for_date(entry_date):
             return {
@@ -144,6 +155,7 @@ def start(
             start_time=start_time,
             end_time=start_time,  # Marker: same as start_time for open entries
             duration_hours=0.0,  # Marker: 0.0 for open entries
+            is_active=True,
             description=description,
         )
 
@@ -180,6 +192,7 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
         end(time="17:30")
         end(date="2024-01-15", time="18:00")
     """
+    app = get_app()
     with app.app_context():
         # Parse date
         if date:
@@ -221,6 +234,7 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
         # Update the entry
         open_entry.end_time = end_time
         open_entry.duration_hours = duration
+        open_entry.is_active = False
         db.session.commit()
 
         return {
@@ -256,6 +270,7 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
         summary(period="month")
         summary(period="week", date="2024-01-15")
     """
+    app = get_app()
     with app.app_context():
         # Validate period
         if period.lower() not in ["week", "month"]:
@@ -366,6 +381,7 @@ def list_entries(
         list_entries(period="month")
         list_entries(period="all", limit=10)
     """
+    app = get_app()
     with app.app_context():
         # Validate period
         if period.lower() not in ["week", "month", "all"]:
@@ -456,6 +472,7 @@ def export_entries(
         export_entries(period="week")
         export_entries(period="month", date="2024-01-15")
     """
+    app = get_app()
     with app.app_context():
         # Validate format
         if export_format.lower() != "csv":

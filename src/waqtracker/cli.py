@@ -93,13 +93,15 @@ def start(time: Optional[str], date: Optional[str], description: str):
         else:
             start_time = datetime.now().time()
 
+        # Validate and normalize description
+        description = description.strip() if description else ""
+        if not description:
+            description = "Work session"
+
         # Check if there's already an open entry for this date
-        # Open entries are identified by:
-        # - duration_hours == 0.0 and end_time == start_time
-        # This is a marker for entries waiting to be closed with 'waqt end'
+        # Open entries are identified by is_active=True
         open_entries = (
-            TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
-            .filter(TimeEntry.end_time == TimeEntry.start_time)
+            TimeEntry.query.filter_by(date=entry_date, is_active=True)
             .all()
         )
 
@@ -122,6 +124,7 @@ def start(time: Optional[str], date: Optional[str], description: str):
             start_time=start_time,
             end_time=start_time,  # Marker: same as start_time for open entries
             duration_hours=0.0,  # Marker: 0.0 for open entries
+            is_active=True,
             description=description,
         )
 
@@ -193,10 +196,9 @@ def end(time: Optional[str], date: Optional[str]):
             end_time = datetime.now().time()
 
         # Find the most recent entry for this date that is still open
-        # Open entries have: duration_hours == 0.0 AND end_time == start_time
+        # Open entries have is_active=True
         open_entry = (
-            TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
-            .filter(TimeEntry.end_time == TimeEntry.start_time)
+            TimeEntry.query.filter_by(date=entry_date, is_active=True)
             .order_by(TimeEntry.created_at.desc())
             .first()
         )
@@ -216,6 +218,7 @@ def end(time: Optional[str], date: Optional[str]):
         # Update the entry
         open_entry.end_time = end_time
         open_entry.duration_hours = duration
+        open_entry.is_active = False
         db.session.commit()
 
         click.echo(click.style("✓ Time tracking ended!", fg="green", bold=True))

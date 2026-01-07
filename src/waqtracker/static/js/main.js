@@ -122,4 +122,152 @@ document.addEventListener('DOMContentLoaded', function() {
         startTimeInput.addEventListener('change', updateDurationPreview);
         endTimeInput.addEventListener('change', updateDurationPreview);
     }
+
+    // Timer Logic
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) {
+        const btnStart = document.getElementById('btn-start-timer');
+        const btnStop = document.getElementById('btn-stop-timer');
+        const btnPause = document.getElementById('btn-pause-timer');
+        const btnResume = document.getElementById('btn-resume-timer');
+        const statusIndicator = document.getElementById('timer-status-indicator');
+        const descriptionDisplay = document.getElementById('timer-description');
+        
+        let timerInterval;
+        let elapsedSeconds = 0;
+        let lastTickTime = null;
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            const now = Date.now();
+            if (lastTickTime) {
+                elapsedSeconds += (now - lastTickTime) / 1000;
+            }
+            lastTickTime = now;
+            timerDisplay.textContent = formatTime(elapsedSeconds);
+        }
+
+        function setTimerState(state, elapsed = 0, description = "Work") {
+            clearInterval(timerInterval);
+            elapsedSeconds = elapsed;
+            timerDisplay.textContent = formatTime(elapsedSeconds);
+
+            if (state === 'running') {
+                lastTickTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+                
+                statusIndicator.className = 'status-indicator active';
+                descriptionDisplay.textContent = `Tracking: ${description}`;
+                
+                btnStart.style.display = 'none';
+                btnResume.style.display = 'none';
+                btnStop.style.display = 'inline-block';
+                btnPause.style.display = 'inline-block';
+            } else if (state === 'paused') {
+                statusIndicator.className = 'status-indicator paused';
+                descriptionDisplay.textContent = `Paused: ${description}`;
+                
+                btnStart.style.display = 'none';
+                btnPause.style.display = 'none';
+                btnStop.style.display = 'inline-block'; // Allow stopping while paused
+                btnResume.style.display = 'inline-block';
+            } else {
+                // Stopped/Inactive
+                statusIndicator.className = 'status-indicator inactive';
+                descriptionDisplay.textContent = 'Ready to work';
+                timerDisplay.textContent = '00:00:00';
+                
+                btnStop.style.display = 'none';
+                btnPause.style.display = 'none';
+                btnResume.style.display = 'none';
+                btnStart.style.display = 'inline-block';
+            }
+        }
+
+        function checkTimerStatus() {
+            fetch('/api/timer/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.active) {
+                        if (data.is_paused) {
+                            setTimerState('paused', data.elapsed_seconds, data.description);
+                        } else {
+                            setTimerState('running', data.elapsed_seconds, data.description);
+                        }
+                    } else {
+                        setTimerState('stopped');
+                    }
+                })
+                .catch(err => console.error('Error checking timer status:', err));
+        }
+
+        // Initialize status
+        checkTimerStatus();
+
+        btnStart.addEventListener('click', () => {
+            fetch('/api/timer/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: 'Work' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Start from 0
+                    setTimerState('running', 0, 'Work');
+                } else {
+                    alert('Failed to start timer: ' + data.message);
+                }
+            });
+        });
+
+        btnStop.addEventListener('click', () => {
+            fetch('/api/timer/stop', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setTimerState('stopped');
+                    // Reload to update the list of entries
+                    window.location.reload();
+                } else {
+                    alert('Failed to stop timer: ' + data.message);
+                }
+            });
+        });
+
+        btnPause.addEventListener('click', () => {
+            fetch('/api/timer/pause', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Just switch state, keep current elapsed
+                    setTimerState('paused', elapsedSeconds, descriptionDisplay.textContent.replace('Tracking: ', ''));
+                } else {
+                    alert('Failed to pause timer: ' + data.message);
+                }
+            });
+        });
+
+        btnResume.addEventListener('click', () => {
+             fetch('/api/timer/resume', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Resume from current elapsed
+                    setTimerState('running', elapsedSeconds, descriptionDisplay.textContent.replace('Paused: ', ''));
+                } else {
+                    alert('Failed to resume timer: ' + data.message);
+                }
+            });
+        });
+    }
 });

@@ -91,7 +91,19 @@ jobs:
       - name: Set up Python
         run: uv python install 3.12
 
+      - name: Create virtual environment
+        shell: bash
+        run: |
+          uv venv --python 3.12
+          echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "$PWD/.venv/Scripts" >> "$GITHUB_PATH"
+          else
+            echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          fi
+
       - name: Install dependencies
+        shell: bash
         run: uv pip install -e ".[build]"
 
       - name: Inject version info
@@ -106,7 +118,7 @@ jobs:
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
         run: |
-          uv run pyinstaller --onefile src/waqtracker/__main__.py --name waqtracker \
+          pyinstaller --onefile src/waqtracker/__main__.py --name waqtracker \
             --add-data "src/waqtracker/templates:waqtracker/templates" \
             --add-data "src/waqtracker/static:waqtracker/static" \
             --hidden-import=werkzeug \
@@ -115,12 +127,13 @@ jobs:
 
       - name: Build executable (Windows)
         if: runner.os == 'Windows'
+        shell: bash
         run: |
-          uv run pyinstaller --onefile src/waqtracker/__main__.py --name waqtracker `
-            --add-data "src/waqtracker/templates;waqtracker/templates" `
-            --add-data "src/waqtracker/static;waqtracker/static" `
-            --hidden-import=werkzeug `
-            --hidden-import=flask `
+          pyinstaller --onefile src/waqtracker/__main__.py --name waqtracker \
+            --add-data "src/waqtracker/templates;waqtracker/templates" \
+            --add-data "src/waqtracker/static;waqtracker/static" \
+            --hidden-import=werkzeug \
+            --hidden-import=flask \
             --hidden-import=click
 
       - name: Create zip (Unix)

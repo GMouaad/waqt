@@ -29,13 +29,38 @@ def test_main_no_args_starts_web_app():
                 mock_app.run.assert_called_once()
                 call_kwargs = mock_app.run.call_args.kwargs
                 assert call_kwargs['host'] == '127.0.0.1'
-                assert call_kwargs['port'] == 5000
+                assert call_kwargs['port'] == 5555
                 assert call_kwargs['debug'] is False  # Default when FLASK_DEBUG not set
                 
                 # Verify startup message was printed
                 output = mock_stdout.getvalue()
                 assert "Starting waqtracker web application" in output
-                assert "http://localhost:5000" in output
+                assert "http://localhost:5555" in output
+
+
+def test_main_port_from_env():
+    """Test that port is configured from PORT environment variable."""
+    from waqtracker.__main__ import main
+    
+    # Mock sys.argv
+    with patch.object(sys, 'argv', ['waqtracker']):
+        # Mock environment variable
+        with patch.dict('os.environ', {'PORT': '1234'}):
+            # Mock create_app
+            with patch('waqtracker.__main__.create_app') as mock_create_app:
+                mock_app = MagicMock()
+                mock_create_app.return_value = mock_app
+                
+                with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+                    main()
+                    
+                    # Verify app.run was called with port=1234
+                    call_kwargs = mock_app.run.call_args.kwargs
+                    assert call_kwargs['port'] == 1234
+                    
+                    # Verify output shows correct port
+                    output = mock_stdout.getvalue()
+                    assert "http://localhost:1234" in output
 
 
 def test_main_with_args_runs_cli():

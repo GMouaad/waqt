@@ -172,7 +172,7 @@ You should see output like:
  * Serving Flask app 'app'
  * Debug mode: on
 WARNING: This is a development server. Do not use it in production.
- * Running on http://0.0.0.0:5000
+ * Running on http://0.0.0.0:5555
 ```
 
 ### Step 7: Access the Application
@@ -180,7 +180,7 @@ WARNING: This is a development server. Do not use it in production.
 Open your web browser and navigate to:
 
 ```
-http://localhost:5000
+http://localhost:5555
 ```
 
 You should see the Time Tracker dashboard!
@@ -260,7 +260,7 @@ These scripts will:
 
 To verify your installation is working correctly:
 
-1. **Check the Dashboard**: Visit `http://localhost:5000` and see the dashboard
+1. **Check the Dashboard**: Visit `http://localhost:5555` and see the dashboard
 2. **Add a Test Entry**: Click "Add Time Entry" and create a test work log
 3. **View Reports**: Navigate to the Reports page to see weekly/monthly summaries
 
@@ -299,12 +299,12 @@ To verify your installation is working correctly:
 **Problem**: `Address already in use` error
 
 **Solution**:
-- Another application is using port 5000
+- Another application is using port 5555
 - Find and stop the other application
-- Or modify `run.py` to use a different port:
-  ```python
-  app.run(debug=debug_mode, host='0.0.0.0', port=5001)
-  ```
+- Or set the `PORT` environment variable to use a different port (e.g., 5556):
+  - Linux/macOS: `PORT=5556 python run.py`
+  - Windows (CMD): `set PORT=5556 && python run.py`
+  - Windows (PowerShell): `$env:PORT=5556; python run.py`
 
 ### Virtual Environment Not Activating
 

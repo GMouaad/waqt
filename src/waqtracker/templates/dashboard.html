@@ -6,6 +6,20 @@
 <div class="dashboard" data-testid="dashboard">
     <h2>Dashboard</h2>
     <p class="subtitle">Today is {{ current_date.strftime('%A, %B %d, %Y') }}</p>
+
+    <div class="timer-control-panel section" data-testid="timer-control-panel">
+        <div class="timer-display-container">
+            <div id="timer-status-indicator" class="status-indicator inactive"></div>
+            <div id="timer-display" class="timer-display">00:00:00</div>
+            <div id="timer-description" class="timer-description">Ready to work</div>
+        </div>
+        <div class="timer-controls">
+            <button id="btn-start-timer" class="btn btn-success btn-large">▶ Start Timer</button>
+            <button id="btn-stop-timer" class="btn btn-danger btn-large" style="display: none;">■ Stop</button>
+            <button id="btn-pause-timer" class="btn btn-warning btn-large" style="display: none;">⏸ Pause</button>
+            <button id="btn-resume-timer" class="btn btn-success btn-large" style="display: none;">▶ Resume</button>
+        </div>
+    </div>
     
     <div class="stats-grid">
         <div class="stat-card" data-testid="stat-weekly-hours">

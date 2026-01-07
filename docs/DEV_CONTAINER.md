@@ -57,8 +57,8 @@ Once the dev container is ready:
    ```
 
 2. **Access the application:**
-   - VS Code will automatically forward port 5000
-   - Click the notification or go to `http://localhost:5000` in your browser
+   - VS Code will automatically forward port 5555
+   - Click the notification or go to `http://localhost:5555` in your browser
 
 ### Running Tests
 
@@ -120,7 +120,7 @@ The dev container automatically installs:
 - **Python 3.11**: Latest stable Python version
 - **SQLite3**: Pre-installed for database operations
 - **Git**: Version control tools
-- **Port Forwarding**: Port 5000 for Flask app
+- **Port Forwarding**: Port 5555 for Flask app
 
 ### Automatic Setup
 
@@ -197,17 +197,17 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 
 ### Port Already in Use
 
-1. **Stop other services using port 5000:**
+1. **Stop other services using port 5555:**
    ```bash
    # On Linux/Mac
-   lsof -ti:5000 | xargs kill -9
+   lsof -ti:5555 | xargs kill -9
    
    # On Windows (PowerShell)
-   Get-Process -Id (Get-NetTCPConnection -LocalPort 5000).OwningProcess | Stop-Process
+   Get-Process -Id (Get-NetTCPConnection -LocalPort 5555).OwningProcess | Stop-Process
    ```
 
 2. **Use a different port:**
-   Edit `run.py` and change the port number.
+   Set the `PORT` environment variable: `PORT=5556 python run.py`
 
 ## Best Practices
 

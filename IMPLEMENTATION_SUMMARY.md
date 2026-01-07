@@ -20,7 +20,12 @@ Successfully transformed the repository from a .NET documentation template into 
 ### 3. Features Implemented
 
 #### Time Tracking
-- Add time entries with date, start/end times, and descriptions
+- **One-Click Timer**: Interactive dashboard timer for real-time tracking
+  - Start, Stop, Pause, and Resume functionality
+  - Live visual display (HH:MM:SS)
+  - Automatic description filling
+  - Status indicator (pulsing green for active, orange for paused)
+- Manual time entries with date, start/end times, and descriptions
 - Automatic duration calculation
 - Support for multiple entries per day
 - Delete functionality for time entries
@@ -30,6 +35,12 @@ Successfully transformed the repository from a .NET documentation template into 
 - Weekly overtime: Hours over 40 per week
 - Display in dashboard statistics
 - Highlighted in reports when present
+
+#### Configuration & Portability
+- **Configurable UI Port**: Environment variable `PORT` support (defaults to 5555)
+- **Standalone Executables**: Cross-platform builds (Linux, macOS, Windows)
+- **SQLite Database**: Portable, single-file database
+- **Dev Container**: Fully configured development environment
 
 #### Leave Management
 - Track vacation days with dates and descriptions
@@ -45,12 +56,13 @@ Successfully transformed the repository from a .NET documentation template into 
 - Leave days included in monthly reports
 
 ### 4. Testing & Quality
-- **11 Unit Tests**: All passing
+- **15+ Tests**: Comprehensive test suite
+  - **Timer API Tests**: Verified lifecycle of the new timer functionality
   - Model tests (TimeEntry, LeaveDay, Settings)
   - Utility function tests (duration, overtime calculation)
   - Route handler tests (all pages accessible)
   - Database operations tests
-- **Test Coverage**: Core business logic covered
+- **Test Coverage**: Core business logic and new API endpoints covered
 - **Code Quality**: PEP 8 compliant, type hints where appropriate
 
 ### 5. DevOps & Automation
@@ -139,12 +151,10 @@ Successfully transformed the repository from a .NET documentation template into 
 ✅ CI/CD pipeline configured and working
 
 ## Future Enhancement Opportunities
-- Export to CSV/Excel
+- Export to Excel (CSV already implemented)
 - Data visualization with charts
 - Calendar view integration
-- Dark mode support
 - Email notifications
-- REST API endpoints
 - Multi-user authentication
 - Data backup/restore
 - Import from other systems

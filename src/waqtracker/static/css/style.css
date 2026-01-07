@@ -220,6 +220,21 @@ main {
     font-size: 0.875rem;
 }
 
+.btn-large {
+    padding: 0.75rem 2rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.btn-warning {
+    background-color: var(--warning-color);
+    color: var(--text-inverse);
+}
+
+.btn-warning:hover {
+    background-color: #e67e22;
+}
+
 /* Cards and Sections */
 .section {
     background: var(--bg-secondary);
@@ -567,4 +582,73 @@ footer p {
     .stats-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Timer Control Panel */
+.timer-control-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-left: 6px solid var(--accent-primary);
+    padding: 2rem;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.timer-display-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.timer-display {
+    font-size: 3.5rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.timer-description {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-bottom: 0.5rem;
+    background-color: var(--text-secondary);
+    display: inline-block;
+}
+
+.status-indicator.active {
+    background-color: var(--success-bg); /* Should be green text actually */
+    background-color: #27ae60;
+    box-shadow: 0 0 10px #27ae60;
+    animation: pulse 1.5s infinite;
+}
+
+.status-indicator.paused {
+    background-color: var(--warning-color);
+}
+
+.status-indicator.inactive {
+    background-color: #bdc3c7;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+.timer-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
 }

@@ -1,6 +1,6 @@
 """Route handlers for the time tracking application."""
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, Response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
 from datetime import datetime, timedelta
 from . import db
 from .models import TimeEntry, LeaveDay
@@ -15,6 +15,194 @@ from .utils import (
 )
 
 bp = Blueprint("main", __name__)
+
+
+def get_open_entry():
+    """Get the currently running timer entry if any."""
+    today = datetime.now().date()
+    # Find entry with is_active=True
+    return (
+        TimeEntry.query.filter_by(date=today, is_active=True)
+        .order_by(TimeEntry.created_at.desc())
+        .first()
+    )
+
+
+@bp.route("/api/timer/status")
+def timer_status():
+    """Get the current status of the timer."""
+    entry = get_open_entry()
+    if entry:
+        is_paused = entry.last_pause_start_time is not None
+        
+        # Calculate elapsed time since start
+        start_dt = datetime.combine(entry.date, entry.start_time)
+        now = datetime.now()
+        
+        if is_paused:
+            # If paused, elapsed time is fixed at the pause start time minus accumulated pauses
+            # Actually simpler: elapsed = (pause_start - start) - previous_pauses
+            current_duration_seconds = (entry.last_pause_start_time - start_dt).total_seconds() - (entry.accumulated_pause_seconds or 0)
+        else:
+            # If running: elapsed = (now - start) - previous_pauses
+            current_duration_seconds = (now - start_dt).total_seconds() - (entry.accumulated_pause_seconds or 0)
+            
+        return jsonify({
+            "active": True,
+            "is_paused": is_paused,
+            "start_time": entry.start_time.strftime("%H:%M:%S"),
+            "elapsed_seconds": int(max(0, current_duration_seconds)),
+            "description": entry.description
+        })
+    
+    return jsonify({"active": False})
+
+
+@bp.route("/api/timer/start", methods=["POST"])
+def start_timer():
+    """Start a new timer."""
+    try:
+        # Check if already running
+        if get_open_entry():
+            return jsonify({"success": False, "message": "Timer already running"}), 400
+            
+        data = request.get_json() or {}
+        description = data.get("description", "").strip()
+        if not description:
+            description = "Work"
+        
+        now = datetime.now()
+        
+        entry = TimeEntry(
+            date=now.date(),
+            start_time=now.time(),
+            end_time=now.time(),  # Marker for open entry
+            duration_hours=0.0,   # Marker for open entry
+            is_active=True,
+            description=description
+        )
+        
+        db.session.add(entry)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": "Timer started",
+            "start_time": now.strftime("%H:%M:%S")
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@bp.route("/api/timer/pause", methods=["POST"])
+def pause_timer():
+    """Pause the current timer."""
+    try:
+        entry = get_open_entry()
+        if not entry:
+            return jsonify({"success": False, "message": "No active timer"}), 400
+            
+        if entry.last_pause_start_time:
+             return jsonify({"success": False, "message": "Timer already paused"}), 400
+
+        entry.last_pause_start_time = datetime.now()
+        db.session.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": "Timer paused"
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@bp.route("/api/timer/resume", methods=["POST"])
+def resume_timer():
+    """Resume the paused timer."""
+    try:
+        entry = get_open_entry()
+        if not entry:
+            return jsonify({"success": False, "message": "No active timer"}), 400
+            
+        if not entry.last_pause_start_time:
+             return jsonify({"success": False, "message": "Timer is not paused"}), 400
+
+        # Calculate how long we were paused
+        pause_duration = (datetime.now() - entry.last_pause_start_time).total_seconds()
+        
+        # Add to accumulated pauses
+        entry.accumulated_pause_seconds = (entry.accumulated_pause_seconds or 0) + pause_duration
+        
+        # Clear pause start time to indicate running
+        entry.last_pause_start_time = None
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": "Timer resumed"
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@bp.route("/api/timer/stop", methods=["POST"])
+def stop_timer():
+    """Stop the current timer."""
+    try:
+        entry = get_open_entry()
+        if not entry:
+            return jsonify({"success": False, "message": "No active timer"}), 400
+            
+        now = datetime.now()
+        
+        # If stopped while paused, effective end time is when it was paused
+        if entry.last_pause_start_time:
+            # We don't add the current incomplete pause to accumulated_pause_seconds
+            # because the work effectively stopped at the beginning of the pause.
+            effective_end_dt = entry.last_pause_start_time
+            # Reset pause state to clean up (though not strictly necessary if we are closing)
+            entry.last_pause_start_time = None
+        else:
+            effective_end_dt = now
+
+        end_time = effective_end_dt.time()
+        
+        # Calculate duration: (End - Start) - Pauses
+        # Note: calculate_duration returns hours. We need to handle the pause subtraction.
+        # Let's calculate raw duration in seconds first
+        start_dt = datetime.combine(entry.date, entry.start_time)
+        
+        # Handle midnight crossing for end time if needed (though effective_end_dt has date)
+        # But TimeEntry stores date and time separately. `entry.date` is the start date.
+        # effective_end_dt might be on the next day.
+        
+        total_elapsed_seconds = (effective_end_dt - start_dt).total_seconds()
+        actual_work_seconds = total_elapsed_seconds - (entry.accumulated_pause_seconds or 0)
+        
+        duration_hours = actual_work_seconds / 3600.0
+        
+        entry.end_time = end_time
+        entry.duration_hours = duration_hours
+        entry.is_active = False
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": "Timer stopped",
+            "duration": duration_hours
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
 @bp.route("/")

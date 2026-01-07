@@ -16,6 +16,7 @@ This is a self-contained Flask-based time tracking application with no external 
 
 ## Features
 
+- **One-Click Timer**: Interactive dashboard timer with Start, Stop, Pause, and Resume controls for real-time tracking
 - **Work Hours Tracking**: Track daily work hours (8 hours/day, 40 hours/week standard)
 - **Overtime Calculation**: Automatically calculate overtime hours
 - **Vacation Days**: Track and manage vacation days
@@ -59,7 +60,7 @@ The easiest way to get started is to download a pre-built executable for your pl
    .\waqtracker.exe
    ```
 
-3. **Access:** Open `http://localhost:5000` in your browser
+3. **Access:** Open `http://localhost:5555` in your browser
 
 **CLI Usage:** When running the standalone executable, pass CLI commands directly as arguments:
 ```bash
@@ -100,7 +101,7 @@ The fastest way to get started from source is using `uv`, a modern Python packag
    python run.py
    ```
 
-3. **Access:** Open `http://localhost:5000`
+3. **Access:** Open `http://localhost:5555`
 
 📚 **For detailed uv installation guide, see [docs/installation.md](docs/installation.md)**
 
@@ -129,7 +130,7 @@ The easiest way to get started is using the pre-configured development container
    ```bash
    python run.py
    ```
-   Access at `http://localhost:5000`
+   Access at `http://localhost:5555`
 
 📚 **For detailed dev container documentation, see [docs/DEV_CONTAINER.md](docs/DEV_CONTAINER.md)**
 
@@ -172,7 +173,7 @@ python init_db.py
 python run.py
 ```
 
-6. Open your browser and navigate to `http://localhost:5000`
+6. Open your browser and navigate to `http://localhost:5555`
 
 **Alternative:** Use the quick start scripts:
 - Linux/macOS: `./start.sh`

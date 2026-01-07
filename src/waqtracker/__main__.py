@@ -29,8 +29,9 @@ def main():
             cli_name = "waqt"
         
         # No arguments - start the web application
+        port = int(os.environ.get("PORT", 5555))
         print("Starting waqtracker web application...")
-        print("Access the application at: http://localhost:5000")
+        print(f"Access the application at: http://localhost:{port}")
         print("\nPress Ctrl+C to stop the server.")
         print(f"\nTo use the CLI, run: {cli_name} <command>")
         print(f"For CLI help, run: {cli_name} --help")
@@ -40,11 +41,11 @@ def main():
             app = create_app()
             debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
             # Bind to localhost only for security (prevents external access)
-            app.run(debug=debug_mode, host="127.0.0.1", port=5000)
+            app.run(debug=debug_mode, host="127.0.0.1", port=port)
         except Exception as e:
             print(f"\n❌ Error starting application: {e}", file=sys.stderr)
             print("\nPlease check that:")
-            print("  - Port 5000 is not already in use")
+            print(f"  - Port {port} is not already in use")
             print("  - You have write permissions in the current directory")
             print("  - All required dependencies are available")
             sys.exit(1)

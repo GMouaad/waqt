@@ -81,7 +81,8 @@ if not exist "time_tracker.db" (
 
 REM Start the application
 echo Starting Flask server...
-echo Application will be available at: http://localhost:5000
+if "%PORT%"=="" set PORT=5555
+echo Application will be available at: http://localhost:%PORT%
 echo.
 echo Press Ctrl+C to stop the server
 echo.
