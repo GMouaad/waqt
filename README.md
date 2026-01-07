@@ -36,9 +36,46 @@ This is a self-contained Flask-based time tracking application with no external 
 
 ## Installation
 
-### Option 1: Download Standalone Executable (Easiest)
+### Quick Install (Recommended)
 
-The easiest way to get started is to download a pre-built executable for your platform:
+**One-line installer for Linux/macOS:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash
+```
+
+**One-line installer for Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1 | iex
+```
+
+These installers will:
+- Download the latest stable release for your platform
+- Install to `~/.waqt/bin` (Unix) or `%LOCALAPPDATA%\waqt` (Windows)
+- Add to your PATH automatically
+- Verify the installation
+
+**Install development build (prerelease):**
+```bash
+# Linux/macOS
+curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash -s -- --prerelease
+
+# Windows PowerShell
+iex "& { $(irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1) } -Prerelease"
+```
+
+After installation, use `waqt` or `waqtracker` commands:
+```bash
+waqt --version      # Check version
+waqtracker          # Start the web server (http://localhost:5555)
+waqt start          # Start time tracking from CLI
+waqt summary        # View summary
+```
+
+---
+
+### Option 1: Download Standalone Executable (Manual Install)
+
+Alternatively, you can manually download a pre-built executable for your platform:
 
 1. **Download the latest release:**
    - Go to the [Releases page](https://github.com/GMouaad/waqt/releases)
@@ -70,7 +107,7 @@ The easiest way to get started is to download a pre-built executable for your pl
 ./waqtracker summary        # View summary
 ```
 
-### Option 2: Using uv (Recommended - Fast & Modern)
+### Option 2: Using uv (Recommended for Source Installation)
 
 The fastest way to get started from source is using `uv`, a modern Python package manager that's 10-100x faster than pip:
 
