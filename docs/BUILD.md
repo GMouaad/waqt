@@ -1,6 +1,6 @@
 # Building Portable Executables
 
-This document explains how to build standalone executables for the Time Tracker application using PyInstaller and the provided GitHub Actions workflows.
+This document explains how to build standalone executables for the Waqt application using PyInstaller and the provided GitHub Actions workflows.
 
 ## Overview
 

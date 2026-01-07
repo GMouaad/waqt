@@ -25,7 +25,7 @@ from .utils import (
 # Initialize FastMCP server
 mcp = FastMCP(
     name="waqtracker",
-    instructions="""Waqt Time Tracker MCP Server
+    instructions="""Waqt MCP Server
 
 A Model Context Protocol server for time tracking functionality.
 This server provides tools for tracking work hours, managing time entries,

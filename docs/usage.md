@@ -1,6 +1,6 @@
 # Usage Guide
 
-This guide explains how to use the Time Tracker application to manage your work hours, overtime, and leave days.
+This guide explains how to use the Waqt application to manage your work hours, overtime, and leave days.
 
 ## Table of Contents
 
@@ -106,7 +106,7 @@ The easiest way to track time is using the **Dashboard Timer**. It automatically
 ### Daily Routine
 
 **Start of Workday:**
-1. Open Time Tracker dashboard.
+1. Open Waqt dashboard.
 2. Click **"▶ Start Timer"**.
 
 **During the Day:**
@@ -278,7 +278,7 @@ If you need assistance:
 1. Check this usage guide thoroughly
 2. Review the [Installation Guide](installation.md) for setup issues
 3. See the project [README](../README.md) for quick reference
-4. Open an issue on GitHub: https://github.com/GMouaad/time-tracker/issues
+4. Open an issue on GitHub: https://github.com/GMouaad/waqt/issues
 
 ## What's Next?
 

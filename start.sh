@@ -1,8 +1,8 @@
 #!/bin/bash
-# Startup script for Time Tracker application
+# Startup script for Waqt application
 # Supports both uv (recommended) and pip (legacy)
 
-echo "🚀 Starting Time Tracker..."
+echo "🚀 Starting Waqt..."
 echo ""
 
 # Detect if uv is available

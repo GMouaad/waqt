@@ -1,10 +1,10 @@
 # Installation Guide
 
-This guide will help you install and set up the Time Tracker application on your system.
+This guide will help you install and set up the Waqt application on your system.
 
 ## Prerequisites
 
-Before installing the Time Tracker application, ensure you have the following:
+Before installing the Waqt application, ensure you have the following:
 
 - **Python 3.10 or higher**: The application requires Python 3.10+
   - Check your Python version: `python --version` or `python3 --version`
@@ -19,7 +19,7 @@ Before installing the Time Tracker application, ensure you have the following:
 
 ### Operating System Support
 
-The Time Tracker application works on:
+The Waqt application works on:
 - Linux (Ubuntu, Debian, Fedora, etc.)
 - macOS
 - Windows 10/11
@@ -86,13 +86,13 @@ uv --version
 #### Option A: Clone with Git (Recommended)
 
 ```bash
-git clone https://github.com/GMouaad/time-tracker.git
-cd time-tracker
+git clone https://github.com/GMouaad/waqt.git
+cd waqt
 ```
 
 #### Option B: Download ZIP
 
-1. Visit https://github.com/GMouaad/time-tracker
+1. Visit https://github.com/GMouaad/waqt
 2. Click "Code" → "Download ZIP"
 3. Extract the ZIP file
 4. Navigate to the extracted folder
@@ -141,7 +141,7 @@ This installs:
 
 ### Step 5: Initialize the Database (Optional)
 
-The Time Tracker application is designed to be **self-initializing**. When you run the application for the first time, it will automatically:
+The Waqt application is designed to be **self-initializing**. When you run the application for the first time, it will automatically:
 - Create the SQLite database file (`time_tracker.db`)
 - Create all necessary tables
 - Apply any pending schema migrations
@@ -179,7 +179,7 @@ Open your web browser and navigate to:
 http://localhost:5555
 ```
 
-You should see the Time Tracker dashboard!
+You should see the Waqt dashboard!
 
 ---
 
@@ -366,7 +366,7 @@ This includes testing and code quality tools:
 
 ## Uninstallation
 
-To remove the Time Tracker application:
+To remove the Waqt application:
 
 1. Deactivate virtual environment: `deactivate`
 2. Delete the project folder
@@ -374,7 +374,7 @@ To remove the Time Tracker application:
 
 ## Next Steps
 
-Once installed, proceed to the [Usage Guide](usage.md) to learn how to use the Time Tracker application effectively.
+Once installed, proceed to the [Usage Guide](usage.md) to learn how to use the Waqt application effectively.
 
 ## Migrating from pip to uv
 
@@ -386,4 +386,4 @@ If you encounter issues not covered here:
 
 1. Check the [Usage Guide](usage.md) for operational questions
 2. Review the project's [README.md](../README.md)
-3. Open an issue on GitHub: https://github.com/GMouaad/time-tracker/issues
+3. Open an issue on GitHub: https://github.com/GMouaad/waqt/issues

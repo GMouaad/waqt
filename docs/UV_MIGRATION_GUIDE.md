@@ -52,8 +52,8 @@ If you're starting fresh:
 
 2. **Clone the repository**:
    ```bash
-   git clone https://github.com/GMouaad/time-tracker.git
-   cd time-tracker
+   git clone https://github.com/GMouaad/waqt.git
+   cd waqt
    ```
 
 3. **Create virtual environment with uv**:
@@ -282,7 +282,7 @@ Based on typical installations of this project:
 ## Getting Help
 
 - **uv documentation**: https://github.com/astral-sh/uv
-- **Project issues**: https://github.com/GMouaad/time-tracker/issues
+- **Project issues**: https://github.com/GMouaad/waqt/issues
 - **Python packaging guide**: https://packaging.python.org/
 
 ## Conclusion

@@ -1,6 +1,6 @@
-# Contributing to Time Tracker
+# Contributing to Waqt
 
-Thank you for your interest in contributing to the Time Tracker application!
+Thank you for your interest in contributing to the Waqt application!
 
 ## Development Setup
 
@@ -24,8 +24,8 @@ The fastest and most modern way to set up the development environment:
 
 2. **Fork and Clone**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/time-tracker.git
-   cd time-tracker
+   git clone https://github.com/YOUR_USERNAME/waqt.git
+   cd waqt
    ```
 
 3. **Create Virtual Environment**
@@ -55,8 +55,8 @@ The fastest and most modern way to set up the development environment:
 
 1. **Fork and Clone**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/time-tracker.git
-   cd time-tracker
+   git clone https://github.com/YOUR_USERNAME/waqt.git
+   cd waqt
    ```
 
 2. **Create Virtual Environment**

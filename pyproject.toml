@@ -49,9 +49,9 @@ waqt = "waqtracker.cli:main"
 waqt-mcp = "waqtracker.mcp_server:main"
 
 [project.urls]
-Homepage = "https://github.com/GMouaad/time-tracker"
-Repository = "https://github.com/GMouaad/time-tracker"
-Issues = "https://github.com/GMouaad/time-tracker/issues"
+Homepage = "https://github.com/GMouaad/waqt"
+Repository = "https://github.com/GMouaad/waqt"
+Issues = "https://github.com/GMouaad/waqt/issues"
 
 [tool.black]
 line-length = 88

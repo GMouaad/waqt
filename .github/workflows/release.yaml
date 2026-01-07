@@ -174,14 +174,14 @@ jobs:
             echo ""
             echo "**Install from Source:**"
             echo '```bash'
-            echo "git clone https://github.com/GMouaad/time-tracker.git"
-            echo "cd time-tracker"
+            echo "git clone https://github.com/GMouaad/waqt.git"
+            echo "cd waqt"
             echo "uv venv && source .venv/bin/activate"
             echo "uv pip install -e ."
             echo "python -m waqtracker.wsgi"
             echo '```'
             echo ""
-            echo "See https://github.com/GMouaad/time-tracker for more info."
+            echo "See https://github.com/GMouaad/waqt for more info."
           } > body.md
 
           echo "Release body:"

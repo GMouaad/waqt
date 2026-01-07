@@ -1,6 +1,6 @@
 # Dev Container Configuration
 
-This directory contains the development container configuration for the Waqtracker time tracking application.
+This directory contains the development container configuration for the Waqt time tracking application.
 
 ## Files
 
