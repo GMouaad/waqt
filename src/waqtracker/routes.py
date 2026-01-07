@@ -274,6 +274,11 @@ def export_csv():
         try:
             ref_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
+            # Log the error and fallback to current date
+            flash(
+                f"Invalid date format '{date_str}', using current date instead.",
+                "warning",
+            )
             ref_date = datetime.now().date()
 
         # Determine date range based on period

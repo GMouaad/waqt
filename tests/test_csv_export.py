@@ -321,9 +321,13 @@ def test_export_csv_empty_entries_list(app):
         # Should return CSV with headers but no data rows
         assert "Date" in csv_content
         assert "Start Time" in csv_content
+        
         # Should not have summary section for empty entries
-        lines = csv_content.strip().split("\n")
-        assert len(lines) == 1  # Just the header
+        # Use csv.reader to count actual rows
+        reader = csv.reader(io.StringIO(csv_content))
+        rows = list(reader)
+        assert len(rows) == 1  # Just the header row
+        assert "Date" in rows[0]  # Verify it's the header
 
 
 def test_export_includes_all_fields(app, sample_entries):

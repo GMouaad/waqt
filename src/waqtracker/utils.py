@@ -215,10 +215,12 @@ def export_time_entries_to_csv(
     ]
     writer.writerow(headers)
 
-    # Write data rows
+    # Write data rows and cache overtime calculations
+    overtime_values = []
     for entry in entries:
         # Calculate overtime for the day
         overtime = calculate_daily_overtime(entry.duration_hours)
+        overtime_values.append(overtime)
 
         row = [
             entry.date.isoformat(),
@@ -251,7 +253,7 @@ def export_time_entries_to_csv(
         writer.writerow(["Total Hours (HH:MM)", format_hours(total_hours)])
         working_days = len(set(entry.date for entry in entries))
         writer.writerow(["Working Days", working_days])
-        total_overtime = sum(calculate_daily_overtime(entry.duration_hours) for entry in entries)
+        total_overtime = sum(overtime_values)
         writer.writerow(["Total Overtime", f"{total_overtime:.2f}"])
 
     return output.getvalue()
