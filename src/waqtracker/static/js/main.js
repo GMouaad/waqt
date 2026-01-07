@@ -36,11 +36,8 @@
     }
     
     // Initialize theme immediately to prevent FOUC
-    // Safe to execute as documentElement exists before DOMContentLoaded
     const initialTheme = getPreferredTheme();
-    if (document.documentElement) {
-        document.documentElement.setAttribute('data-theme', initialTheme);
-    }
+    document.documentElement.setAttribute('data-theme', initialTheme);
     
     // Set up theme toggle button when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -59,15 +56,13 @@
         
         // Listen for system theme changes
         const prefersDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        if (prefersDarkQuery) {
-            prefersDarkQuery.addEventListener('change', function(e) {
-                // Only auto-switch if user hasn't manually set a preference
-                const hasManualPreference = localStorage.getItem('theme') !== null;
-                if (!hasManualPreference) {
-                    applyTheme(e.matches ? 'dark' : 'light', false);
-                }
-            });
-        }
+        prefersDarkQuery.addEventListener('change', function(e) {
+            // Only auto-switch if user hasn't manually set a preference
+            const hasManualPreference = localStorage.getItem('theme') !== null;
+            if (!hasManualPreference) {
+                applyTheme(e.matches ? 'dark' : 'light', false);
+            }
+        });
     });
 })();
 
