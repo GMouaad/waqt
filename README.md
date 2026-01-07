@@ -8,11 +8,17 @@ This is a self-contained Flask-based time tracking application with no external 
 
 ## Documentation
 
-- **[Installation Guide](docs/installation.md)** - Detailed installation instructions, prerequisites, and troubleshooting
-- **[UV Migration Guide](docs/UV_MIGRATION_GUIDE.md)** - Guide for migrating from pip to uv package manager
-- **[Usage Guide](docs/usage.md)** - Complete guide on how to use the application, workflows, and best practices
-- **[MCP Guide](docs/MCP_GUIDE.md)** - Model Context Protocol server documentation for AI assistant integration
-- **[E2E Testing Guide](docs/E2E_TESTING.md)** - Playwright end-to-end testing documentation and best practices
+📚 **Complete documentation is available at: [https://gmouaad.github.io/waqt/](https://gmouaad.github.io/waqt/)**
+
+Quick links:
+
+- **[Installation Guide](https://gmouaad.github.io/waqt/installation/)** - Detailed installation instructions, prerequisites, and troubleshooting
+- **[Usage Guide](https://gmouaad.github.io/waqt/usage/)** - Complete guide on how to use the application, workflows, and best practices
+- **[UV Migration Guide](https://gmouaad.github.io/waqt/uv-migration/)** - Guide for migrating from pip to uv package manager
+- **[MCP Guide](https://gmouaad.github.io/waqt/mcp-guide/)** - Model Context Protocol server documentation for AI assistant integration
+- **[E2E Testing Guide](https://gmouaad.github.io/waqt/e2e-testing/)** - Playwright end-to-end testing documentation and best practices
+- **[Building Executables](https://gmouaad.github.io/waqt/build/)** - Instructions for building standalone executables
+- **[Development Container](https://gmouaad.github.io/waqt/dev-container/)** - Setting up the dev container for development
 
 ## Features
 
@@ -139,7 +145,7 @@ The fastest way to get started from source is using `uv`, a modern Python packag
 
 3. **Access:** Open `http://localhost:5555`
 
-📚 **For detailed uv installation guide, see [docs/installation.md](docs/installation.md)**
+📚 **For detailed uv installation guide, see the [Installation Guide](https://gmouaad.github.io/waqt/installation/)**
 
 ### Option 3: Using Dev Container (Recommended for Development)
 
@@ -168,7 +174,7 @@ The easiest way to get started is using the pre-configured development container
    ```
    Access at `http://localhost:5555`
 
-📚 **For detailed dev container documentation, see [docs/DEV_CONTAINER.md](docs/DEV_CONTAINER.md)**
+📚 **For detailed dev container documentation, see the [Development Container Guide](https://gmouaad.github.io/waqt/dev-container/)**
 
 ### Option 4: Manual Installation with pip (Legacy - Deprecated)
 
@@ -176,7 +182,7 @@ The easiest way to get started is using the pre-configured development container
 
 **Requirements:** Python 3.11 or higher
 
-For detailed installation instructions including troubleshooting, see the **[Installation Guide](docs/installation.md)**.
+For detailed installation instructions including troubleshooting, see the **[Installation Guide](https://gmouaad.github.io/waqt/installation/)**.
 
 ### Quick Start (Legacy pip method)
 
@@ -365,11 +371,11 @@ Add to your Claude Desktop configuration (`claude_desktop_config.json`):
 }
 ```
 
-📚 **For detailed MCP documentation, see [docs/MCP_GUIDE.md](docs/MCP_GUIDE.md)**
+📚 **For detailed MCP documentation, see the [MCP Guide](https://gmouaad.github.io/waqt/mcp-guide/)**
 
 ## Web Interface Usage
 
-For detailed usage instructions, workflows, and examples, see the **[Usage Guide](docs/usage.md)**.
+For detailed usage instructions, workflows, and examples, see the **[Usage Guide](https://gmouaad.github.io/waqt/usage/)**.
 
 ### Quick Overview
 
