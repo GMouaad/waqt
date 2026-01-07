@@ -57,10 +57,16 @@ get_release_version() {
         # Dev prerelease always uses 'dev' tag - no API call needed
         echo "dev"
     else
-        # Get latest stable release
-        curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" |
-            grep '"tag_name":' |
-            sed -E 's/.*"([^"]+)".*/\1/'
+        # Get latest stable release - try jq first, fallback to grep/sed
+        local version=""
+        if command -v jq >/dev/null 2>&1; then
+            version=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | jq -r '.tag_name')
+        else
+            version=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" |
+                grep '"tag_name":' |
+                sed -E 's/.*"([^"]+)".*/\1/')
+        fi
+        echo "$version"
     fi
 }
 
@@ -106,7 +112,9 @@ main() {
 
     # Extract
     info "Extracting..."
-    unzip -q "${DOWNLOAD_PATH}/${FILENAME}" -d "${DOWNLOAD_PATH}"
+    if ! unzip -q "${DOWNLOAD_PATH}/${FILENAME}" -d "${DOWNLOAD_PATH}"; then
+        error "Failed to extract ${FILENAME}. Ensure 'unzip' is installed."
+    fi
 
     # Install
     mkdir -p "$INSTALL_DIR"

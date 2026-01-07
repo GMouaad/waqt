@@ -21,6 +21,18 @@ if ($Prerelease) {
     Write-Info "Installing waqt..."
 }
 
+# Detect architecture
+$Arch = "amd64"
+if ([System.Environment]::Is64BitOperatingSystem) {
+    # Check processor architecture
+    $ProcessorArch = (Get-CimInstance Win32_Processor).Architecture
+    # 9 = x64 (AMD64/EM64T), 12 = ARM64
+    if ($ProcessorArch -eq 12) {
+        $Arch = "arm64"
+    }
+}
+Write-Info "Detected architecture: $Arch"
+
 # Get release version
 try {
     if ($Prerelease) {
@@ -37,7 +49,7 @@ try {
 }
 
 # Download
-$Filename = "waqtracker-windows-amd64.zip"
+$Filename = "waqtracker-windows-$Arch.zip"
 $Url = "https://github.com/$Repo/releases/download/$Version/$Filename"
 # Resolve $env:TEMP to long path (fixes 8.3 short path issues like C:\Users\TERRY~1.ANE)
 $TempBase = (Get-Item $env:TEMP).FullName
@@ -81,9 +93,17 @@ if ($env:GITHUB_ACTIONS) {
 } else {
     # Regular install: add to user PATH if not already there
     $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
-    if ($UserPath -notlike "*$InstallDir*") {
+    # Split PATH and check for exact match
+    $PathEntries = $UserPath -split ';' | ForEach-Object { $_.TrimEnd('\') }
+    $InstallDirNormalized = $InstallDir.TrimEnd('\')
+    
+    if ($PathEntries -notcontains $InstallDirNormalized) {
         Write-Info "Adding $InstallDir to PATH..."
-        [Environment]::SetEnvironmentVariable("Path", "$UserPath;$InstallDir", "User")
+        if ($UserPath) {
+            [Environment]::SetEnvironmentVariable("Path", "$UserPath;$InstallDir", "User")
+        } else {
+            [Environment]::SetEnvironmentVariable("Path", "$InstallDir", "User")
+        }
         $env:Path = "$env:Path;$InstallDir"
     } else {
         Write-Info "Install directory is already in PATH"
