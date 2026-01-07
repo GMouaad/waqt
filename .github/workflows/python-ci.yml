@@ -59,15 +59,10 @@ jobs:
         # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,env,.venv,test-venv,build,dist
     
-    - name: Initialize database
+    - name: Run app smoke test
       run: |
-        python init_db.py
-    
+        timeout 10s python -m waqtracker.wsgi || code=$?; if [ $code -eq 124 ]; then echo "App started successfully"; else exit $code; fi
+
     - name: Run tests
       run: |
         pytest tests/ -v --tb=short
-    
-    - name: Test application startup
-      run: |
-        timeout 10s python run.py || code=$?; if [ $code -eq 124 ]; then echo "App started successfully"; else exit $code; fi
-      continue-on-error: false

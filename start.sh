@@ -67,16 +67,9 @@ if ! python -c "import flask" 2>/dev/null; then
     if [ "$UV_AVAILABLE" = true ]; then
         uv pip install -e .
     else
-        pip install -r requirements.txt
+        pip install -e .
     fi
     echo "✅ Dependencies installed"
-    echo ""
-fi
-
-# Check if database exists
-if [ ! -f "time_tracker.db" ]; then
-    echo "🗄️  Initializing database..."
-    python init_db.py
     echo ""
 fi
 
@@ -88,4 +81,4 @@ echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
 
-python run.py
+python -m waqtracker.wsgi

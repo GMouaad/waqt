@@ -66,16 +66,9 @@ if errorlevel 1 (
     if "%UV_AVAILABLE%"=="true" (
         uv pip install -e .
     ) else (
-        pip install -r requirements.txt
+        pip install -e .
     )
     echo Dependencies installed
-    echo.
-)
-
-REM Check if database exists
-if not exist "time_tracker.db" (
-    echo Initializing database...
-    python init_db.py
     echo.
 )
 
@@ -87,4 +80,4 @@ echo.
 echo Press Ctrl+C to stop the server
 echo.
 
-python run.py
+python -m waqtracker.wsgi

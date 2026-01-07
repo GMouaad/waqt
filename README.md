@@ -97,8 +97,7 @@ The fastest way to get started from source is using `uv`, a modern Python packag
    uv venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    uv pip install -e .
-   python init_db.py
-   python run.py
+   python -m waqtracker.wsgi   # Database initialized automatically on first run
    ```
 
 3. **Access:** Open `http://localhost:5555`
@@ -128,7 +127,7 @@ The easiest way to get started is using the pre-configured development container
 
 4. **Run the application:**
    ```bash
-   python run.py
+   python -m waqtracker.wsgi
    ```
    Access at `http://localhost:5555`
 
@@ -160,18 +159,15 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 3. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
-4. Initialize the database:
+4. Run the application:
 ```bash
-python init_db.py
+python -m waqtracker.wsgi
 ```
 
-5. Run the application:
-```bash
-python run.py
-```
+*Note: The database is automatically initialized and migrated on first run.*
 
 6. Open your browser and navigate to `http://localhost:5555`
 
@@ -365,16 +361,17 @@ time-tracker/
 │       ├── __init__.py      # Flask app initialization
 │       ├── models.py        # Database models
 │       ├── routes.py        # Application routes
+│       ├── wsgi.py          # WSGI entry point
+│       ├── scripts/         # Utility scripts (init_db, etc.)
 │       ├── templates/       # HTML templates
 │       └── static/          # CSS, JS, images
+├── examples/                # Example scripts
 ├── docs/                    # Documentation
 │   ├── installation.md      # Installation guide
 │   ├── usage.md            # Usage guide
 │   └── DEV_CONTAINER.md    # Dev container guide
 ├── tests/                   # Unit tests
-├── requirements.txt         # Python dependencies
-├── run.py                   # Application entry point
-├── init_db.py               # Database initialization
+├── pyproject.toml           # Project dependencies
 └── README.md               # This file
 ```
 

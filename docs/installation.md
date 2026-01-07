@@ -139,32 +139,28 @@ This installs:
 - 📦 Built-in virtual environment management
 - 🚀 Significantly faster installation times
 
-### Step 5: Initialize the Database
+### Step 5: Initialize the Database (Optional)
 
-Create the SQLite database and set up default settings:
+The Time Tracker application is designed to be **self-initializing**. When you run the application for the first time, it will automatically:
+- Create the SQLite database file (`time_tracker.db`)
+- Create all necessary tables
+- Apply any pending schema migrations
+- Seed default configuration settings
+
+If you prefer to initialize the database manually before running the app, you can use:
 
 ```bash
-python init_db.py
+python -m waqtracker.scripts.init_db
 ```
 
-You should see output like:
-```
-✓ Database tables created successfully!
-✓ Added setting: standard_hours_per_day = 8
-✓ Added setting: standard_hours_per_week = 40
-
-✅ Database initialization complete!
-You can now run the app with: python run.py
-```
-
-This creates a `time_tracker.db` file in your project directory.
+This creates a `time_tracker.db` file in your project directory with all default settings.
 
 ### Step 6: Run the Application
 
 Start the Flask development server:
 
 ```bash
-python run.py
+python -m waqtracker.wsgi
 ```
 
 You should see output like:
@@ -220,7 +216,7 @@ You should see `(venv)` in your terminal prompt, indicating the virtual environm
 With the virtual environment activated, install the required packages:
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ### 4-7. Complete Setup
@@ -253,8 +249,7 @@ These scripts will:
 - Create a virtual environment (if not exists)
 - Activate the virtual environment
 - Install dependencies (if not installed)
-- Initialize the database (if not exists)
-- Start the application
+- Start the application (which handles database initialization)
 
 ## Verification
 
@@ -302,9 +297,9 @@ To verify your installation is working correctly:
 - Another application is using port 5555
 - Find and stop the other application
 - Or set the `PORT` environment variable to use a different port (e.g., 5556):
-  - Linux/macOS: `PORT=5556 python run.py`
-  - Windows (CMD): `set PORT=5556 && python run.py`
-  - Windows (PowerShell): `$env:PORT=5556; python run.py`
+  - Linux/macOS: `PORT=5556 python -m waqtracker.wsgi`
+  - Windows (CMD): `set PORT=5556 && python -m waqtracker.wsgi`
+  - Windows (PowerShell): `$env:PORT=5556; python -m waqtracker.wsgi`
 
 ### Virtual Environment Not Activating
 
@@ -325,7 +320,7 @@ To verify your installation is working correctly:
 - Update uv: `uv self update`
 - Check your internet connection
 - Clear cache: `uv cache clean`
-- Try installing with pip as fallback: `pip install -r requirements.txt`
+- Try installing with pip as fallback: `pip install -e .`
 
 **Solution with pip (legacy)**:
 - Update pip: `pip install --upgrade pip`
@@ -360,7 +355,7 @@ uv pip install -e ".[dev]"
 ### With pip (Legacy):
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"
 ```
 
 This includes testing and code quality tools:

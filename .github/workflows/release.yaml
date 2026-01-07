@@ -178,7 +178,7 @@ jobs:
             echo "cd time-tracker"
             echo "uv venv && source .venv/bin/activate"
             echo "uv pip install -e ."
-            echo "python run.py"
+            echo "python -m waqtracker.wsgi"
             echo '```'
             echo ""
             echo "See https://github.com/GMouaad/time-tracker for more info."

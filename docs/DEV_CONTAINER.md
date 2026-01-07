@@ -39,8 +39,8 @@ A development container is a Docker container specifically configured for develo
 4. **Automatic Setup:**
    The dev container will automatically:
    - Install Python 3.11
-   - Install all Python dependencies from `requirements.txt` and `requirements-dev.txt`
-   - Initialize the SQLite database with `init_db.py`
+   - Install all Python dependencies from `pyproject.toml`
+   - Initialize the SQLite database with `python -m waqtracker.scripts.init_db`
    - Configure VS Code with recommended extensions and settings
 
 ### Running the Application
@@ -49,7 +49,7 @@ Once the dev container is ready:
 
 1. **Start the Flask server:**
    ```bash
-   python run.py
+   python -m waqtracker.wsgi
    ```
    Or use the provided startup script:
    ```bash
@@ -184,7 +184,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 
 2. **Manually install dependencies:**
    ```bash
-   pip install -r requirements.txt -r requirements-dev.txt
+   pip install -e ".[dev]"
    ```
 
 ### Database Issues
@@ -192,7 +192,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 1. **Reinitialize the database:**
    ```bash
    rm -f time_tracker.db
-   python init_db.py
+   python -m waqtracker.scripts.init_db
    ```
 
 ### Port Already in Use
@@ -207,7 +207,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
    ```
 
 2. **Use a different port:**
-   Set the `PORT` environment variable: `PORT=5556 python run.py`
+   Set the `PORT` environment variable: `PORT=5556 python -m waqtracker.wsgi`
 
 ## Best Practices
 
