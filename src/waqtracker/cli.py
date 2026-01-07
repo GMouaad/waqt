@@ -4,7 +4,7 @@ import click
 from datetime import datetime
 from typing import Optional
 from . import create_app, db
-from .models import TimeEntry, LeaveDay
+from .models import TimeEntry, LeaveDay, Settings
 from .utils import (
     get_week_bounds,
     get_month_bounds,
@@ -496,6 +496,235 @@ def export(period: str, date: Optional[str], output: Optional[str], export_forma
                 click.style(f"Error writing to file: {str(e)}", fg="red")
             )
             raise click.exceptions.Exit(1)
+
+
+# Configuration management commands
+@cli.group()
+def config():
+    """Manage application configuration settings.
+
+    Configuration options control various aspects of time tracking behavior,
+    including standard work hours, break durations, and feature flags.
+    All settings are stored persistently in the database.
+    """
+    pass
+
+
+# Configuration defaults and validation rules
+CONFIG_DEFAULTS = {
+    "standard_hours_per_day": "8",
+    "standard_hours_per_week": "40",
+    "weekly_hours": "40",
+    "pause_duration_minutes": "45",
+    "auto_end": "false",
+}
+
+CONFIG_DESCRIPTIONS = {
+    "standard_hours_per_day": "Standard working hours per day (default: 8)",
+    "standard_hours_per_week": "Standard working hours per week (default: 40)",
+    "weekly_hours": "Expected weekly working hours (default: 40)",
+    "pause_duration_minutes": "Default pause/break duration in minutes (default: 45)",
+    "auto_end": "Feature flag: Auto-end work session after 8h 45m (default: false)",
+}
+
+CONFIG_VALIDATORS = {
+    "standard_hours_per_day": lambda v: 0 < float(v) <= 24,
+    "standard_hours_per_week": lambda v: 0 < float(v) <= 168,
+    "weekly_hours": lambda v: 0 < float(v) <= 168,
+    "pause_duration_minutes": lambda v: 0 <= int(v) <= 480,
+    "auto_end": lambda v: v.lower() in ("true", "false", "1", "0", "yes", "no", "on", "off"),
+}
+
+CONFIG_VALIDATION_MESSAGES = {
+    "standard_hours_per_day": "Must be between 0 and 24 hours",
+    "standard_hours_per_week": "Must be between 0 and 168 hours",
+    "weekly_hours": "Must be between 0 and 168 hours",
+    "pause_duration_minutes": "Must be between 0 and 480 minutes (8 hours)",
+    "auto_end": "Must be a boolean value (true/false, yes/no, 1/0, on/off)",
+}
+
+
+@config.command("list")
+def config_list():
+    """Display all configuration options and their current values.
+
+    Shows all configuration settings with their current values, descriptions,
+    and default values. Settings marked with (*) indicate they are using
+    non-default values.
+
+    Examples:
+        waqt config list
+    """
+    app = create_app()
+    with app.app_context():
+        all_settings = Settings.get_all_settings()
+
+        click.echo(click.style("\n⚙️  Configuration Settings", fg="cyan", bold=True))
+        click.echo("=" * 70)
+
+        # Sort by key for consistent display
+        for key in sorted(CONFIG_DEFAULTS.keys()):
+            current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
+            default_value = CONFIG_DEFAULTS[key]
+            description = CONFIG_DESCRIPTIONS.get(key, "No description available")
+
+            # Mark non-default values
+            marker = " *" if current_value != default_value else ""
+
+            click.echo(f"\n{click.style(key, fg='green', bold=True)}{marker}")
+            click.echo(f"  Value: {current_value}")
+            click.echo(f"  Default: {default_value}")
+            click.echo(f"  Description: {description}")
+
+        click.echo("\n" + "=" * 70)
+        click.echo("* Indicates non-default value")
+        click.echo()
+
+
+@config.command("get")
+@click.argument("key")
+def config_get(key: str):
+    """Get the value of a specific configuration option.
+
+    Displays the current value of the specified configuration key.
+
+    Examples:
+        waqt config get weekly_hours
+        waqt config get auto_end
+    """
+    app = create_app()
+    with app.app_context():
+        if key not in CONFIG_DEFAULTS:
+            click.echo(
+                click.style(
+                    f"Error: Unknown configuration key '{key}'.",
+                    fg="red",
+                )
+            )
+            click.echo("\nAvailable configuration keys:")
+            for k in sorted(CONFIG_DEFAULTS.keys()):
+                click.echo(f"  - {k}")
+            raise click.exceptions.Exit(1)
+
+        value = Settings.get_setting(key, CONFIG_DEFAULTS[key])
+        description = CONFIG_DESCRIPTIONS.get(key, "No description available")
+
+        click.echo(click.style(f"\n{key}", fg="green", bold=True))
+        click.echo(f"Value: {value}")
+        click.echo(f"Description: {description}")
+        click.echo()
+
+
+@config.command("set")
+@click.argument("key")
+@click.argument("value")
+def config_set(key: str, value: str):
+    """Set a configuration option to a new value.
+
+    Updates the specified configuration key with the provided value.
+    The value will be validated before being saved.
+
+    Examples:
+        waqt config set weekly_hours 35
+        waqt config set pause_duration_minutes 60
+        waqt config set auto_end true
+    """
+    app = create_app()
+    with app.app_context():
+        if key not in CONFIG_DEFAULTS:
+            click.echo(
+                click.style(
+                    f"Error: Unknown configuration key '{key}'.",
+                    fg="red",
+                )
+            )
+            click.echo("\nAvailable configuration keys:")
+            for k in sorted(CONFIG_DEFAULTS.keys()):
+                click.echo(f"  - {k}")
+            raise click.exceptions.Exit(1)
+
+        # Validate the value
+        validator = CONFIG_VALIDATORS.get(key)
+        if validator:
+            try:
+                if not validator(value):
+                    click.echo(
+                        click.style(
+                            f"Error: Invalid value for '{key}'.",
+                            fg="red",
+                        )
+                    )
+                    validation_msg = CONFIG_VALIDATION_MESSAGES.get(
+                        key, "Value validation failed"
+                    )
+                    click.echo(f"{validation_msg}")
+                    raise click.exceptions.Exit(1)
+            except (ValueError, TypeError) as e:
+                click.echo(
+                    click.style(
+                        f"Error: Invalid value for '{key}': {str(e)}",
+                        fg="red",
+                    )
+                )
+                validation_msg = CONFIG_VALIDATION_MESSAGES.get(
+                    key, "Value validation failed"
+                )
+                click.echo(f"{validation_msg}")
+                raise click.exceptions.Exit(1)
+
+        # Normalize boolean values
+        if key == "auto_end":
+            value = "true" if value.lower() in ("true", "1", "yes", "on") else "false"
+
+        # Get old value for display
+        old_value = Settings.get_setting(key, CONFIG_DEFAULTS[key])
+
+        # Set the new value
+        Settings.set_setting(key, value)
+
+        click.echo(click.style("✓ Configuration updated!", fg="green", bold=True))
+        click.echo(f"Key: {key}")
+        click.echo(f"Old value: {old_value}")
+        click.echo(f"New value: {value}")
+        click.echo()
+
+
+@config.command("reset")
+@click.argument("key")
+def config_reset(key: str):
+    """Reset a configuration option to its default value.
+
+    Restores the specified configuration key to its default value.
+
+    Examples:
+        waqt config reset weekly_hours
+        waqt config reset auto_end
+    """
+    app = create_app()
+    with app.app_context():
+        if key not in CONFIG_DEFAULTS:
+            click.echo(
+                click.style(
+                    f"Error: Unknown configuration key '{key}'.",
+                    fg="red",
+                )
+            )
+            click.echo("\nAvailable configuration keys:")
+            for k in sorted(CONFIG_DEFAULTS.keys()):
+                click.echo(f"  - {k}")
+            raise click.exceptions.Exit(1)
+
+        default_value = CONFIG_DEFAULTS[key]
+        old_value = Settings.get_setting(key, default_value)
+
+        # Set to default value
+        Settings.set_setting(key, default_value)
+
+        click.echo(click.style("✓ Configuration reset to default!", fg="green", bold=True))
+        click.echo(f"Key: {key}")
+        click.echo(f"Old value: {old_value}")
+        click.echo(f"Default value: {default_value}")
+        click.echo()
 
 
 def main():
