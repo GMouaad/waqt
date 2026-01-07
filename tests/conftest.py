@@ -4,13 +4,24 @@ import pytest
 import os
 import tempfile
 from datetime import datetime
+from pathlib import Path
 
 # Try to import playwright, but don't fail if it's not installed
 try:
     from playwright.sync_api import sync_playwright
     PLAYWRIGHT_AVAILABLE = True
+    
+    # Check if browsers are installed by checking for browser executables
+    playwright_dir = Path.home() / ".cache" / "ms-playwright"
+    chromium_dirs = list(playwright_dir.glob("chromium*")) if playwright_dir.exists() else []
+    PLAYWRIGHT_BROWSERS_INSTALLED = len(chromium_dirs) > 0 and any(
+        (d / "chrome-linux" / "chrome").exists() or 
+        (d / "chrome-headless-shell-linux64" / "chrome-headless-shell").exists()
+        for d in chromium_dirs
+    )
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
+    PLAYWRIGHT_BROWSERS_INSTALLED = False
 
 
 def pytest_configure(config):
@@ -22,11 +33,16 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(config, items):
-    """Automatically skip e2e tests if Playwright is not available."""
-    if PLAYWRIGHT_AVAILABLE:
+    """Automatically skip e2e tests if Playwright is not available or browsers not installed."""
+    if PLAYWRIGHT_AVAILABLE and PLAYWRIGHT_BROWSERS_INSTALLED:
         return
     
-    skip_e2e = pytest.mark.skip(reason="Playwright not installed - skipping E2E tests")
+    skip_reason = (
+        "Playwright not installed - skipping E2E tests" 
+        if not PLAYWRIGHT_AVAILABLE 
+        else "Playwright browsers not installed - run 'playwright install' to enable E2E tests"
+    )
+    skip_e2e = pytest.mark.skip(reason=skip_reason)
     for item in items:
         if "e2e" in item.keywords:
             item.add_marker(skip_e2e)
@@ -53,8 +69,8 @@ def browser_context_args():
 @pytest.fixture(scope="function")
 def live_server(app):
     """Start a live Flask server for E2E tests."""
-    if not PLAYWRIGHT_AVAILABLE:
-        pytest.skip("Playwright not installed")
+    if not PLAYWRIGHT_AVAILABLE or not PLAYWRIGHT_BROWSERS_INSTALLED:
+        pytest.skip("Playwright not available or browsers not installed")
     
     from werkzeug.serving import make_server
     import threading
@@ -100,8 +116,8 @@ def app():
 @pytest.fixture(scope="function")
 def browser_instance():
     """Create a browser instance for tests."""
-    if not PLAYWRIGHT_AVAILABLE:
-        pytest.skip("Playwright not installed")
+    if not PLAYWRIGHT_AVAILABLE or not PLAYWRIGHT_BROWSERS_INSTALLED:
+        pytest.skip("Playwright not available or browsers not installed")
     
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -112,8 +128,8 @@ def browser_instance():
 @pytest.fixture(scope="function")
 def page(browser_instance):
     """Create a new page for each test."""
-    if not PLAYWRIGHT_AVAILABLE:
-        pytest.skip("Playwright not installed")
+    if not PLAYWRIGHT_AVAILABLE or not PLAYWRIGHT_BROWSERS_INSTALLED:
+        pytest.skip("Playwright not available or browsers not installed")
     
     context = browser_instance.new_context(
         viewport={"width": 1280, "height": 720}
