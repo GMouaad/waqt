@@ -1,13 +1,9 @@
 // Theme Management
 (function() {
-    // Track if user has manually changed theme
-    let hasManualPreference = false;
-    
     // Get theme from localStorage or system preference
     function getPreferredTheme() {
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
-            hasManualPreference = true;
             return storedTheme;
         }
         
@@ -19,20 +15,24 @@
         return 'light';
     }
     
-    // Apply theme to document
-    function applyTheme(theme, isManual = false) {
-        document.documentElement.setAttribute('data-theme', theme);
-        
-        if (isManual) {
-            localStorage.setItem('theme', theme);
-            hasManualPreference = true;
-        }
-        
-        // Update theme toggle icon
+    // Update theme icon
+    function updateThemeIcon(theme) {
         const themeIcon = document.getElementById('theme-icon');
         if (themeIcon) {
             themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
         }
+    }
+    
+    // Apply theme to document
+    function applyTheme(theme, isManual = false) {
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        // Only store in localStorage if manually changed by user
+        if (isManual) {
+            localStorage.setItem('theme', theme);
+        }
+        
+        updateThemeIcon(theme);
     }
     
     // Initialize theme immediately to prevent FOUC
@@ -41,11 +41,8 @@
     
     // Set up theme toggle button when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-        // Update icon after DOM is ready (without writing to localStorage again)
-        const themeIcon = document.getElementById('theme-icon');
-        if (themeIcon) {
-            themeIcon.textContent = initialTheme === 'dark' ? '☀️' : '🌙';
-        }
+        // Update icon after DOM is ready
+        updateThemeIcon(initialTheme);
         
         const themeToggle = document.getElementById('theme-toggle');
         
@@ -61,6 +58,7 @@
         if (window.matchMedia) {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
                 // Only auto-switch if user hasn't manually set a preference
+                const hasManualPreference = localStorage.getItem('theme') !== null;
                 if (!hasManualPreference) {
                     applyTheme(e.matches ? 'dark' : 'light', false);
                 }
