@@ -19,7 +19,6 @@ def app():
         # Initialize with default settings
         default_settings = [
             ("standard_hours_per_day", "8"),
-            ("standard_hours_per_week", "40"),
             ("weekly_hours", "40"),
             ("pause_duration_minutes", "45"),
             ("auto_end", "false"),
@@ -55,7 +54,6 @@ def test_config_list_displays_all_settings(runner, app):
         assert result.exit_code == 0
         assert "Configuration Settings" in result.output
         assert "standard_hours_per_day" in result.output
-        assert "standard_hours_per_week" in result.output
         assert "weekly_hours" in result.output
         assert "pause_duration_minutes" in result.output
         assert "auto_end" in result.output
@@ -297,6 +295,33 @@ def test_settings_get_all_settings(app):
         assert "pause_duration_minutes" in all_settings
         assert "auto_end" in all_settings
         assert all_settings["weekly_hours"] == "40"
+
+
+def test_settings_get_int_with_invalid_value(app):
+    """Test that get_int returns default when value cannot be converted."""
+    with app.app_context():
+        # Store a non-numeric value
+        Settings.set_setting("test_invalid_int", "not_a_number")
+        value = Settings.get_int("test_invalid_int", default=42)
+        assert value == 42
+
+
+def test_settings_get_float_with_invalid_value(app):
+    """Test that get_float returns default when value cannot be converted."""
+    with app.app_context():
+        # Store a non-numeric value
+        Settings.set_setting("test_invalid_float", "not_a_float")
+        value = Settings.get_float("test_invalid_float", default=3.14)
+        assert value == 3.14
+
+
+def test_settings_get_bool_with_invalid_value(app):
+    """Test that get_bool returns default for invalid boolean values."""
+    with app.app_context():
+        # Store various values and check they return false (not in the true list)
+        for invalid_val in ["invalid", "maybe", "2", ""]:
+            Settings.set_setting("test_bool", invalid_val)
+            assert Settings.get_bool("test_bool", default=False) is False
 
 
 def test_config_list_marks_non_default_values(runner, app):

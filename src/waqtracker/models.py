@@ -1,7 +1,10 @@
 """Database models for time tracking application."""
 
+import logging
 from datetime import datetime, timezone
 from . import db
+
+logger = logging.getLogger(__name__)
 
 
 class TimeEntry(db.Model):
@@ -101,7 +104,11 @@ class Settings(db.Model):
             return None
         try:
             return int(value)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
+            logger.warning(
+                f"Failed to convert setting '{key}' value '{value}' to int: {e}. "
+                f"Returning default: {default}"
+            )
             return default
 
     @staticmethod
@@ -112,7 +119,11 @@ class Settings(db.Model):
             return None
         try:
             return float(value)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
+            logger.warning(
+                f"Failed to convert setting '{key}' value '{value}' to float: {e}. "
+                f"Returning default: {default}"
+            )
             return default
 
     @staticmethod

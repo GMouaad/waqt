@@ -266,7 +266,6 @@ waqt config reset weekly_hours
 **Available Configuration Options:**
 - `weekly_hours`: Expected weekly working hours (default: 40)
 - `standard_hours_per_day`: Standard working hours per day (default: 8)
-- `standard_hours_per_week`: Standard working hours per week (default: 40)
 - `pause_duration_minutes`: Default pause/break duration in minutes (default: 45)
 - `auto_end`: Feature flag for auto-ending work sessions (default: false)
 

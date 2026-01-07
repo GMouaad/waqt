@@ -509,15 +509,21 @@ def config():
 # Configuration defaults and validation rules
 CONFIG_DEFAULTS = {
     "standard_hours_per_day": "8",
-    "standard_hours_per_week": "40",
     "weekly_hours": "40",
     "pause_duration_minutes": "45",
     "auto_end": "false",
 }
 
+# Configuration value types for automatic type handling
+CONFIG_TYPES = {
+    "standard_hours_per_day": "float",
+    "weekly_hours": "float",
+    "pause_duration_minutes": "int",
+    "auto_end": "bool",
+}
+
 CONFIG_DESCRIPTIONS = {
     "standard_hours_per_day": "Standard working hours per day (default: 8)",
-    "standard_hours_per_week": "Standard working hours per week (default: 40)",
     "weekly_hours": "Expected weekly working hours (default: 40)",
     "pause_duration_minutes": "Default pause/break duration in minutes (default: 45)",
     "auto_end": "Feature flag: Auto-end work session after 8h 45m (default: false)",
@@ -525,17 +531,15 @@ CONFIG_DESCRIPTIONS = {
 
 CONFIG_VALIDATORS = {
     "standard_hours_per_day": lambda v: 0 < float(v) <= 24,
-    "standard_hours_per_week": lambda v: 0 < float(v) <= 168,
     "weekly_hours": lambda v: 0 < float(v) <= 168,
     "pause_duration_minutes": lambda v: 0 <= int(v) <= 480,
-    "auto_end": lambda v: v.lower()
-    in ("true", "false", "1", "0", "yes", "no", "on", "off"),
+    "auto_end": lambda v: isinstance(v, str)
+    and v.lower() in ("true", "false", "1", "0", "yes", "no", "on", "off"),
 }
 
 CONFIG_VALIDATION_MESSAGES = {
-    "standard_hours_per_day": "Must be between 0 and 24 hours",
-    "standard_hours_per_week": "Must be between 0 and 168 hours",
-    "weekly_hours": "Must be between 0 and 168 hours",
+    "standard_hours_per_day": "Must be greater than 0 and at most 24 hours",
+    "weekly_hours": "Must be greater than 0 and at most 168 hours",
     "pause_duration_minutes": "Must be between 0 and 480 minutes (8 hours)",
     "auto_end": "Must be a boolean value (true/false, yes/no, 1/0, on/off)",
 }
@@ -669,8 +673,8 @@ def config_set(key: str, value: str):
                 click.echo(f"{validation_msg}")
                 raise click.exceptions.Exit(1)
 
-        # Normalize boolean values
-        if key == "auto_end":
+        # Normalize boolean values for all boolean type configs
+        if CONFIG_TYPES.get(key) == "bool":
             value = "true" if value.lower() in ("true", "1", "yes", "on") else "false"
 
         # Get old value for display
