@@ -25,16 +25,52 @@ This is a self-contained Flask-based time tracking application with no external 
 
 ## Technology Stack
 
-- **Backend**: Flask (Python 3.10+)
+- **Backend**: Flask (Python 3.11+)
 - **Database**: SQLite3
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Portable**: No external services required
 
 ## Installation
 
-### Option 1: Using uv (Recommended - Fast & Modern)
+### Option 1: Download Standalone Executable (Easiest)
 
-The fastest way to get started is using `uv`, a modern Python package manager that's 10-100x faster than pip:
+The easiest way to get started is to download a pre-built executable for your platform:
+
+1. **Download the latest release:**
+   - Go to the [Releases page](https://github.com/GMouaad/time-tracker/releases)
+   - Download the zip file for your platform:
+     - **Linux (x64)**: `waqtracker-linux-amd64.zip`
+     - **macOS (Intel)**: `waqtracker-macos-amd64.zip`
+     - **macOS (Apple Silicon)**: `waqtracker-macos-arm64.zip`
+     - **Windows (x64)**: `waqtracker-windows-amd64.zip`
+
+2. **Extract and run:**
+   ```bash
+   # Linux/macOS
+   unzip waqtracker-*.zip
+   chmod +x waqtracker  # macOS/Linux only
+   ./waqtracker
+   
+   # Windows PowerShell
+   Expand-Archive waqtracker-windows-amd64.zip
+   .\waqtracker.exe
+   ```
+
+3. **Access:** Open `http://localhost:5000` in your browser
+
+**CLI Usage:** When running the standalone executable, pass CLI commands directly as arguments:
+```bash
+./waqtracker --version      # Check version
+./waqtracker start          # Start time tracking
+./waqtracker end            # End time tracking
+./waqtracker summary        # View summary
+```
+
+### Option 2: Using uv (Recommended - Fast & Modern)
+
+The fastest way to get started from source is using `uv`, a modern Python package manager that's 10-100x faster than pip:
+
+**Requirements:** Python 3.11 or higher
 
 1. **Install uv:**
    ```bash
@@ -65,7 +101,7 @@ The fastest way to get started is using `uv`, a modern Python package manager th
 
 📚 **For detailed uv installation guide, see [docs/installation.md](docs/installation.md)**
 
-### Option 2: Using Dev Container (Recommended for Development)
+### Option 3: Using Dev Container (Recommended for Development)
 
 The easiest way to get started is using the pre-configured development container:
 
@@ -94,15 +130,17 @@ The easiest way to get started is using the pre-configured development container
 
 📚 **For detailed dev container documentation, see [docs/DEV_CONTAINER.md](docs/DEV_CONTAINER.md)**
 
-### Option 3: Manual Installation with pip (Legacy - Deprecated)
+### Option 4: Manual Installation with pip (Legacy - Deprecated)
 
-> **⚠️ DEPRECATED**: This method is maintained for backward compatibility. Please use `uv` (Option 1) for better performance.
+> **⚠️ DEPRECATED**: This method is maintained for backward compatibility. Please use the standalone executable (Option 1) or `uv` (Option 2) for better experience.
+
+**Requirements:** Python 3.11 or higher
 
 For detailed installation instructions including troubleshooting, see the **[Installation Guide](docs/installation.md)**.
 
 ### Quick Start (Legacy pip method)
 
-> **Note**: Consider using `uv` (Option 1) for faster installation.
+> **Note**: Consider using the standalone executable or `uv` for easier installation.
 
 1. Clone the repository:
 ```bash

@@ -23,6 +23,10 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# PyInstaller
+*.spec
+*.manifest
+
 # Virtual Environment
 venv/
 .venv/
@@ -30,6 +34,7 @@ env/
 ENV/
 env.bak/
 venv.bak/
+test-venv/
 
 # Flask
 instance/

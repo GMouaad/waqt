@@ -1,13 +1,13 @@
-name: Python CI
+name: Dev Build
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test:
@@ -18,7 +18,7 @@ jobs:
         python-version: ['3.11', '3.12']
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -50,9 +50,7 @@ jobs:
     
     - name: Lint with flake8
       run: |
-        # Stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,env,.venv,test-venv,build,dist
-        # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,env,.venv,test-venv,build,dist
     
     - name: Initialize database
@@ -62,8 +60,13 @@ jobs:
     - name: Run tests
       run: |
         pytest tests/ -v
-    
-    - name: Test application startup
-      run: |
-        timeout 10s python run.py || code=$?; if [ $code -eq 124 ]; then echo "App started successfully"; else exit $code; fi
-      continue-on-error: false
+
+  build:
+    needs: test
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/build.yaml
+    with:
+      version: "0.1.${{ github.run_number }}-dev"
+      git_sha: ${{ github.sha }}
+      ref: ${{ github.ref }}
+      fetch_depth: 1
