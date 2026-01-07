@@ -50,7 +50,7 @@ def test_mcp_server_starts():
 def test_mcp_module_can_be_imported():
     """Test that the MCP server module can be imported."""
     result = subprocess.run(
-        [sys.executable, "-c", "from src.waqtracker.mcp_server import mcp, main"],
+        [sys.executable, "-c", "from waqtracker.mcp_server import mcp, main"],
         capture_output=True,
         text=True,
     )
@@ -63,7 +63,7 @@ def test_mcp_server_has_tools():
         [
             sys.executable,
             "-c",
-            "from src.waqtracker.mcp_server import start, end, summary, list_entries, export_entries; "
+            "from waqtracker.mcp_server import start, end, summary, list_entries, export_entries; "
             "print('success')",
         ],
         capture_output=True,
@@ -75,7 +75,7 @@ def test_mcp_server_has_tools():
 
 def test_demo_script_runs():
     """Test that the demo script runs successfully."""
-    demo_path = Path(__file__).parent.parent / "demo_mcp.py"
+    demo_path = Path(__file__).parent.parent / "examples" / "demo_mcp.py"
     if demo_path.exists():
         result = subprocess.run(
             [sys.executable, str(demo_path)],
