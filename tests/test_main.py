@@ -30,7 +30,7 @@ def test_main_no_args_starts_web_app():
                 call_kwargs = mock_app.run.call_args.kwargs
                 assert call_kwargs['host'] == '127.0.0.1'
                 assert call_kwargs['port'] == 5000
-                assert call_kwargs['debug'] == False  # Default when FLASK_DEBUG not set
+                assert call_kwargs['debug'] is False  # Default when FLASK_DEBUG not set
                 
                 # Verify startup message was printed
                 output = mock_stdout.getvalue()
@@ -81,19 +81,17 @@ def test_main_help_message_package_mode():
     
     # Mock sys.argv (single element = no args, package mode)
     with patch.object(sys, 'argv', ['waqtracker']):
-        # Ensure frozen attribute doesn't exist (normal case for package mode)
-        if hasattr(sys, 'frozen'):
-            delattr(sys, 'frozen')
-        
-        with patch('waqtracker.__main__.create_app') as mock_create_app:
-            mock_app = MagicMock()
-            mock_create_app.return_value = mock_app
-            
-            with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                main()
+        # Mock frozen attribute as not existing (package mode)
+        with patch.object(sys, 'frozen', False, create=True):
+            with patch('waqtracker.__main__.create_app') as mock_create_app:
+                mock_app = MagicMock()
+                mock_create_app.return_value = mock_app
                 
-                output = mock_stdout.getvalue()
-                assert "waqt <command>" in output
+                with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+                    main()
+                    
+                    output = mock_stdout.getvalue()
+                    assert "waqt <command>" in output
 
 
 def test_main_error_handling():
@@ -140,7 +138,7 @@ def test_main_debug_mode_from_env():
                     
                     # Verify app.run was called with debug=True
                     call_kwargs = mock_app.run.call_args.kwargs
-                    assert call_kwargs['debug'] == True
+                    assert call_kwargs['debug'] is True
 
 
 def test_main_host_binding():
