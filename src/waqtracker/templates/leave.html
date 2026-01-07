@@ -3,24 +3,24 @@
 {% block title %}Leave Management - Time Tracker{% endblock %}
 
 {% block content %}
-<div class="leave-page">
+<div class="leave-page" data-testid="leave-page">
     <h2>Leave Management</h2>
     <p class="subtitle">Track your vacation and sick leave days</p>
     
     <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card" data-testid="stat-vacation-days">
             <h3>Vacation Days</h3>
             <div class="stat-number text-info">{{ vacation_count }}</div>
             <p class="stat-label">{{ current_year }}</p>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card" data-testid="stat-sick-days">
             <h3>Sick Days</h3>
             <div class="stat-number text-warning">{{ sick_count }}</div>
             <p class="stat-label">{{ current_year }}</p>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card" data-testid="stat-total-leave">
             <h3>Total Leave</h3>
             <div class="stat-number">{{ vacation_count + sick_count }}</div>
             <p class="stat-label">{{ current_year }}</p>
@@ -29,16 +29,16 @@
     
     <div class="section">
         <h3>Add Leave Day</h3>
-        <form method="POST" action="{{ url_for('main.leave') }}" class="form-inline">
+        <form method="POST" action="{{ url_for('main.leave') }}" class="form-inline" data-testid="leave-form">
             <div class="form-row">
                 <div class="form-group">
                     <label for="date">Date *</label>
-                    <input type="date" id="date" name="date" value="{{ today.isoformat() }}" required>
+                    <input type="date" id="date" name="date" data-testid="input-leave-date" value="{{ today.isoformat() }}" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="leave_type">Type *</label>
-                    <select id="leave_type" name="leave_type" required>
+                    <select id="leave_type" name="leave_type" data-testid="select-leave-type" required>
                         <option value="vacation">Vacation</option>
                         <option value="sick">Sick Leave</option>
                     </select>
@@ -46,12 +46,12 @@
                 
                 <div class="form-group form-group-expand">
                     <label for="description">Description</label>
-                    <input type="text" id="description" name="description" placeholder="Optional notes">
+                    <input type="text" id="description" name="description" data-testid="input-leave-description" placeholder="Optional notes">
                 </div>
                 
                 <div class="form-group">
                     <label>&nbsp;</label>
-                    <button type="submit" class="btn btn-primary">Add Leave</button>
+                    <button type="submit" class="btn btn-primary" data-testid="btn-add-leave">Add Leave</button>
                 </div>
             </div>
         </form>
@@ -60,7 +60,7 @@
     {% if leave_days %}
         <div class="section">
             <h3>Leave History</h3>
-            <table class="data-table">
+            <table class="data-table" data-testid="leave-history-table">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -71,13 +71,13 @@
                 </thead>
                 <tbody>
                     {% for leave in leave_days %}
-                    <tr>
+                    <tr data-testid="leave-row-{{ leave.id }}">
                         <td>{{ leave.date.strftime('%Y-%m-%d (%a)') }}</td>
                         <td><span class="badge badge-{{ leave.leave_type }}">{{ leave.leave_type|capitalize }}</span></td>
                         <td>{{ leave.description or '-' }}</td>
                         <td>
                             <form method="POST" action="{{ url_for('main.delete_leave', leave_id=leave.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this leave day?');">
-                                <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                                <button type="submit" class="btn btn-danger btn-small" data-testid="btn-delete-leave-{{ leave.id }}">Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -86,7 +86,7 @@
             </table>
         </div>
     {% else %}
-        <div class="empty-state">
+        <div class="empty-state" data-testid="empty-leave">
             <p>No leave days recorded yet.</p>
         </div>
     {% endif %}

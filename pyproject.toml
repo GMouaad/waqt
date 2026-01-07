@@ -36,6 +36,7 @@ dependencies = [
 dev = [
     "pytest==8.3.5",
     "pytest-cov==6.0.0",
+    "pytest-playwright==0.6.2",
     "flake8==7.0.0",
     "black==24.1.1",
 ]
@@ -81,6 +82,7 @@ python_functions = ["test_*"]
 addopts = "-v --strict-markers"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "e2e: marks tests as end-to-end browser tests (requires Playwright)",
 ]
 
 [tool.coverage.run]

@@ -3,36 +3,36 @@
 {% block title %}Add Time Entry - Time Tracker{% endblock %}
 
 {% block content %}
-<div class="form-page">
+<div class="form-page" data-testid="time-entry-page">
     <h2>Add Time Entry</h2>
     <p class="subtitle">Log your work hours and activities</p>
     
-    <form method="POST" action="{{ url_for('main.time_entry') }}" class="form-card">
+    <form method="POST" action="{{ url_for('main.time_entry') }}" class="form-card" data-testid="time-entry-form">
         <div class="form-group">
             <label for="date">Date *</label>
-            <input type="date" id="date" name="date" value="{{ today.isoformat() }}" required>
+            <input type="date" id="date" name="date" data-testid="input-date" value="{{ today.isoformat() }}" required>
         </div>
         
         <div class="form-row">
             <div class="form-group">
                 <label for="start_time">Start Time *</label>
-                <input type="time" id="start_time" name="start_time" required>
+                <input type="time" id="start_time" name="start_time" data-testid="input-start-time" required>
             </div>
             
             <div class="form-group">
                 <label for="end_time">End Time *</label>
-                <input type="time" id="end_time" name="end_time" required>
+                <input type="time" id="end_time" name="end_time" data-testid="input-end-time" required>
             </div>
         </div>
         
         <div class="form-group">
             <label for="description">Description *</label>
-            <textarea id="description" name="description" rows="4" required placeholder="What did you work on?"></textarea>
+            <textarea id="description" name="description" data-testid="input-description" rows="4" required placeholder="What did you work on?"></textarea>
         </div>
         
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Save Entry</button>
-            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" data-testid="btn-submit">Save Entry</button>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary" data-testid="btn-cancel">Cancel</a>
         </div>
     </form>
     

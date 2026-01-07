@@ -12,6 +12,7 @@ This is a self-contained Flask-based time tracking application with no external 
 - **[UV Migration Guide](docs/UV_MIGRATION_GUIDE.md)** - Guide for migrating from pip to uv package manager
 - **[Usage Guide](docs/usage.md)** - Complete guide on how to use the application, workflows, and best practices
 - **[MCP Guide](docs/MCP_GUIDE.md)** - Model Context Protocol server documentation for AI assistant integration
+- **[E2E Testing Guide](docs/E2E_TESTING.md)** - Playwright end-to-end testing documentation and best practices
 
 ## Features
 
@@ -227,6 +228,55 @@ waqt summary --date 2024-01-15
 # Short alias
 waqt sum -p week
 ```
+
+#### Export Time Entries
+Export your time tracking data to CSV:
+```bash
+# Export all entries
+waqt export
+
+# Export current week
+waqt export --period week
+
+# Export specific month
+waqt export --period month --date 2024-01-15
+
+# Export with custom filename
+waqt export --output my_report.csv
+
+# Export week to specific file
+waqt export -p week -o weekly_report.csv
+```
+
+#### Configuration Management
+Manage application configuration settings:
+```bash
+# List all configuration options
+waqt config list
+
+# Get a specific configuration value
+waqt config get weekly_hours
+
+# Set a configuration value
+waqt config set weekly_hours 35
+waqt config set pause_duration_minutes 60
+waqt config set auto_end true
+
+# Reset a configuration to default
+waqt config reset weekly_hours
+```
+
+**Available Configuration Options:**
+- `weekly_hours`: Expected weekly working hours (default: 40)
+- `standard_hours_per_day`: Standard working hours per day (default: 8)
+- `pause_duration_minutes`: Default pause/break duration in minutes (default: 45)
+- `auto_end`: Feature flag for auto-ending work sessions (default: false)
+
+**Configuration Features:**
+- All settings persist in the database
+- Configuration changes immediately affect calculations
+- Values are validated before being saved
+- Non-default values are marked with an asterisk (*) in list output
 
 #### Reference (Placeholder)
 Display reference information:
