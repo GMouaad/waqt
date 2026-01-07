@@ -122,4 +122,152 @@ document.addEventListener('DOMContentLoaded', function() {
         startTimeInput.addEventListener('change', updateDurationPreview);
         endTimeInput.addEventListener('change', updateDurationPreview);
     }
+
+    // Timer Logic
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) {
+        const btnStart = document.getElementById('btn-start-timer');
+        const btnStop = document.getElementById('btn-stop-timer');
+        const btnPause = document.getElementById('btn-pause-timer');
+        const btnResume = document.getElementById('btn-resume-timer');
+        const statusIndicator = document.getElementById('timer-status-indicator');
+        const descriptionDisplay = document.getElementById('timer-description');
+        
+        let timerInterval;
+        let startTime = null;
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            if (!startTime) return;
+            const now = new Date();
+            const elapsed = Math.floor((now - startTime) / 1000);
+            timerDisplay.textContent = formatTime(elapsed);
+        }
+
+        function setTimerActive(active, startTimestamp = null, description = "Work") {
+            if (active) {
+                // Parse start time "HH:MM:SS" today
+                const today = new Date();
+                const [hours, minutes, seconds] = startTimestamp.split(':');
+                startTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes, seconds);
+                
+                // Adjust for if start time was yesterday (should handle in backend ideally but simple fix here)
+                if (startTime > new Date()) {
+                    startTime.setDate(startTime.getDate() - 1);
+                }
+
+                timerInterval = setInterval(updateTimer, 1000);
+                updateTimer(); // Immediate update
+
+                statusIndicator.className = 'status-indicator active';
+                descriptionDisplay.textContent = `Tracking: ${description}`;
+                
+                btnStart.style.display = 'none';
+                btnResume.style.display = 'none';
+                btnStop.style.display = 'inline-block';
+                btnPause.style.display = 'inline-block';
+            } else {
+                clearInterval(timerInterval);
+                statusIndicator.className = 'status-indicator inactive';
+                descriptionDisplay.textContent = 'Ready to work';
+                timerDisplay.textContent = '00:00:00';
+                
+                btnStop.style.display = 'none';
+                btnPause.style.display = 'none';
+                
+                // If we just stopped/paused, deciding between Start and Resume is handled by caller
+                // Default reset state:
+                btnStart.style.display = 'inline-block';
+                btnResume.style.display = 'none';
+            }
+        }
+
+        function checkTimerStatus() {
+            fetch('/api/timer/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.active) {
+                        setTimerActive(true, data.start_time, data.description);
+                    } else {
+                        setTimerActive(false);
+                    }
+                })
+                .catch(err => console.error('Error checking timer status:', err));
+        }
+
+        // Initialize status
+        checkTimerStatus();
+
+        btnStart.addEventListener('click', () => {
+            fetch('/api/timer/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: 'Work' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setTimerActive(true, data.start_time, 'Work');
+                } else {
+                    alert('Failed to start timer: ' + data.message);
+                }
+            });
+        });
+
+        btnStop.addEventListener('click', () => {
+            fetch('/api/timer/stop', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setTimerActive(false);
+                    // Reload to update the list of entries
+                    window.location.reload();
+                } else {
+                    alert('Failed to stop timer: ' + data.message);
+                }
+            });
+        });
+
+        btnPause.addEventListener('click', () => {
+            fetch('/api/timer/stop', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Stop the visual timer
+                    clearInterval(timerInterval);
+                    statusIndicator.className = 'status-indicator paused';
+                    descriptionDisplay.textContent = 'Timer Paused';
+                    
+                    btnStop.style.display = 'none';
+                    btnPause.style.display = 'none';
+                    btnStart.style.display = 'none';
+                    btnResume.style.display = 'inline-block'; // Show Resume
+                } else {
+                    alert('Failed to pause timer: ' + data.message);
+                }
+            });
+        });
+
+        btnResume.addEventListener('click', () => {
+             fetch('/api/timer/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: 'Work' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setTimerActive(true, data.start_time, 'Work');
+                } else {
+                    alert('Failed to resume timer: ' + data.message);
+                }
+            });
+        });
+    }
 });

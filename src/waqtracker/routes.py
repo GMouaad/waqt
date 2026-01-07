@@ -1,6 +1,6 @@
 """Route handlers for the time tracking application."""
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, Response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
 from datetime import datetime, timedelta
 from . import db
 from .models import TimeEntry, LeaveDay
@@ -15,6 +15,102 @@ from .utils import (
 )
 
 bp = Blueprint("main", __name__)
+
+
+def get_open_entry():
+    """Get the currently running timer entry if any."""
+    today = datetime.now().date()
+    # Find entry with duration=0 AND end_time=start_time (marker for open entry)
+    return (
+        TimeEntry.query.filter_by(date=today, duration_hours=0.0)
+        .filter(TimeEntry.end_time == TimeEntry.start_time)
+        .order_by(TimeEntry.created_at.desc())
+        .first()
+    )
+
+
+@bp.route("/api/timer/status")
+def timer_status():
+    """Get the current status of the timer."""
+    entry = get_open_entry()
+    if entry:
+        # Calculate elapsed time since start
+        start_dt = datetime.combine(entry.date, entry.start_time)
+        elapsed_seconds = (datetime.now() - start_dt).total_seconds()
+        
+        return jsonify({
+            "active": True,
+            "start_time": entry.start_time.strftime("%H:%M:%S"),
+            "elapsed_seconds": int(elapsed_seconds),
+            "description": entry.description
+        })
+    
+    return jsonify({"active": False})
+
+
+@bp.route("/api/timer/start", methods=["POST"])
+def start_timer():
+    """Start a new timer."""
+    try:
+        # Check if already running
+        if get_open_entry():
+            return jsonify({"success": False, "message": "Timer already running"}), 400
+            
+        data = request.get_json() or {}
+        description = data.get("description", "Work")
+        
+        now = datetime.now()
+        
+        entry = TimeEntry(
+            date=now.date(),
+            start_time=now.time(),
+            end_time=now.time(),  # Marker for open entry
+            duration_hours=0.0,   # Marker for open entry
+            description=description
+        )
+        
+        db.session.add(entry)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": "Timer started",
+            "start_time": now.strftime("%H:%M:%S")
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@bp.route("/api/timer/stop", methods=["POST"])
+def stop_timer():
+    """Stop the current timer."""
+    try:
+        entry = get_open_entry()
+        if not entry:
+            return jsonify({"success": False, "message": "No active timer"}), 400
+            
+        now = datetime.now()
+        end_time = now.time()
+        
+        # Calculate duration
+        duration = calculate_duration(entry.start_time, end_time)
+        
+        entry.end_time = end_time
+        entry.duration_hours = duration
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": "Timer stopped",
+            "duration": duration
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
 @bp.route("/")
