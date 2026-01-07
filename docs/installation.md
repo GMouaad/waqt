@@ -139,25 +139,21 @@ This installs:
 - 📦 Built-in virtual environment management
 - 🚀 Significantly faster installation times
 
-### Step 5: Initialize the Database
+### Step 5: Initialize the Database (Optional)
 
-Create the SQLite database and set up default settings:
+The Time Tracker application is designed to be **self-initializing**. When you run the application for the first time, it will automatically:
+- Create the SQLite database file (`time_tracker.db`)
+- Create all necessary tables
+- Apply any pending schema migrations
+- Seed default configuration settings
+
+If you prefer to initialize the database manually before running the app, you can use:
 
 ```bash
 python -m waqtracker.scripts.init_db
 ```
 
-You should see output like:
-```
-✓ Database tables created successfully!
-✓ Added setting: standard_hours_per_day = 8
-✓ Added setting: standard_hours_per_week = 40
-
-✅ Database initialization complete!
-You can now run the app with: python -m waqtracker.wsgi
-```
-
-This creates a `time_tracker.db` file in your project directory.
+This creates a `time_tracker.db` file in your project directory with all default settings.
 
 ### Step 6: Run the Application
 
@@ -253,8 +249,7 @@ These scripts will:
 - Create a virtual environment (if not exists)
 - Activate the virtual environment
 - Install dependencies (if not installed)
-- Initialize the database (if not exists)
-- Start the application
+- Start the application (which handles database initialization)
 
 ## Verification
 

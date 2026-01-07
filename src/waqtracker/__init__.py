@@ -49,5 +49,41 @@ def create_app():
 
         # Create tables if they don't exist
         db.create_all()
+        
+        # Run migrations for existing databases
+        try:
+            # Add project root to sys.path to import migrations
+            import sys
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+            if project_root not in sys.path:
+                sys.path.insert(0, project_root)
+            
+            from migrations.run_migrations import run_migrations
+            run_migrations(app.config["SQLALCHEMY_DATABASE_URI"])
+        except ImportError:
+            # If migrations folder is missing, we just skip it
+            pass
+        except Exception as e:
+            app.logger.error(f"Failed to run migrations: {e}")
+
+        # Seed default settings if they don't exist
+        from .models import Settings
+        default_settings = [
+            ("standard_hours_per_day", "8"),
+            ("weekly_hours", "40"),
+            ("pause_duration_minutes", "45"),
+            ("auto_end", "false"),
+        ]
+        
+        settings_changed = False
+        for key, value in default_settings:
+            existing = Settings.query.filter_by(key=key).first()
+            if not existing:
+                setting = Settings(key=key, value=value)
+                db.session.add(setting)
+                settings_changed = True
+        
+        if settings_changed:
+            db.session.commit()
 
     return app

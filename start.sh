@@ -73,13 +73,6 @@ if ! python -c "import flask" 2>/dev/null; then
     echo ""
 fi
 
-# Check if database exists
-if [ ! -f "time_tracker.db" ]; then
-    echo "🗄️  Initializing database..."
-    python -m waqtracker.scripts.init_db
-    echo ""
-fi
-
 # Start the application
 echo "🌐 Starting Flask server..."
 port=${PORT:-5555}

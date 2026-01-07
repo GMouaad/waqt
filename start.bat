@@ -72,13 +72,6 @@ if errorlevel 1 (
     echo.
 )
 
-REM Check if database exists
-if not exist "time_tracker.db" (
-    echo Initializing database...
-    python -m waqtracker.scripts.init_db
-    echo.
-)
-
 REM Start the application
 echo Starting Flask server...
 if "%PORT%"=="" set PORT=5555

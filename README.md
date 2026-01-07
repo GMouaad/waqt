@@ -97,8 +97,7 @@ The fastest way to get started from source is using `uv`, a modern Python packag
    uv venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    uv pip install -e .
-   python -m waqtracker.scripts.init_db
-   python -m waqtracker.wsgi
+   python -m waqtracker.wsgi   # Database initialized automatically on first run
    ```
 
 3. **Access:** Open `http://localhost:5555`
@@ -163,15 +162,12 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -e .
 ```
 
-4. Initialize the database:
-```bash
-python -m waqtracker.scripts.init_db
-```
-
-5. Run the application:
+4. Run the application:
 ```bash
 python -m waqtracker.wsgi
 ```
+
+*Note: The database is automatically initialized and migrated on first run.*
 
 6. Open your browser and navigate to `http://localhost:5555`
 
