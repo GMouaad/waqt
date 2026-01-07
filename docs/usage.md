@@ -42,7 +42,7 @@ start.bat
    python run.py
    ```
 
-3. Open your browser to `http://localhost:5000`
+3. Open your browser to `http://localhost:5555`
 
 ### Stopping the Server
 

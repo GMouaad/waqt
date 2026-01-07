@@ -82,7 +82,8 @@ fi
 
 # Start the application
 echo "🌐 Starting Flask server..."
-echo "📍 Application will be available at: http://localhost:5000"
+port=${PORT:-5555}
+echo "📍 Application will be available at: http://localhost:$port"
 echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""

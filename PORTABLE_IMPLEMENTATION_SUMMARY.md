@@ -124,7 +124,7 @@ command-line arguments are provided:
    ```bash
    ./waqtracker
    ```
-   This starts the Flask web server on `http://localhost:5000`.
+   This starts the Flask web server on `http://localhost:5555`.
 
 2. **CLI mode** (with arguments):
    When invoked with arguments, the executable does **not** start the web server;
