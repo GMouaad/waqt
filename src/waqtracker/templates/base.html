@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Time Tracker{% endblock %}</title>
+    <title>{% block title %}Waqt{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar" data-testid="navbar">
         <div class="container">
-            <h1 class="logo" data-testid="logo">⏱️ Time Tracker</h1>
+            <h1 class="logo" data-testid="logo">⏱️ Waqt</h1>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.index') }}" data-testid="nav-dashboard" {% if request.endpoint == 'main.index' %}class="active"{% endif %}>Dashboard</a></li>
                 <li><a href="{{ url_for('main.time_entry') }}" data-testid="nav-time-entry" {% if request.endpoint == 'main.time_entry' %}class="active"{% endif %}>Add Time</a></li>
@@ -42,7 +42,7 @@
     
     <footer>
         <div class="container">
-            <p>&copy; 2026 Time Tracker - Simple time tracking for everyone</p>
+            <p>&copy; 2026 Waqt - Simple time tracking for everyone</p>
         </div>
     </footer>
     
