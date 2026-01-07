@@ -18,6 +18,14 @@
             </a>
         </div>
         
+        <div class="export-controls">
+            <a href="{{ url_for('main.export_csv', period=period, date=selected_date.isoformat()) }}" 
+               class="btn btn-success" 
+               title="Export current view to CSV">
+                📥 Export CSV
+            </a>
+        </div>
+        
         <div class="date-navigator" data-testid="date-navigator">
             {% if period == 'week' %}
                 {% set prev_date = (start_date - timedelta(days=7)).isoformat() %}
