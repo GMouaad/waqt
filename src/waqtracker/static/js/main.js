@@ -36,8 +36,11 @@
     }
     
     // Initialize theme immediately to prevent FOUC
+    // Safe to execute as documentElement exists before DOMContentLoaded
     const initialTheme = getPreferredTheme();
-    document.documentElement.setAttribute('data-theme', initialTheme);
+    if (document.documentElement) {
+        document.documentElement.setAttribute('data-theme', initialTheme);
+    }
     
     // Set up theme toggle button when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -55,8 +58,9 @@
         }
         
         // Listen for system theme changes
-        if (window.matchMedia) {
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        const prefersDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        if (prefersDarkQuery) {
+            prefersDarkQuery.addEventListener('change', function(e) {
                 // Only auto-switch if user hasn't manually set a preference
                 const hasManualPreference = localStorage.getItem('theme') !== null;
                 if (!hasManualPreference) {

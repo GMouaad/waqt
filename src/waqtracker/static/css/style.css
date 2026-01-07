@@ -468,7 +468,7 @@ main {
     color: var(--accent-primary) !important;
 }
 
-/* Duration Preview */
+/* Duration Preview - JavaScript-generated element for time entry duration calculation */
 .duration-preview {
     margin-top: 0.5rem;
     font-weight: bold;
