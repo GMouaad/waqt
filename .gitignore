@@ -65,7 +65,3 @@ htmlcov/
 # Logs
 *.log
 logs/
-
-# MkDocs
-site/
-.cache/

@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to the Waqt application!
 
-📚 **For complete documentation, visit [https://gmouaad.github.io/waqt/](https://gmouaad.github.io/waqt/)**
+📚 **[View Documentation Website](https://gmouaad.github.io/waqt/)** for complete guides and examples.
 
 ## Development Setup
 

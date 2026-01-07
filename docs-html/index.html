@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waqt - Time Tracking Application</title>
+    <meta name="description" content="A portable Python time tracking application for managing work hours, overtime, vacation days, sick leaves, and work activities.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-clock"></i>
+                <span>Waqt</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#installation">Installation</a></li>
+                <li><a href="#usage">Usage</a></li>
+                <li><a href="#documentation">Documentation</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank"><i class="fab fa-github"></i> GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1>⏰ Waqt</h1>
+                <p class="hero-subtitle">Time Tracking Application</p>
+                <p class="hero-description">A portable Python time tracking application for managing work hours, overtime, vacation days, sick leaves, and work activities.</p>
+                <div class="hero-buttons">
+                    <a href="#installation" class="btn btn-primary">Get Started</a>
+                    <a href="https://github.com/GMouaad/waqt" class="btn btn-secondary" target="_blank">View on GitHub</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="features">
+        <div class="container">
+            <h2>Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-play-circle"></i>
+                    <h3>One-Click Timer</h3>
+                    <p>Interactive dashboard timer with Start, Stop, Pause, and Resume controls for real-time tracking</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-clock"></i>
+                    <h3>Work Hours Tracking</h3>
+                    <p>Track daily work hours (8 hours/day, 40 hours/week standard)</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-calculator"></i>
+                    <h3>Overtime Calculation</h3>
+                    <p>Automatically calculate overtime hours</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-umbrella-beach"></i>
+                    <h3>Vacation Days</h3>
+                    <p>Track and manage vacation days</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-notes-medical"></i>
+                    <h3>Sick Leaves</h3>
+                    <p>Record sick leave days</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Reports</h3>
+                    <p>View weekly and monthly overtime summaries</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-terminal"></i>
+                    <h3>CLI Tool</h3>
+                    <p>Command-line interface for quick time tracking from the terminal</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-robot"></i>
+                    <h3>MCP Server</h3>
+                    <p>Model Context Protocol server for AI assistant integration</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="installation" id="installation">
+        <div class="container">
+            <h2>Installation</h2>
+            
+            <div class="install-method">
+                <h3>Quick Install (Recommended)</h3>
+                <p>One-line installer for your platform:</p>
+                
+                <div class="code-tabs">
+                    <div class="tabs">
+                        <button class="tab-button active" data-tab="linux">Linux/macOS</button>
+                        <button class="tab-button" data-tab="windows">Windows</button>
+                    </div>
+                    <div class="tab-content active" id="linux">
+                        <pre><code>curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash</code></pre>
+                        <button class="copy-btn" data-clipboard="curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div class="tab-content" id="windows">
+                        <pre><code>irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1 | iex</code></pre>
+                        <button class="copy-btn" data-clipboard="irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1 | iex">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="install-method">
+                <h3>Using uv (from source)</h3>
+                <pre><code>git clone https://github.com/GMouaad/waqt.git
+cd waqt
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -e .</code></pre>
+            </div>
+
+            <div class="install-features">
+                <h4>After installation:</h4>
+                <ul>
+                    <li><code>waqt --version</code> - Check version</li>
+                    <li><code>waqtracker</code> - Start the web server (http://localhost:5555)</li>
+                    <li><code>waqt start</code> - Start time tracking from CLI</li>
+                    <li><code>waqt summary</code> - View summary</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="usage" id="usage">
+        <div class="container">
+            <h2>Usage</h2>
+            
+            <div class="usage-grid">
+                <div class="usage-card">
+                    <h3><i class="fas fa-globe"></i> Web Interface</h3>
+                    <p>Navigate to <code>http://localhost:5555</code> after running <code>waqtracker</code></p>
+                    <ul>
+                        <li>Dashboard Timer: One-click start/stop/pause/resume</li>
+                        <li>Time Entry Management: Add, view, and delete entries</li>
+                        <li>Reports: Weekly and monthly summaries</li>
+                        <li>Leave Management: Track vacation and sick days</li>
+                    </ul>
+                </div>
+                
+                <div class="usage-card">
+                    <h3><i class="fas fa-terminal"></i> CLI Commands</h3>
+                    <pre><code># Start tracking time
+waqt start --time 09:00 --description "Working on feature X"
+
+# End tracking time
+waqt end --time 17:30
+
+# View summary
+waqt summary
+
+# Export time entries
+waqt export --period week
+
+# Configuration management
+waqt config list
+waqt config set weekly_hours 40</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="documentation" id="documentation">
+        <div class="container">
+            <h2>Documentation</h2>
+            
+            <div class="docs-grid">
+                <div class="doc-card">
+                    <i class="fas fa-download"></i>
+                    <h3>Installation Guide</h3>
+                    <p>Detailed installation instructions, prerequisites, and troubleshooting</p>
+                    <a href="https://github.com/GMouaad/waqt/blob/main/docs/installation.md" target="_blank" class="btn btn-small">Read More</a>
+                </div>
+                
+                <div class="doc-card">
+                    <i class="fas fa-book"></i>
+                    <h3>Usage Guide</h3>
+                    <p>Complete guide on how to use the application, workflows, and best practices</p>
+                    <a href="https://github.com/GMouaad/waqt/blob/main/docs/usage.md" target="_blank" class="btn btn-small">Read More</a>
+                </div>
+                
+                <div class="doc-card">
+                    <i class="fas fa-hammer"></i>
+                    <h3>Building Executables</h3>
+                    <p>Instructions for building standalone executables</p>
+                    <a href="https://github.com/GMouaad/waqt/blob/main/docs/BUILD.md" target="_blank" class="btn btn-small">Read More</a>
+                </div>
+                
+                <div class="doc-card">
+                    <i class="fas fa-docker"></i>
+                    <h3>Development Container</h3>
+                    <p>Setting up the dev container for development</p>
+                    <a href="https://github.com/GMouaad/waqt/blob/main/docs/DEV_CONTAINER.md" target="_blank" class="btn btn-small">Read More</a>
+                </div>
+                
+                <div class="doc-card">
+                    <i class="fas fa-vial"></i>
+                    <h3>E2E Testing</h3>
+                    <p>Playwright end-to-end testing documentation and best practices</p>
+                    <a href="https://github.com/GMouaad/waqt/blob/main/docs/E2E_TESTING.md" target="_blank" class="btn btn-small">Read More</a>
+                </div>
+                
+                <div class="doc-card">
+                    <i class="fas fa-robot"></i>
+                    <h3>MCP Integration</h3>
+                    <p>Model Context Protocol server documentation for AI assistant integration</p>
+                    <a href="https://github.com/GMouaad/waqt/blob/main/docs/MCP_GUIDE.md" target="_blank" class="btn btn-small">Read More</a>
+                </div>
+                
+                <div class="doc-card">
+                    <i class="fas fa-arrow-right"></i>
+                    <h3>UV Migration Guide</h3>
+                    <p>Guide for migrating from pip to uv package manager</p>
+                    <a href="https://github.com/GMouaad/waqt/blob/main/docs/UV_MIGRATION_GUIDE.md" target="_blank" class="btn btn-small">Read More</a>
+                </div>
+                
+                <div class="doc-card">
+                    <i class="fas fa-code-branch"></i>
+                    <h3>Contributing</h3>
+                    <p>How to contribute to the project</p>
+                    <a href="https://github.com/GMouaad/waqt/blob/main/CONTRIBUTING.md" target="_blank" class="btn btn-small">Read More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Waqt Contributors. Licensed under the MIT License.</p>
+            <p>Made with ❤️ by the Waqt Contributors</p>
+            <div class="footer-links">
+                <a href="https://github.com/GMouaad/waqt" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank"><i class="fas fa-bug"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
