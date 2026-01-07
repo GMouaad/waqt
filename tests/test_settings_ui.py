@@ -143,8 +143,8 @@ def test_settings_update_empty_value_shows_error(client, app):
         }, follow_redirects=True)
         
         assert response.status_code == 200
-        # Should show error about empty value
-        assert b"cannot be empty" in response.data or b"error" in response.data.lower()
+        # Should show specific error about empty value for the field
+        assert b"Standard Hours Per Day: Value cannot be empty" in response.data
 
 
 def test_settings_update_multiple_values(client, app):
