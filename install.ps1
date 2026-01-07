@@ -24,10 +24,9 @@ if ($Prerelease) {
 # Detect architecture
 $Arch = "amd64"
 if ([System.Environment]::Is64BitOperatingSystem) {
-    # Check processor architecture
-    $ProcessorArch = (Get-CimInstance Win32_Processor).Architecture
-    # 9 = x64 (AMD64/EM64T), 12 = ARM64
-    if ($ProcessorArch -eq 12) {
+    # Check processor architecture using environment variable for better performance
+    $ProcessorArch = $env:PROCESSOR_ARCHITECTURE
+    if ($ProcessorArch -eq "ARM64") {
         $Arch = "arm64"
     }
 }

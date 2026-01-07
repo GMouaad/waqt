@@ -59,13 +59,19 @@ get_release_version() {
     else
         # Get latest stable release - try jq first, fallback to grep/sed
         local version=""
+        local api_url="https://api.github.com/repos/${REPO}/releases/latest"
+        
         if command -v jq >/dev/null 2>&1; then
-            version=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | jq -r '.tag_name')
-        else
-            version=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" |
+            version=$(curl -fsSL "$api_url" 2>/dev/null | jq -r '.tag_name' 2>/dev/null)
+        fi
+        
+        # Fallback to grep/sed if jq failed or not available
+        if [ -z "$version" ] || [ "$version" = "null" ]; then
+            version=$(curl -fsSL "$api_url" 2>/dev/null |
                 grep '"tag_name":' |
                 sed -E 's/.*"([^"]+)".*/\1/')
         fi
+        
         echo "$version"
     fi
 }
@@ -193,8 +199,8 @@ add_to_path() {
     # Create config file directory if needed
     mkdir -p "$(dirname "$config_file")"
 
-    # Check if already added
-    if [[ -f "$config_file" ]] && grep -q "/.waqt/bin" "$config_file" 2>/dev/null; then
+    # Check if already added - use more specific pattern to avoid false positives
+    if [[ -f "$config_file" ]] && grep -qF '$HOME/.waqt/bin' "$config_file" 2>/dev/null; then
         info "PATH already configured in $config_file"
         return
     fi
