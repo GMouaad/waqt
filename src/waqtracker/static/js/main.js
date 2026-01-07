@@ -134,7 +134,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const descriptionDisplay = document.getElementById('timer-description');
         
         let timerInterval;
-        let startTime = null;
+        let elapsedSeconds = 0;
+        let lastTickTime = null;
 
         function formatTime(seconds) {
             const h = Math.floor(seconds / 3600);
@@ -144,27 +145,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function updateTimer() {
-            if (!startTime) return;
-            const now = new Date();
-            const elapsed = Math.floor((now - startTime) / 1000);
-            timerDisplay.textContent = formatTime(elapsed);
+            const now = Date.now();
+            if (lastTickTime) {
+                elapsedSeconds += (now - lastTickTime) / 1000;
+            }
+            lastTickTime = now;
+            timerDisplay.textContent = formatTime(elapsedSeconds);
         }
 
-        function setTimerActive(active, startTimestamp = null, description = "Work") {
-            if (active) {
-                // Parse start time "HH:MM:SS" today
-                const today = new Date();
-                const [hours, minutes, seconds] = startTimestamp.split(':');
-                startTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes, seconds);
-                
-                // Adjust for if start time was yesterday (should handle in backend ideally but simple fix here)
-                if (startTime > new Date()) {
-                    startTime.setDate(startTime.getDate() - 1);
-                }
+        function setTimerState(state, elapsed = 0, description = "Work") {
+            clearInterval(timerInterval);
+            elapsedSeconds = elapsed;
+            timerDisplay.textContent = formatTime(elapsedSeconds);
 
+            if (state === 'running') {
+                lastTickTime = Date.now();
                 timerInterval = setInterval(updateTimer, 1000);
-                updateTimer(); // Immediate update
-
+                
                 statusIndicator.className = 'status-indicator active';
                 descriptionDisplay.textContent = `Tracking: ${description}`;
                 
@@ -172,19 +169,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnResume.style.display = 'none';
                 btnStop.style.display = 'inline-block';
                 btnPause.style.display = 'inline-block';
+            } else if (state === 'paused') {
+                statusIndicator.className = 'status-indicator paused';
+                descriptionDisplay.textContent = `Paused: ${description}`;
+                
+                btnStart.style.display = 'none';
+                btnPause.style.display = 'none';
+                btnStop.style.display = 'inline-block'; // Allow stopping while paused
+                btnResume.style.display = 'inline-block';
             } else {
-                clearInterval(timerInterval);
+                // Stopped/Inactive
                 statusIndicator.className = 'status-indicator inactive';
                 descriptionDisplay.textContent = 'Ready to work';
                 timerDisplay.textContent = '00:00:00';
                 
                 btnStop.style.display = 'none';
                 btnPause.style.display = 'none';
-                
-                // If we just stopped/paused, deciding between Start and Resume is handled by caller
-                // Default reset state:
-                btnStart.style.display = 'inline-block';
                 btnResume.style.display = 'none';
+                btnStart.style.display = 'inline-block';
             }
         }
 
@@ -193,9 +195,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.active) {
-                        setTimerActive(true, data.start_time, data.description);
+                        if (data.is_paused) {
+                            setTimerState('paused', data.elapsed_seconds, data.description);
+                        } else {
+                            setTimerState('running', data.elapsed_seconds, data.description);
+                        }
                     } else {
-                        setTimerActive(false);
+                        setTimerState('stopped');
                     }
                 })
                 .catch(err => console.error('Error checking timer status:', err));
@@ -213,7 +219,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    setTimerActive(true, data.start_time, 'Work');
+                    // Start from 0
+                    setTimerState('running', 0, 'Work');
                 } else {
                     alert('Failed to start timer: ' + data.message);
                 }
@@ -225,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    setTimerActive(false);
+                    setTimerState('stopped');
                     // Reload to update the list of entries
                     window.location.reload();
                 } else {
@@ -235,19 +242,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         btnPause.addEventListener('click', () => {
-            fetch('/api/timer/stop', { method: 'POST' })
+            fetch('/api/timer/pause', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Stop the visual timer
-                    clearInterval(timerInterval);
-                    statusIndicator.className = 'status-indicator paused';
-                    descriptionDisplay.textContent = 'Timer Paused';
-                    
-                    btnStop.style.display = 'none';
-                    btnPause.style.display = 'none';
-                    btnStart.style.display = 'none';
-                    btnResume.style.display = 'inline-block'; // Show Resume
+                    // Just switch state, keep current elapsed
+                    setTimerState('paused', elapsedSeconds, descriptionDisplay.textContent.replace('Tracking: ', ''));
                 } else {
                     alert('Failed to pause timer: ' + data.message);
                 }
@@ -255,15 +255,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         btnResume.addEventListener('click', () => {
-             fetch('/api/timer/start', {
+             fetch('/api/timer/resume', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ description: 'Work' })
+                headers: { 'Content-Type': 'application/json' }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    setTimerActive(true, data.start_time, 'Work');
+                    // Resume from current elapsed
+                    setTimerState('running', elapsedSeconds, descriptionDisplay.textContent.replace('Paused: ', ''));
                 } else {
                     alert('Failed to resume timer: ' + data.message);
                 }

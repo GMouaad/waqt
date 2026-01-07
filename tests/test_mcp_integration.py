@@ -20,12 +20,22 @@ def test_mcp_server_entry_point_exists():
 def test_mcp_server_starts():
     """Test that MCP server starts without errors."""
     # Try to start the server with a timeout
+    import os
+    env = os.environ.copy()
+    # Ensure src is in PYTHONPATH so waqtracker can be imported
+    src_path = str(Path(__file__).parent.parent / "src")
+    if "PYTHONPATH" in env:
+        env["PYTHONPATH"] = f"{src_path}:{env['PYTHONPATH']}"
+    else:
+        env["PYTHONPATH"] = src_path
+        
     try:
         result = subprocess.run(
-            ["waqt-mcp"],
+            [sys.executable, "-m", "waqtracker.mcp_server"],
             capture_output=True,
             text=True,
             timeout=2,
+            env=env
         )
     except subprocess.TimeoutExpired:
         # This is expected - the server should keep running
