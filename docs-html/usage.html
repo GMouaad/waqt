@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage - Waqt</title>
+    <meta name="description" content="Usage guide for Waqt time tracking application">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="index.html" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                    <i class="fas fa-clock"></i>
+                    <span>Waqt</span>
+                </a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="installation.html">Installation</a></li>
+                <li><a href="usage.html" class="active">Usage</a></li>
+                <li><a href="documentation.html">Documentation</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h1><i class="fas fa-book"></i> Usage Guide</h1>
+            <p>Learn how to use Waqt for time tracking</p>
+        </div>
+    </div>
+
+    <section class="usage content-section">
+        <div class="container">
+            <div class="usage-grid">
+                <div class="usage-card">
+                    <h3><i class="fas fa-globe"></i> Web Interface</h3>
+                    <p>Navigate to <code>http://localhost:5555</code> after running <code>waqtracker</code></p>
+                    <ul>
+                        <li>Dashboard Timer: One-click start/stop/pause/resume</li>
+                        <li>Time Entry Management: Add, view, and delete entries</li>
+                        <li>Reports: Weekly and monthly summaries</li>
+                        <li>Leave Management: Track vacation and sick days</li>
+                    </ul>
+                </div>
+                
+                <div class="usage-card">
+                    <h3><i class="fas fa-terminal"></i> CLI Commands</h3>
+                    <pre><code># Start tracking time
+waqt start --time 09:00 --description "Working on feature X"
+
+# End tracking time
+waqt end --time 17:30
+
+# View summary
+waqt summary
+
+# Export time entries
+waqt export --period week
+
+# Configuration management
+waqt config list
+waqt config set weekly_hours 40</code></pre>
+                </div>
+            </div>
+
+            <div class="detailed-guide">
+                <h3>Detailed Guides</h3>
+                <div class="guide-cards">
+                    <a href="https://github.com/GMouaad/waqt/blob/main/docs/usage.md" target="_blank" rel="noopener noreferrer" class="guide-card">
+                        <i class="fas fa-file-alt"></i>
+                        <h4>Complete Usage Guide</h4>
+                        <p>Comprehensive guide with workflows, best practices, and tips</p>
+                    </a>
+                    <a href="https://github.com/GMouaad/waqt/blob/main/docs/installation.md" target="_blank" rel="noopener noreferrer" class="guide-card">
+                        <i class="fas fa-download"></i>
+                        <h4>Installation Details</h4>
+                        <p>Detailed installation instructions and troubleshooting</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="copyright-year">2024</span> Waqt Contributors. Licensed under the MIT License.</p>
+            <p>Made with ❤️ by the Waqt Contributors</p>
+            <div class="footer-links">
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

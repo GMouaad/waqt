@@ -8,6 +8,9 @@ This is a self-contained Flask-based time tracking application with no external 
 
 ## Documentation
 
+📚 **[View Documentation Website](https://gmouaad.github.io/waqt/)** - Complete documentation with guides and examples
+
+Additional documentation files:
 - **[Installation Guide](docs/installation.md)** - Detailed installation instructions, prerequisites, and troubleshooting
 - **[UV Migration Guide](docs/UV_MIGRATION_GUIDE.md)** - Guide for migrating from pip to uv package manager
 - **[Usage Guide](docs/usage.md)** - Complete guide on how to use the application, workflows, and best practices

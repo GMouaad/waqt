@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to the Waqt application!
 
+📚 **[View Documentation Website](https://gmouaad.github.io/waqt/)** for complete guides and examples.
+
 ## Development Setup
 
 ### Recommended: Using uv
