@@ -1,3 +1,61 @@
+// Theme Management
+(function() {
+    // Get theme from localStorage or system preference
+    function getPreferredTheme() {
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            return storedTheme;
+        }
+        
+        // Check system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        
+        return 'light';
+    }
+    
+    // Apply theme to document
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        // Update theme toggle icon
+        const themeIcon = document.getElementById('theme-icon');
+        if (themeIcon) {
+            themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+    }
+    
+    // Initialize theme on page load
+    const initialTheme = getPreferredTheme();
+    applyTheme(initialTheme);
+    
+    // Set up theme toggle button when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                applyTheme(newTheme);
+            });
+        }
+        
+        // Listen for system theme changes
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                // Only auto-switch if user hasn't manually set a preference
+                const storedTheme = localStorage.getItem('theme');
+                if (!storedTheme) {
+                    applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        }
+    });
+})();
+
 // Simple JavaScript for time tracker app
 
 // Auto-dismiss flash messages after 5 seconds
