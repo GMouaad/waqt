@@ -12,6 +12,8 @@ from .utils import (
     calculate_monthly_stats,
     calculate_duration,
     format_hours,
+    export_time_entries_to_csv,
+    get_time_entries_for_period,
 )
 from ._version import VERSION
 
@@ -380,6 +382,120 @@ def reference():
     click.echo("  • Configuration options")
     click.echo("\nFor now, use 'waqt --help' to see available commands.")
     click.echo()
+
+
+@cli.command()
+@click.option(
+    "--period",
+    "-p",
+    type=click.Choice(["week", "month", "all"], case_sensitive=False),
+    default="all",
+    help="Export period: week, month, or all entries (default: all)",
+)
+@click.option(
+    "--date",
+    "-d",
+    type=str,
+    default=None,
+    help="Reference date for week/month in YYYY-MM-DD format (default: today)",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=str,
+    default=None,
+    help="Output file path (default: time_entries_<period>_<date>.csv)",
+)
+@click.option(
+    "--format",
+    "-f",
+    "export_format",
+    type=click.Choice(["csv"], case_sensitive=False),
+    default="csv",
+    help="Export format (default: csv)",
+)
+def export(period: str, date: Optional[str], output: Optional[str], export_format: str):
+    """Export time entries to CSV file.
+
+    Export your time tracking data to a CSV file for use in spreadsheet
+    applications like Excel or Google Sheets. You can export by week, month,
+    or all entries.
+
+    Examples:
+        waqt export
+        waqt export --period week
+        waqt export --period month --date 2024-01-15
+        waqt export --output my_time_entries.csv
+        waqt export -p week -o weekly_report.csv
+    """
+    app = create_app()
+    with app.app_context():
+        # Parse reference date
+        if date:
+            try:
+                ref_date = datetime.strptime(date, "%Y-%m-%d").date()
+            except ValueError:
+                click.echo(
+                    click.style(
+                        f"Error: Invalid date format '{date}'. Use YYYY-MM-DD.",
+                        fg="red",
+                    )
+                )
+                raise click.exceptions.Exit(1)
+        else:
+            ref_date = datetime.now().date()
+
+        # Determine date range based on period
+        if period.lower() == "week":
+            start_date, end_date = get_week_bounds(ref_date)
+            period_name = f"week_{start_date}"
+        elif period.lower() == "month":
+            start_date, end_date = get_month_bounds(ref_date)
+            period_name = f"month_{start_date.strftime('%Y-%m')}"
+        else:
+            start_date = None
+            end_date = None
+            period_name = "all"
+
+        # Query entries using utility function
+        entries = get_time_entries_for_period(start_date, end_date)
+
+        if not entries:
+            click.echo(
+                click.style("No time entries found to export.", fg="yellow")
+            )
+            raise click.exceptions.Exit(0)
+
+        # Generate CSV content
+        csv_content = export_time_entries_to_csv(entries, start_date, end_date)
+
+        # Determine output filename
+        if output:
+            output_file = output
+        else:
+            timestamp = datetime.now().strftime("%Y%m%d")
+            output_file = f"time_entries_{period_name}_{timestamp}.csv"
+
+        # Write to file
+        try:
+            with open(output_file, "w", newline="", encoding="utf-8") as f:
+                f.write(csv_content)
+
+            click.echo(click.style("✓ Export successful!", fg="green", bold=True))
+            click.echo(f"File: {output_file}")
+            click.echo(f"Entries exported: {len(entries)}")
+
+            if start_date and end_date:
+                click.echo(f"Period: {start_date} to {end_date}")
+
+            total_hours = sum(entry.duration_hours for entry in entries)
+            click.echo(f"Total hours: {format_hours(total_hours)}")
+
+        except IOError as e:
+            click.echo(
+                click.style(f"Error writing to file: {str(e)}", fg="red")
+            )
+            raise click.exceptions.Exit(1)
 
 
 def main():

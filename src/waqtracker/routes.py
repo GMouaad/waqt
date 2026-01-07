@@ -1,6 +1,6 @@
 """Route handlers for the time tracking application."""
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response
 from datetime import datetime, timedelta
 from . import db
 from .models import TimeEntry, LeaveDay
@@ -10,6 +10,8 @@ from .utils import (
     calculate_monthly_stats,
     get_week_bounds,
     get_month_bounds,
+    export_time_entries_to_csv,
+    get_time_entries_for_period,
 )
 
 bp = Blueprint("main", __name__)
@@ -258,3 +260,70 @@ def delete_leave(leave_id):
         flash(f"Error deleting leave day: {str(e)}", "error")
 
     return redirect(url_for("main.leave"))
+
+
+@bp.route("/export/csv")
+def export_csv():
+    """Export time entries to CSV format."""
+    try:
+        # Get filter parameters
+        period = request.args.get("period", "all")
+        date_str = request.args.get("date", datetime.now().date().isoformat())
+
+        # Parse the reference date
+        try:
+            ref_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            # Log the error and fallback to current date
+            flash(
+                f"Invalid date format '{date_str}', using current date instead.",
+                "warning",
+            )
+            ref_date = datetime.now().date()
+
+        # Determine date range based on period
+        if period == "week":
+            start_date, end_date = get_week_bounds(ref_date)
+        elif period == "month":
+            start_date, end_date = get_month_bounds(ref_date)
+        else:
+            # Export all entries
+            start_date = None
+            end_date = None
+
+        # Query entries using utility function
+        entries = get_time_entries_for_period(start_date, end_date)
+
+        if not entries:
+            flash("No time entries found to export.", "warning")
+            return redirect(url_for("main.reports"))
+
+        # Generate CSV content
+        csv_content = export_time_entries_to_csv(entries, start_date, end_date)
+
+        # Generate filename
+        if start_date and end_date:
+            filename = (
+                f"time_entries_{start_date.strftime('%Y%m%d')}_"
+                f"{end_date.strftime('%Y%m%d')}.csv"
+            )
+        else:
+            filename = f"time_entries_all_{datetime.now().strftime('%Y%m%d')}.csv"
+
+        # Return CSV as download
+        return Response(
+            csv_content,
+            mimetype="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+
+    except IOError as e:
+        # Handle file system errors
+        flash(f"Error writing CSV file: {str(e)}", "error")
+        return redirect(url_for("main.reports"))
+    except Exception as e:
+        # Log unexpected errors for debugging
+        import logging
+        logging.error(f"Unexpected error during CSV export: {str(e)}", exc_info=True)
+        flash("An unexpected error occurred during export. Please try again.", "error")
+        return redirect(url_for("main.reports"))
