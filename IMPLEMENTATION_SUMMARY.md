@@ -85,10 +85,9 @@ Successfully transformed the repository from a .NET documentation template into 
   - Automatic dependency installation
   - Database initialization on first run
 - **Development Tools**:
-  - `requirements.txt`: Production dependencies
-  - `requirements-dev.txt`: Development/testing tools
-  - `init_db.py`: Database initialization script
-  - `run.py`: Application entry point
+  - `pyproject.toml`: Project dependencies and configuration
+  - `src/waqtracker/scripts/init_db.py`: Database initialization script
+  - `src/waqtracker/wsgi.py`: Application entry point
 
 ## Technical Specifications
 
@@ -135,7 +134,7 @@ Successfully transformed the repository from a .NET documentation template into 
 - HTML templates: 5
 - CSS files: 1 (7KB)
 - JavaScript files: 1 (2.4KB)
-- Configuration files: 4 (.gitignore, requirements.txt, etc.)
+- Configuration files: 3 (.gitignore, pyproject.toml, etc.)
 - Documentation files: 3 (README, CONTRIBUTING, copilot-instructions)
 - Scripts: 3 (run.py, init_db.py, start scripts)
 

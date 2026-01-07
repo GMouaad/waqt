@@ -160,7 +160,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 3. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 4. Initialize the database:
@@ -375,7 +375,7 @@ time-tracker/
 │   ├── usage.md            # Usage guide
 │   └── DEV_CONTAINER.md    # Dev container guide
 ├── tests/                   # Unit tests
-├── requirements.txt         # Python dependencies
+├── pyproject.toml           # Project dependencies
 └── README.md               # This file
 ```
 

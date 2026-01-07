@@ -67,7 +67,7 @@ if ! python -c "import flask" 2>/dev/null; then
     if [ "$UV_AVAILABLE" = true ]; then
         uv pip install -e .
     else
-        pip install -r requirements.txt
+        pip install -e .
     fi
     echo "✅ Dependencies installed"
     echo ""

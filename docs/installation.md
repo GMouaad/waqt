@@ -144,7 +144,7 @@ This installs:
 Create the SQLite database and set up default settings:
 
 ```bash
-python init_db.py
+python -m waqtracker.scripts.init_db
 ```
 
 You should see output like:
@@ -154,7 +154,7 @@ You should see output like:
 ✓ Added setting: standard_hours_per_week = 40
 
 ✅ Database initialization complete!
-You can now run the app with: python run.py
+You can now run the app with: python -m waqtracker.wsgi
 ```
 
 This creates a `time_tracker.db` file in your project directory.
@@ -164,7 +164,7 @@ This creates a `time_tracker.db` file in your project directory.
 Start the Flask development server:
 
 ```bash
-python run.py
+python -m waqtracker.wsgi
 ```
 
 You should see output like:
@@ -220,7 +220,7 @@ You should see `(venv)` in your terminal prompt, indicating the virtual environm
 With the virtual environment activated, install the required packages:
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ### 4-7. Complete Setup
@@ -302,9 +302,9 @@ To verify your installation is working correctly:
 - Another application is using port 5555
 - Find and stop the other application
 - Or set the `PORT` environment variable to use a different port (e.g., 5556):
-  - Linux/macOS: `PORT=5556 python run.py`
-  - Windows (CMD): `set PORT=5556 && python run.py`
-  - Windows (PowerShell): `$env:PORT=5556; python run.py`
+  - Linux/macOS: `PORT=5556 python -m waqtracker.wsgi`
+  - Windows (CMD): `set PORT=5556 && python -m waqtracker.wsgi`
+  - Windows (PowerShell): `$env:PORT=5556; python -m waqtracker.wsgi`
 
 ### Virtual Environment Not Activating
 
@@ -325,7 +325,7 @@ To verify your installation is working correctly:
 - Update uv: `uv self update`
 - Check your internet connection
 - Clear cache: `uv cache clean`
-- Try installing with pip as fallback: `pip install -r requirements.txt`
+- Try installing with pip as fallback: `pip install -e .`
 
 **Solution with pip (legacy)**:
 - Update pip: `pip install --upgrade pip`
@@ -360,7 +360,7 @@ uv pip install -e ".[dev]"
 ### With pip (Legacy):
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"
 ```
 
 This includes testing and code quality tools:

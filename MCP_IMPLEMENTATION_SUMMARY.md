@@ -48,7 +48,7 @@ This document summarizes the implementation of Model Context Protocol (MCP) supp
    - Added `mcp>=1.0.0` dependency
    - Added `waqt-mcp` entry point
    
-3. **requirements.txt**
+3. **pyproject.toml**
    - Added `mcp>=1.0.0` dependency
    
 4. **README.md**

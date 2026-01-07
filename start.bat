@@ -66,7 +66,7 @@ if errorlevel 1 (
     if "%UV_AVAILABLE%"=="true" (
         uv pip install -e .
     ) else (
-        pip install -r requirements.txt
+        pip install -e .
     )
     echo Dependencies installed
     echo.
