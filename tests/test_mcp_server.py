@@ -455,7 +455,7 @@ def test_export_entries_no_entries(app):
 def test_export_entries_invalid_format(app):
     """Test export with invalid format."""
     with app.app_context():
-        result = export_entries(format="json")
+        result = export_entries(export_format="json")
         
         assert result["status"] == "error"
         assert "Unsupported format" in result["message"]

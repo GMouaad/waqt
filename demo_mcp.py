@@ -10,12 +10,6 @@ through the MCP protocol by an MCP client.
 import os
 import tempfile
 
-# Set up temporary database BEFORE importing app modules
-temp_db = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
-temp_db.close()
-os.environ['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{temp_db.name}'
-
-from datetime import date, time
 from src.waqtracker import create_app, db
 from src.waqtracker.mcp_server import (
     start,

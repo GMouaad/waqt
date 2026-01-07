@@ -5,7 +5,7 @@ time tracking functionality to LLM applications, mirroring the CLI capabilities.
 """
 
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 from mcp.server.fastmcp import FastMCP
 
 from . import create_app, db
@@ -20,7 +20,6 @@ from .utils import (
     export_time_entries_to_csv,
     get_time_entries_for_period,
 )
-from ._version import VERSION
 
 
 # Initialize FastMCP server
@@ -36,7 +35,7 @@ Available tools:
 - start: Start time tracking for a day
 - end: End time tracking for a day
 - summary: Get time summary for week or month
-- export: Export time entries to CSV format
+- export_entries: Export time entries to CSV format
 - list_entries: List time entries for a period
 
 Standard work schedule: 8 hours/day, 40 hours/week
@@ -79,12 +78,7 @@ def _has_open_entry_for_date(entry_date):
     Returns:
         Boolean indicating if an open entry exists
     """
-    open_entries = (
-        TimeEntry.query.filter_by(date=entry_date, duration_hours=0.0)
-        .filter(TimeEntry.end_time == TimeEntry.start_time)
-        .all()
-    )
-    return len(open_entries) > 0
+    return _get_open_entry_for_date(entry_date) is not None
 
 
 @mcp.tool()
@@ -312,7 +306,6 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
         # Format recent entries
         recent_entries = []
         for entry in entries[-5:]:  # Last 5 entries
-            overtime_marker = " ⚠" if entry.duration_hours > 8.0 else ""
             recent_entries.append({
                 "date": entry.date.isoformat(),
                 "start_time": entry.start_time.strftime("%H:%M"),
@@ -443,7 +436,7 @@ def list_entries(
 def export_entries(
     period: str = "all",
     date: Optional[str] = None,
-    format: str = "csv",
+    export_format: str = "csv",
 ) -> Dict[str, Any]:
     """Export time entries to CSV format.
     
@@ -453,7 +446,7 @@ def export_entries(
     Args:
         period: Export period: "week", "month", or "all". Defaults to "all".
         date: Reference date in YYYY-MM-DD format. Defaults to today.
-        format: Export format. Currently only "csv" is supported.
+        export_format: Export format. Currently only "csv" is supported.
     
     Returns:
         Dictionary with status, metadata, and CSV content.
@@ -465,10 +458,10 @@ def export_entries(
     """
     with app.app_context():
         # Validate format
-        if format.lower() != "csv":
+        if export_format.lower() != "csv":
             return {
                 "status": "error",
-                "message": f"Unsupported format '{format}'. Only 'csv' is supported.",
+                "message": f"Unsupported format '{export_format}'. Only 'csv' is supported.",
             }
 
         # Validate period
@@ -526,7 +519,7 @@ def export_entries(
             "total_hours": total_hours,
             "total_hours_formatted": format_hours(total_hours),
             "period": period_name,
-            "format": format,
+            "format": export_format,
             "csv_content": csv_content,
         }
 

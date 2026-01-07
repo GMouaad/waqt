@@ -3,7 +3,6 @@
 import pytest
 import subprocess
 import sys
-import json
 from pathlib import Path
 
 
@@ -55,7 +54,7 @@ def test_mcp_server_has_tools():
             sys.executable,
             "-c",
             "from src.waqtracker.mcp_server import start, end, summary, list_entries, export_entries; "
-            "print('success')"
+            "print('success')",
         ],
         capture_output=True,
         text=True,
