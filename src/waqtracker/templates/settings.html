@@ -49,6 +49,12 @@
                                     {% elif setting.type == 'int' %}
                                         step="1"
                                     {% endif %}
+                                    {% if setting.min %}
+                                        min="{{ setting.min }}"
+                                    {% endif %}
+                                    {% if setting.max %}
+                                        max="{{ setting.max }}"
+                                    {% endif %}
                                     class="form-control"
                                     data-testid="input-{{ setting.key }}"
                                     required
@@ -120,7 +126,7 @@
 }
 
 .setting-item {
-    background: var(--card-background);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1.5rem;
@@ -132,7 +138,7 @@
 }
 
 .setting-item:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px var(--shadow);
 }
 
 .setting-header {
@@ -145,7 +151,7 @@
 .setting-label {
     font-weight: 600;
     font-size: 1.1rem;
-    color: var(--text-color);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -199,12 +205,14 @@
     border-radius: 4px;
     font-size: 1rem;
     transition: border-color 0.2s;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .form-control:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
 .form-actions {
@@ -230,8 +238,8 @@
 .settings-info {
     margin-top: 2rem;
     padding: 1rem;
-    background: var(--info-background);
-    border-left: 4px solid var(--info-color);
+    background: var(--info-bg);
+    border-left: 4px solid var(--info-border);
     border-radius: 4px;
 }
 
@@ -249,7 +257,7 @@
 }
 
 .detail-card {
-    background: var(--card-background);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1.5rem;
@@ -257,25 +265,13 @@
 
 .detail-card h4 {
     margin-top: 0;
-    color: var(--primary-color);
+    color: var(--accent-primary);
 }
 
 .detail-card p {
     margin: 0.5rem 0 0;
     color: var(--text-secondary);
     font-size: 0.9rem;
-}
-
-/* CSS variables for theming (define in main CSS if not already present) */
-:root {
-    --warning-color: #f59e0b;
-    --info-color: #3b82f6;
-    --info-background: #eff6ff;
-}
-
-/* Dark theme adjustments */
-body.dark-theme {
-    --info-background: #1e3a5f;
 }
 </style>
 {% endblock %}

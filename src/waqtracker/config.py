@@ -122,3 +122,22 @@ def get_config_input_type(key):
     elif config_type in ("int", "float"):
         return "number"
     return "text"
+
+
+def get_config_validation_bounds(key):
+    """
+    Get min/max validation bounds for numeric configuration fields.
+    
+    Args:
+        key: Configuration key
+        
+    Returns:
+        dict: Dictionary with 'min' and 'max' keys, or empty dict for non-numeric fields
+    """
+    bounds = {
+        "standard_hours_per_day": {"min": "0.1", "max": "24"},
+        "weekly_hours": {"min": "0.1", "max": "168"},
+        "pause_duration_minutes": {"min": "0", "max": "480"},
+        "max_work_session_hours": {"min": "1", "max": "24"},
+    }
+    return bounds.get(key, {})

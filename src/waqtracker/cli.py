@@ -20,8 +20,6 @@ from .config import (
     CONFIG_DEFAULTS,
     CONFIG_TYPES,
     CONFIG_DESCRIPTIONS,
-    CONFIG_VALIDATORS,
-    CONFIG_VALIDATION_MESSAGES,
     validate_config_value,
     normalize_bool_value,
 )

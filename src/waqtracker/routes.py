@@ -21,6 +21,7 @@ from .config import (
     validate_config_value,
     normalize_bool_value,
     get_config_input_type,
+    get_config_validation_bounds,
 )
 
 bp = Blueprint("main", __name__)
@@ -584,8 +585,9 @@ def settings():
             # Track if any changes were made
             changes_made = False
             errors = []
+            updates = []  # Store updates to apply after validation
             
-            # Process each configuration key
+            # First pass: Validate all values
             for key in CONFIG_DEFAULTS.keys():
                 config_type = CONFIG_TYPES.get(key)
                 
@@ -616,16 +618,23 @@ def settings():
                 if config_type == "bool":
                     new_value = normalize_bool_value(new_value)
                 
-                # Update the setting
-                Settings.set_setting(key, new_value)
+                # Store for later update
+                updates.append((key, new_value))
                 changes_made = True
+            
+            # If validation passed, apply all updates atomically
+            if not errors and updates:
+                for key, value in updates:
+                    Settings.update_setting(key, value)
+                db.session.commit()
             
             # Show appropriate flash message
             if errors:
                 for error in errors:
                     flash(error, "error")
-                if changes_made:
-                    flash("Some settings were updated, but some had errors.", "warning")
+                if changes_made and not updates:
+                    # Had changes but all failed validation
+                    flash("No settings were updated due to validation errors.", "error")
             elif changes_made:
                 flash("Settings updated successfully!", "success")
             else:
@@ -647,7 +656,7 @@ def settings():
         current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
         default_value = CONFIG_DEFAULTS[key]
         
-        settings_data.append({
+        setting_dict = {
             "key": key,
             "display_name": CONFIG_DISPLAY_NAMES.get(key, key),
             "current_value": current_value,
@@ -656,7 +665,14 @@ def settings():
             "type": CONFIG_TYPES.get(key, "text"),
             "input_type": get_config_input_type(key),
             "is_modified": current_value != default_value,
-        })
+        }
+        
+        # Add validation bounds for numeric fields
+        bounds = get_config_validation_bounds(key)
+        if bounds:
+            setting_dict.update(bounds)
+        
+        settings_data.append(setting_dict)
     
     return render_template(
         "settings.html",

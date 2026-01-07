@@ -126,8 +126,8 @@ def test_settings_update_invalid_value_shows_error(client, app):
         }, follow_redirects=True)
         
         assert response.status_code == 200
-        assert b"Weekly Hours" in response.data
-        # Should show error about invalid value
+        # Verify specific error message appears
+        assert b"Weekly Hours: Must be greater than 0 and at most 168 hours" in response.data
 
 
 def test_settings_update_empty_value_shows_error(client, app):
@@ -145,6 +145,43 @@ def test_settings_update_empty_value_shows_error(client, app):
         assert response.status_code == 200
         # Should show specific error about empty value for the field
         assert b"Standard Hours Per Day: Value cannot be empty" in response.data
+
+
+def test_settings_empty_values_for_all_numeric_fields(client, app):
+    """Test that empty values for all required numeric fields show error messages."""
+    with app.app_context():
+        # Test empty weekly_hours
+        response = client.post("/settings", data={
+            "standard_hours_per_day": "8",
+            "weekly_hours": "",  # Empty value
+            "pause_duration_minutes": "45",
+            "auto_end": "",
+            "alert_on_max_work_session": "",
+            "max_work_session_hours": "10",
+        }, follow_redirects=True)
+        assert b"Weekly Hours: Value cannot be empty" in response.data
+        
+        # Test empty pause_duration_minutes
+        response = client.post("/settings", data={
+            "standard_hours_per_day": "8",
+            "weekly_hours": "40",
+            "pause_duration_minutes": "",  # Empty value
+            "auto_end": "",
+            "alert_on_max_work_session": "",
+            "max_work_session_hours": "10",
+        }, follow_redirects=True)
+        assert b"Pause Duration (minutes): Value cannot be empty" in response.data
+        
+        # Test empty max_work_session_hours
+        response = client.post("/settings", data={
+            "standard_hours_per_day": "8",
+            "weekly_hours": "40",
+            "pause_duration_minutes": "45",
+            "auto_end": "",
+            "alert_on_max_work_session": "",
+            "max_work_session_hours": "",  # Empty value
+        }, follow_redirects=True)
+        assert b"Max Work Session Hours: Value cannot be empty" in response.data
 
 
 def test_settings_update_multiple_values(client, app):
@@ -201,7 +238,7 @@ def test_settings_validates_standard_hours_per_day_range(client, app):
             "max_work_session_hours": "10",
         }, follow_redirects=True)
         assert response.status_code == 200
-        # Should show error
+        assert b"Standard Hours Per Day: Must be greater than 0 and at most 24 hours" in response.data
         
         # Test too high
         response = client.post("/settings", data={
@@ -213,7 +250,7 @@ def test_settings_validates_standard_hours_per_day_range(client, app):
             "max_work_session_hours": "10",
         }, follow_redirects=True)
         assert response.status_code == 200
-        # Should show error
+        assert b"Standard Hours Per Day: Must be greater than 0 and at most 24 hours" in response.data
 
 
 def test_settings_validates_pause_duration_range(client, app):
@@ -229,7 +266,7 @@ def test_settings_validates_pause_duration_range(client, app):
             "max_work_session_hours": "10",
         }, follow_redirects=True)
         assert response.status_code == 200
-        # Should show error about value being too high
+        assert b"Pause Duration (minutes): Must be between 0 and 480 minutes (8 hours)" in response.data
 
 
 def test_settings_validates_max_work_session_hours_range(client, app):
@@ -245,7 +282,7 @@ def test_settings_validates_max_work_session_hours_range(client, app):
             "max_work_session_hours": "0.5",  # < 1
         }, follow_redirects=True)
         assert response.status_code == 200
-        # Should show error
+        assert b"Max Work Session Hours: Must be between 1 and 24 hours" in response.data
         
         # Test too high
         response = client.post("/settings", data={
@@ -257,7 +294,7 @@ def test_settings_validates_max_work_session_hours_range(client, app):
             "max_work_session_hours": "25",  # > 24
         }, follow_redirects=True)
         assert response.status_code == 200
-        # Should show error
+        assert b"Max Work Session Hours: Must be between 1 and 24 hours" in response.data
 
 
 def test_settings_page_shows_modified_indicator(client, app):
@@ -278,4 +315,6 @@ def test_settings_navigation_link_exists(client, app):
     with app.app_context():
         response = client.get("/")
         assert response.status_code == 200
-        assert b'href="/settings"' in response.data or b"Settings" in response.data
+        # Check for both href and Settings text in navigation
+        assert b'href="/settings"' in response.data
+        assert b"Settings" in response.data
