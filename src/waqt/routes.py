@@ -369,6 +369,8 @@ def index():
 @bp.route("/time-entry", methods=["GET", "POST"])
 def time_entry():
     """Add or view time entries."""
+    time_format = Settings.get_setting("time_format", "24")
+
     if request.method == "POST":
         try:
             # Parse form data
@@ -384,8 +386,18 @@ def time_entry():
 
             # Parse date and times
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
-            start_time = datetime.strptime(start_time_str, "%H:%M").time()
-            end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            
+            if time_format == "12":
+                try:
+                    start_time = datetime.strptime(start_time_str, "%I:%M %p").time()
+                    end_time = datetime.strptime(end_time_str, "%I:%M %p").time()
+                except ValueError:
+                    # Fallback to 24-hour format if 12-hour parsing fails
+                    start_time = datetime.strptime(start_time_str, "%H:%M").time()
+                    end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            else:
+                start_time = datetime.strptime(start_time_str, "%H:%M").time()
+                end_time = datetime.strptime(end_time_str, "%H:%M").time()
 
             # Calculate duration
             duration = calculate_duration(start_time, end_time)
@@ -434,13 +446,14 @@ def time_entry():
             return redirect(url_for("main.time_entry"))
 
     # GET request - show form
-    return render_template("time_entry.html", today=datetime.now().date())
+    return render_template("time_entry.html", today=datetime.now().date(), time_format=time_format)
 
 
 @bp.route("/time-entry/<int:entry_id>/edit", methods=["GET", "POST"])
 def edit_time_entry(entry_id):
     """Edit an existing time entry."""
     entry = TimeEntry.query.get_or_404(entry_id)
+    time_format = Settings.get_setting("time_format", "24")
 
     # Prevent editing of active timers to avoid data corruption and
     # keep behavior consistent with the CLI.
@@ -464,8 +477,17 @@ def edit_time_entry(entry_id):
                 return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
 
             # Parse times
-            start_time = datetime.strptime(start_time_str, "%H:%M").time()
-            end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            if time_format == "12":
+                try:
+                    start_time = datetime.strptime(start_time_str, "%I:%M %p").time()
+                    end_time = datetime.strptime(end_time_str, "%I:%M %p").time()
+                except ValueError:
+                    # Fallback to 24-hour format if 12-hour parsing fails
+                    start_time = datetime.strptime(start_time_str, "%H:%M").time()
+                    end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            else:
+                start_time = datetime.strptime(start_time_str, "%H:%M").time()
+                end_time = datetime.strptime(end_time_str, "%H:%M").time()
 
             # Calculate duration
             duration = calculate_duration(start_time, end_time)
@@ -497,7 +519,7 @@ def edit_time_entry(entry_id):
             return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
 
     # GET request - show form with existing data
-    return render_template("edit_time_entry.html", entry=entry)
+    return render_template("edit_time_entry.html", entry=entry, time_format=time_format)
 
 
 @bp.route("/time-entry/<int:entry_id>/delete", methods=["POST"])
