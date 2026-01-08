@@ -94,6 +94,16 @@ class Settings(db.Model):
         db.session.commit()
 
     @staticmethod
+    def update_setting(key, value):
+        """Update a setting value without committing (for atomic transactions)."""
+        setting = Settings.query.filter_by(key=key).first()
+        if setting:
+            setting.value = str(value)
+        else:
+            setting = Settings(key=key, value=str(value))
+            db.session.add(setting)
+
+    @staticmethod
     def get_all_settings():
         """Get all settings as a dictionary."""
         settings = Settings.query.all()

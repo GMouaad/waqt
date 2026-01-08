@@ -13,16 +13,26 @@ from .utils import (
     export_time_entries_to_csv,
     get_time_entries_for_period,
 )
+from .config import (
+    CONFIG_DEFAULTS,
+    CONFIG_TYPES,
+    CONFIG_DESCRIPTIONS,
+    CONFIG_DISPLAY_NAMES,
+    validate_config_value,
+    normalize_bool_value,
+    get_config_input_type,
+    get_config_validation_bounds,
+)
 
 bp = Blueprint("main", __name__)
 
 
 def get_open_entry():
     """Get the currently running timer entry if any."""
-    today = datetime.now().date()
-    # Find entry with is_active=True
+    # Find entry with is_active=True (don't restrict to today's date)
+    # This handles cases where a timer was started late at night and is still running
     return (
-        TimeEntry.query.filter_by(date=today, is_active=True)
+        TimeEntry.query.filter_by(is_active=True)
         .order_by(TimeEntry.created_at.desc())
         .first()
     )
@@ -562,3 +572,109 @@ def export_csv():
         logging.error(f"Unexpected error during CSV export: {str(e)}", exc_info=True)
         flash("An unexpected error occurred during export. Please try again.", "error")
         return redirect(url_for("main.reports"))
+
+
+@bp.route("/settings", methods=["GET", "POST"])
+def settings():
+    """View and manage application settings."""
+    if request.method == "POST":
+        try:
+            # Get all current settings first
+            all_settings = Settings.get_all_settings()
+            
+            # Track if any changes were made
+            changes_made = False
+            errors = []
+            updates = []  # Store updates to apply after validation
+            
+            # First pass: Validate all values
+            for key in CONFIG_DEFAULTS.keys():
+                config_type = CONFIG_TYPES.get(key)
+                
+                # Get the new value from form
+                if config_type == "bool":
+                    # Checkbox: checked = "on", unchecked = not in form
+                    new_value = "true" if request.form.get(key) == "on" else "false"
+                else:
+                    new_value = request.form.get(key, "").strip()
+                    if not new_value:
+                        errors.append(f"{CONFIG_DISPLAY_NAMES.get(key, key)}: Value cannot be empty")
+                        continue
+                
+                # Get current value
+                current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
+                
+                # Skip if value hasn't changed
+                if new_value == current_value:
+                    continue
+                
+                # Validate the new value
+                is_valid, error_message = validate_config_value(key, new_value)
+                if not is_valid:
+                    errors.append(f"{CONFIG_DISPLAY_NAMES.get(key, key)}: {error_message}")
+                    continue
+                
+                # Normalize boolean values
+                if config_type == "bool":
+                    new_value = normalize_bool_value(new_value)
+                
+                # Store for later update
+                updates.append((key, new_value))
+                changes_made = True
+            
+            # If validation passed, apply all updates atomically
+            if not errors and updates:
+                for key, value in updates:
+                    Settings.update_setting(key, value)
+                db.session.commit()
+            
+            # Show appropriate flash message
+            if errors:
+                for error in errors:
+                    flash(error, "error")
+                if changes_made and not updates:
+                    # Had changes but all failed validation
+                    flash("No settings were updated due to validation errors.", "error")
+            elif changes_made:
+                flash("Settings updated successfully!", "success")
+            else:
+                flash("No changes were made.", "info")
+            
+            return redirect(url_for("main.settings"))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error updating settings: {str(e)}", "error")
+            return redirect(url_for("main.settings"))
+    
+    # GET request - show settings form
+    all_settings = Settings.get_all_settings()
+    
+    # Prepare settings data for template
+    settings_data = []
+    for key in sorted(CONFIG_DEFAULTS.keys()):
+        current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
+        default_value = CONFIG_DEFAULTS[key]
+        
+        setting_dict = {
+            "key": key,
+            "display_name": CONFIG_DISPLAY_NAMES.get(key, key),
+            "current_value": current_value,
+            "default_value": default_value,
+            "description": CONFIG_DESCRIPTIONS.get(key, ""),
+            "type": CONFIG_TYPES.get(key, "text"),
+            "input_type": get_config_input_type(key),
+            "is_modified": current_value != default_value,
+        }
+        
+        # Add validation bounds for numeric fields
+        bounds = get_config_validation_bounds(key)
+        if bounds:
+            setting_dict.update(bounds)
+        
+        settings_data.append(setting_dict)
+    
+    return render_template(
+        "settings.html",
+        settings_data=settings_data,
+    )
