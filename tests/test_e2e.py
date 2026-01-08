@@ -125,9 +125,10 @@ def test_add_leave_day(page, live_server):
     """Test adding a leave day through the UI."""
     page.goto(f"{live_server}/leave")
     
-    # Fill out the leave form
+    # Fill out the leave form (using new multi-day fields)
     today = datetime.now().date().isoformat()
-    page.get_by_test_id("input-leave-date").fill(today)
+    page.get_by_test_id("input-start-date").fill(today)
+    page.get_by_test_id("input-end-date").fill(today)
     page.get_by_test_id("select-leave-type").select_option("vacation")
     page.get_by_test_id("input-leave-description").fill("Summer vacation")
     
