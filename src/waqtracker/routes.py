@@ -389,6 +389,15 @@ def edit_time_entry(entry_id):
     """Edit an existing time entry."""
     entry = TimeEntry.query.get_or_404(entry_id)
 
+    # Prevent editing of active timers to avoid data corruption and
+    # keep behavior consistent with the CLI.
+    if entry.is_active:
+        flash(
+            "Cannot edit an active timer. Please stop the timer before editing.",
+            "error",
+        )
+        return redirect(url_for("main.index"))
+
     if request.method == "POST":
         try:
             # Parse form data

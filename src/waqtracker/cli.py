@@ -356,7 +356,7 @@ def edit_entry(
                 "You can use the UI to delete entries, or specify --start to select."
             )
 
-            # If start time provided, try to match it
+            # If start time provided, try to match it for selection
             if start:
                 try:
                     start_time = datetime.strptime(start, "%H:%M").time()
@@ -367,6 +367,9 @@ def edit_entry(
                             f"\nMatching entry by start time: "
                             f"{entry.start_time.strftime('%H:%M')}"
                         )
+                        # Mark that this entry was selected by start time
+                        # We won't update start_time again since it was used for selection
+                        selected_by_start = True
                     else:
                         click.echo(
                             click.style(
@@ -387,14 +390,16 @@ def edit_entry(
                 raise click.exceptions.Exit(1)
         else:
             entry = entries[0]
+            selected_by_start = False
 
         # Store original values for display
         original_start = entry.start_time
         original_end = entry.end_time
         original_description = entry.description
 
-        # Parse and update start time if provided
-        if start:
+        # Parse and update start time if provided and not used for selection
+        # When multiple entries exist, --start is used for selection, not update
+        if start and not selected_by_start:
             try:
                 entry.start_time = datetime.strptime(start, "%H:%M").time()
             except ValueError:

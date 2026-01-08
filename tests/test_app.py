@@ -289,3 +289,35 @@ def test_edit_time_entry_invalid_time(client, app):
         assert updated_entry.start_time == time(17, 0)
         assert updated_entry.end_time == time(9, 0)
         assert updated_entry.duration_hours == 16.0  # 17:00 to 09:00 next day
+
+
+def test_edit_active_timer_prevented(client, app):
+    """Test that editing an active timer is prevented."""
+    with app.app_context():
+        # Create an active entry (timer running)
+        entry = TimeEntry(
+            date=date.today(),
+            start_time=time(9, 0),
+            end_time=time(9, 0),
+            duration_hours=0.0,
+            description="Active work",
+            is_active=True,
+        )
+        db.session.add(entry)
+        db.session.commit()
+        entry_id = entry.id
+
+    # Try to access the edit page
+    response = client.get(f"/time-entry/{entry_id}/edit", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Cannot edit an active timer" in response.data
+    assert b"Please stop the timer before editing" in response.data
+
+    # Verify we're redirected to dashboard
+    assert b"Dashboard" in response.data
+
+    # Verify entry was not changed
+    with app.app_context():
+        unchanged_entry = TimeEntry.query.get(entry_id)
+        assert unchanged_entry.is_active is True
+        assert unchanged_entry.start_time == time(9, 0)
