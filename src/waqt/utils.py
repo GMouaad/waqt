@@ -1,5 +1,6 @@
 """Utility functions for time tracking calculations."""
 
+import calendar
 import csv
 import io
 from datetime import datetime, timedelta, date, time as datetime_time
@@ -414,3 +415,123 @@ def export_time_entries_to_csv(
         writer.writerow(["Total Overtime", f"{total_overtime:.2f}"])
 
     return output.getvalue()
+
+
+def generate_calendar_data(year: int, month: int) -> Dict:
+    """
+    Generate calendar data for a given month with entry information.
+    
+    Args:
+        year: Year for the calendar
+        month: Month for the calendar (1-12)
+    
+    Returns:
+        Dictionary containing:
+            - weeks: List of weeks, each week is a list of day dicts
+            - month_name: Name of the month
+            - year: Year
+            - prev_month: Dict with year and month for previous month
+            - next_month: Dict with year and month for next month
+    """
+    
+    # Get month boundaries
+    month_start = date(year, month, 1)
+    if month == 12:
+        month_end = date(year, 12, 31)
+    else:
+        next_month_start = date(year, month + 1, 1)
+        month_end = next_month_start - timedelta(days=1)
+    
+    # Get all time entries for the month
+    time_entries = TimeEntry.query.filter(
+        TimeEntry.date >= month_start,
+        TimeEntry.date <= month_end
+    ).all()
+    
+    # Get all leave days for the month
+    leave_days = LeaveDay.query.filter(
+        LeaveDay.date >= month_start,
+        LeaveDay.date <= month_end
+    ).all()
+    
+    # Create dictionaries for quick lookup
+    entries_by_date = {}
+    for entry in time_entries:
+        if entry.date not in entries_by_date:
+            entries_by_date[entry.date] = []
+        entries_by_date[entry.date].append(entry)
+    
+    leaves_by_date = {}
+    for leave in leave_days:
+        leaves_by_date[leave.date] = leave
+    
+    # Generate calendar weeks
+    cal = calendar.monthcalendar(year, month)
+    weeks = []
+    
+    today = datetime.now().date()
+    
+    for week in cal:
+        week_days = []
+        for day_num in week:
+            if day_num == 0:
+                # Day from another month
+                week_days.append({
+                    'day': '',
+                    'is_current_month': False,
+                    'is_today': False,
+                    'has_entry': False,
+                    'has_leave': False,
+                    'leave_type': None,
+                    'total_hours': 0,
+                    'entry_count': 0,
+                    'date': None
+                })
+            else:
+                day_date = date(year, month, day_num)
+                has_entries = day_date in entries_by_date
+                has_leave = day_date in leaves_by_date
+                
+                total_hours = 0
+                entry_count = 0
+                if has_entries:
+                    entry_count = len(entries_by_date[day_date])
+                    total_hours = sum(e.duration_hours for e in entries_by_date[day_date])
+                
+                leave_type = None
+                if has_leave:
+                    leave_type = leaves_by_date[day_date].leave_type
+                
+                week_days.append({
+                    'day': day_num,
+                    'is_current_month': True,
+                    'is_today': day_date == today,
+                    'has_entry': has_entries,
+                    'has_leave': has_leave,
+                    'leave_type': leave_type,
+                    'total_hours': round(total_hours, 2),
+                    'entry_count': entry_count,
+                    'date': day_date.isoformat()
+                })
+        
+        weeks.append(week_days)
+    
+    # Calculate previous and next month
+    if month == 1:
+        prev_month = {'year': year - 1, 'month': 12}
+    else:
+        prev_month = {'year': year, 'month': month - 1}
+    
+    if month == 12:
+        next_month = {'year': year + 1, 'month': 1}
+    else:
+        next_month = {'year': year, 'month': month + 1}
+    
+    return {
+        'weeks': weeks,
+        'month_name': calendar.month_name[month],
+        'year': year,
+        'month': month,
+        'prev_month': prev_month,
+        'next_month': next_month
+    }

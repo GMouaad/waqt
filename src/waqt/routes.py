@@ -21,6 +21,7 @@ from .utils import (
     get_month_bounds,
     export_time_entries_to_csv,
     get_time_entries_for_period,
+    generate_calendar_data,
 )
 from .config import (
     CONFIG_DEFAULTS,
@@ -281,6 +282,42 @@ def stop_timer():
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+@bp.route("/api/calendar/day/<date_str>")
+def get_day_details(date_str):
+    """Get details for a specific day including time entries and leave."""
+    try:
+        day_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        
+        # Validate date is within reasonable range
+        if day_date.year < 1900 or day_date.year > 2100:
+            return jsonify({"success": False, "message": "Date out of valid range"}), 400
+    except ValueError:
+        return jsonify({"success": False, "message": "Invalid date format"}), 400
+    
+    try:
+        # Get time entries for the day
+        entries = TimeEntry.query.filter_by(date=day_date).order_by(TimeEntry.start_time).all()
+        
+        # Get leave for the day
+        leave = LeaveDay.query.filter_by(date=day_date).first()
+        
+        # Calculate total hours
+        total_hours = sum(e.duration_hours for e in entries)
+        
+        return jsonify({
+            "success": True,
+            "date": date_str,
+            "entries": [e.to_dict() for e in entries],
+            "leave": leave.to_dict() if leave else None,
+            "total_hours": round(total_hours, 2),
+            "entry_count": len(entries),
+            "has_entry": len(entries) > 0,
+            "has_leave": leave is not None
+        })
+    except Exception as e:
+        return jsonify({"success": False, "message": "Database error occurred"}), 500
+
+
 @bp.route("/")
 def index():
     """Dashboard - show overview of recent entries and current week stats."""
@@ -306,11 +343,26 @@ def index():
         .all()
     )
 
+    # Generate calendar data for the current month
+    try:
+        calendar_data = generate_calendar_data(today.year, today.month)
+    except Exception:
+        # Provide empty calendar structure as fallback
+        calendar_data = {
+            'weeks': [],
+            'month_name': today.strftime('%B'),
+            'year': today.year,
+            'month': today.month,
+            'prev_month': {'year': today.year, 'month': today.month},
+            'next_month': {'year': today.year, 'month': today.month}
+        }
+
     return render_template(
         "dashboard.html",
         recent_entries=recent_entries,
         weekly_stats=weekly_stats,
         current_date=today,
+        calendar_data=calendar_data,
     )
 
 

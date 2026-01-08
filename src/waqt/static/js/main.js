@@ -342,4 +342,140 @@ document.addEventListener('DOMContentLoaded', function() {
         checkSessionAlert();
         setInterval(checkSessionAlert, 60000);
     }
+    
+    // Calendar interactivity
+    const calendarDays = document.querySelectorAll('.calendar-day:not(.empty)');
+    const tooltip = document.getElementById('calendar-tooltip');
+    
+    if (calendarDays.length > 0 && tooltip) {
+        let currentTooltipDay = null;
+        
+        calendarDays.forEach(day => {
+            day.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                
+                const date = this.dataset.date;
+                if (!date) return;
+                
+                // If clicking the same day, hide tooltip
+                if (currentTooltipDay === date && tooltip.style.display !== 'none') {
+                    hideTooltip();
+                    return;
+                }
+                
+                currentTooltipDay = date;
+                
+                try {
+                    const response = await fetch(`/api/calendar/day/${date}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showTooltip(this, data);
+                    }
+                } catch (error) {
+                    console.error('Error fetching day details:', error);
+                }
+            });
+        });
+        
+        function showTooltip(dayElement, data) {
+            const rect = dayElement.getBoundingClientRect();
+            const tooltipDate = document.getElementById('tooltip-date');
+            const tooltipBody = document.getElementById('tooltip-body');
+            const tooltipAddEntry = document.getElementById('tooltip-add-entry');
+            
+            // Format date nicely - parse the date in a timezone-safe manner
+            // We deliberately avoid using `new Date(data.date)` because parsing
+            // bare 'YYYY-MM-DD' strings is implementation-dependent and often
+            // treated as UTC, which can cause off-by-one-day errors depending
+            // on the user's timezone. Constructing the Date from (year, month - 1, day)
+            // ensures consistent local calendar dates.
+            const [year, month, day] = data.date.split('-').map(num => parseInt(num, 10));
+            const dateObj = new Date(year, month - 1, day);
+            const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            tooltipDate.textContent = formattedDate;
+            
+            // Build tooltip body
+            let bodyHTML = '';
+            
+            if (data.has_leave) {
+                const leaveIcon = data.leave.leave_type === 'vacation' ? '🏖️' : '🤒';
+                const leaveLabel = data.leave.leave_type === 'vacation' ? 'Vacation' : 'Sick Leave';
+                const leaveIconAria = data.leave.leave_type === 'vacation' ? 'Vacation day' : 'Sick leave';
+                bodyHTML += `<div class="tooltip-entry"><strong><span role="img" aria-label="${leaveIconAria}">${leaveIcon}</span> ${leaveLabel}</strong>`;
+                if (data.leave.description) {
+                    bodyHTML += `<br>${data.leave.description}`;
+                }
+                bodyHTML += '</div>';
+            }
+            
+            if (data.has_entry) {
+                bodyHTML += `<div><strong>Work Entries (${data.entry_count}):</strong></div>`;
+                data.entries.forEach(entry => {
+                    bodyHTML += `
+                        <div class="tooltip-entry">
+                            <div>${entry.start_time} - ${entry.end_time}</div>
+                            <div><strong>${entry.duration_hours}h</strong> - ${entry.description}</div>
+                        </div>
+                    `;
+                });
+                bodyHTML += `<div style="margin-top: 0.5rem;"><strong>Total: ${data.total_hours}h</strong></div>`;
+            } else if (!data.has_leave) {
+                bodyHTML += '<div style="color: var(--text-secondary);"><span role="img" aria-label="Warning">⚠️</span> No entry for this day</div>';
+            }
+            
+            tooltipBody.innerHTML = bodyHTML;
+            
+            // Update add entry link
+            tooltipAddEntry.href = `/time-entry?date=${data.date}`;
+            
+            // Position tooltip
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            
+            tooltip.style.display = 'block';
+            
+            // Get tooltip dimensions after making it visible
+            const tooltipRect = tooltip.getBoundingClientRect();
+            
+            // Calculate position (try to center below the day)
+            let left = rect.left + scrollLeft + (rect.width / 2) - (tooltipRect.width / 2);
+            let top = rect.bottom + scrollTop + 10;
+            
+            // Keep tooltip within viewport horizontally
+            if (left < 10) left = 10;
+            if (left + tooltipRect.width > window.innerWidth - 10) {
+                left = window.innerWidth - tooltipRect.width - 10;
+            }
+            
+            // If tooltip goes below viewport, show above the day instead
+            if (top + tooltipRect.height > scrollTop + window.innerHeight) {
+                top = rect.top + scrollTop - tooltipRect.height - 10;
+            }
+            
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+        }
+        
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+            currentTooltipDay = null;
+        }
+        
+        // Hide tooltip when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!tooltip.contains(e.target) && !e.target.closest('.calendar-day')) {
+                hideTooltip();
+            }
+        });
+        
+        // Hide tooltip on scroll
+        window.addEventListener('scroll', hideTooltip);
+    }
 });
