@@ -15,6 +15,8 @@ from .utils import (
     export_time_entries_to_csv,
     get_time_entries_for_period,
     format_time,
+    get_working_days_in_range,
+    calculate_leave_hours,
 )
 from ._version import VERSION, GIT_SHA
 from .config import (
@@ -912,6 +914,164 @@ def config_reset(key: str):
         click.echo(f"Old value: {old_value}")
         click.echo(f"Default value: {default_value}")
         click.echo()
+
+
+@cli.command()
+@click.option(
+    "--from",
+    "start_date",
+    type=str,
+    required=True,
+    help="Start date in YYYY-MM-DD format",
+)
+@click.option(
+    "--to",
+    "end_date",
+    type=str,
+    required=True,
+    help="End date in YYYY-MM-DD format",
+)
+@click.option(
+    "--type",
+    "-t",
+    "leave_type",
+    type=click.Choice(["vacation", "sick"], case_sensitive=False),
+    default="vacation",
+    help="Type of leave (default: vacation)",
+)
+@click.option(
+    "--description",
+    "--desc",
+    type=str,
+    default="",
+    help="Description or notes for the leave",
+)
+def leave_request(start_date: str, end_date: str, leave_type: str, description: str):
+    """Request multi-day leave with automatic working hours calculation.
+
+    Creates leave records for all working days (Monday-Friday) in the specified
+    date range, automatically excluding weekends. Useful for requesting vacation
+    or sick leave spanning multiple days.
+
+    Examples:
+        waqt leave-request --from 2026-01-13 --to 2026-01-17
+        waqt leave-request --from 2026-01-13 --to 2026-01-19 --type vacation
+        waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical leave"
+    """
+    app = create_app()
+    with app.app_context():
+        # Parse dates
+        try:
+            start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        except ValueError:
+            click.echo(
+                click.style(
+                    f"Error: Invalid start date format '{start_date}'. Use YYYY-MM-DD.",
+                    fg="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+
+        try:
+            end = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            click.echo(
+                click.style(
+                    f"Error: Invalid end date format '{end_date}'. Use YYYY-MM-DD.",
+                    fg="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+
+        # Validate date range
+        if end < start:
+            click.echo(
+                click.style(
+                    "Error: End date must be on or after start date.",
+                    fg="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+
+        # Calculate leave statistics
+        leave_stats = calculate_leave_hours(start, end)
+        working_days = get_working_days_in_range(start, end)
+
+        # Check if there are any working days
+        if not working_days:
+            click.echo(
+                click.style(
+                    "⚠ No working days in the selected range (only weekends).",
+                    fg="yellow",
+                    bold=True,
+                )
+            )
+            click.echo("Please select a range that includes at least one weekday.")
+            raise click.exceptions.Exit(1)
+
+        # Display preview
+        click.echo(click.style("\n📅 Leave Request Summary", fg="cyan", bold=True))
+        click.echo("=" * 50)
+        click.echo(f"Start Date: {start.strftime('%Y-%m-%d (%A)')}")
+        click.echo(f"End Date: {end.strftime('%Y-%m-%d (%A)')}")
+        click.echo(f"Leave Type: {leave_type.capitalize()}")
+        if description:
+            click.echo(f"Description: {description}")
+        click.echo()
+        click.echo(f"Total Days: {leave_stats['total_days']}")
+        click.echo(f"Working Days: {leave_stats['working_days']} (Mon-Fri)")
+        if leave_stats["weekend_days"] > 0:
+            click.echo(
+                click.style(
+                    f"Weekend Days: {leave_stats['weekend_days']} (excluded)",
+                    fg="yellow",
+                )
+            )
+        click.echo(f"Working Hours: {format_hours(leave_stats['working_hours'])}")
+        click.echo()
+
+        # Confirm before creating
+        if not click.confirm("Create leave records for these dates?"):
+            click.echo("Leave request cancelled.")
+            raise click.exceptions.Exit(0)
+
+        # Create leave records
+        try:
+            created_count = 0
+            for leave_date in working_days:
+                leave_day = LeaveDay(
+                    date=leave_date,
+                    leave_type=leave_type.lower(),
+                    description=description.strip() if description else "",
+                )
+                db.session.add(leave_day)
+                created_count += 1
+
+            db.session.commit()
+
+            click.echo(
+                click.style(
+                    f"✓ Leave request created successfully!",
+                    fg="green",
+                    bold=True,
+                )
+            )
+            click.echo(f"Created {created_count} leave record(s)")
+            if leave_stats["weekend_days"] > 0:
+                click.echo(
+                    f"Excluded {leave_stats['weekend_days']} weekend day(s)"
+                )
+            click.echo()
+
+        except Exception as e:
+            db.session.rollback()
+            click.echo(
+                click.style(
+                    f"Error creating leave records: {str(e)}",
+                    fg="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
 
 
 @cli.command()

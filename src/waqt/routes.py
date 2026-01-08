@@ -529,32 +529,88 @@ def leave():
     """Manage vacation and sick leave days."""
     if request.method == "POST":
         try:
-            # Parse form data
-            date_str = request.form.get("date")
+            # Import here to avoid circular imports
+            from .utils import get_working_days_in_range, calculate_leave_hours
+
+            # Parse form data - support both single day and multi-day formats
+            single_date_str = request.form.get("date")
+            start_date_str = request.form.get("start_date")
+            end_date_str = request.form.get("end_date")
             leave_type = request.form.get("leave_type")
             description = request.form.get("description", "").strip()
 
-            # Validate inputs
-            if not all([date_str, leave_type]):
-                flash("Date and leave type are required.", "error")
+            # Validate leave type first
+            if not leave_type:
+                flash("Leave type is required.", "error")
                 return redirect(url_for("main.leave"))
 
             if leave_type not in ["vacation", "sick"]:
                 flash("Invalid leave type.", "error")
                 return redirect(url_for("main.leave"))
 
-            # Parse date
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            # Determine if single-day or multi-day request
+            if single_date_str:
+                # Single day format (backward compatibility)
+                start_date = datetime.strptime(single_date_str, "%Y-%m-%d").date()
+                end_date = start_date
+            elif start_date_str and end_date_str:
+                # Multi-day format
+                start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+                end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            else:
+                flash("Please provide either a date or a date range.", "error")
+                return redirect(url_for("main.leave"))
 
-            # Create new leave day
-            leave_day = LeaveDay(
-                date=date, leave_type=leave_type, description=description
-            )
+            # Validate date range
+            if end_date < start_date:
+                flash("End date must be on or after start date.", "error")
+                return redirect(url_for("main.leave"))
 
-            db.session.add(leave_day)
+            # Get working days in range (excludes weekends)
+            working_days = get_working_days_in_range(start_date, end_date)
+
+            if not working_days:
+                flash(
+                    "No working days in the selected range (only weekends). "
+                    "Please select a range that includes at least one weekday.",
+                    "warning",
+                )
+                return redirect(url_for("main.leave"))
+
+            # Calculate leave statistics
+            leave_stats = calculate_leave_hours(start_date, end_date)
+
+            # Create leave day records for each working day
+            created_count = 0
+            for leave_date in working_days:
+                leave_day = LeaveDay(
+                    date=leave_date, leave_type=leave_type, description=description
+                )
+                db.session.add(leave_day)
+                created_count += 1
+
             db.session.commit()
 
-            flash(f"{leave_type.capitalize()} leave added successfully!", "success")
+            # Provide detailed feedback
+            if created_count == 1:
+                flash(
+                    f"{leave_type.capitalize()} leave added successfully!",
+                    "success",
+                )
+            else:
+                # Multi-day feedback
+                weekend_msg = (
+                    f" (excluded {leave_stats['weekend_days']} weekend days)"
+                    if leave_stats["weekend_days"] > 0
+                    else ""
+                )
+                flash(
+                    f"{leave_type.capitalize()} leave added successfully! "
+                    f"{created_count} working days added{weekend_msg}. "
+                    f"Total working hours: {leave_stats['working_hours']:.1f}h",
+                    "success",
+                )
+
             return redirect(url_for("main.leave"))
 
         except ValueError as e:
@@ -584,6 +640,7 @@ def leave():
         sick_count=sick_count,
         current_year=current_year,
         today=datetime.now().date(),
+        standard_hours_per_day=Settings.get_float("standard_hours_per_day", 8.0),
     )
 
 

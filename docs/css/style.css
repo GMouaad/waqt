@@ -647,3 +647,76 @@ html {
     color: var(--text-light);
     font-size: 0.95rem;
 }
+
+/* Feature Highlight Section */
+.feature-highlight {
+    margin-top: 4rem;
+    background: white;
+    padding: 3rem;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-lg);
+    border-left: 4px solid var(--primary-color);
+}
+
+.feature-highlight h3 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.feature-highlight > p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+}
+
+.feature-details {
+    display: grid;
+    gap: 2rem;
+}
+
+.feature-section {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.feature-section h4 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.feature-section h4 i {
+    color: var(--primary-color);
+    margin-right: 0.5rem;
+}
+
+.feature-section ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.feature-section li {
+    padding: 0.5rem 0;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.feature-section li strong {
+    color: var(--primary-color);
+}
+
+.feature-section pre {
+    margin-top: 1rem;
+    background: #1e293b;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.feature-section code {
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
