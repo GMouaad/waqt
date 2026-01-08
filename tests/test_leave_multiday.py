@@ -276,3 +276,123 @@ class TestMultiDayLeaveBackend:
             assert len(leave_days) == 1
             assert leave_days[0].date == date(2026, 1, 15)
             assert leave_days[0].leave_type == "sick"
+
+
+class TestLeaveRequestCLI:
+    """Tests for leave-request CLI command."""
+
+    def test_leave_request_cli_basic(self, app):
+        """Test basic leave request via CLI."""
+        from click.testing import CliRunner
+        from src.waqt.cli import cli
+
+        with app.app_context():
+            runner = CliRunner()
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from", "2026-01-12",
+                    "--to", "2026-01-16",
+                    "--type", "vacation",
+                    "--desc", "Winter break",
+                ],
+                input="y\n",  # Confirm the request
+            )
+
+            assert result.exit_code == 0
+            assert "Leave Request Summary" in result.output
+            assert "Working Days: 5" in result.output
+            assert "✓ Leave request created successfully!" in result.output
+
+            # Verify records created
+            leave_days = LeaveDay.query.all()
+            assert len(leave_days) == 5
+
+    def test_leave_request_cli_excludes_weekends(self, app):
+        """Test that CLI leave request excludes weekends."""
+        from click.testing import CliRunner
+        from src.waqt.cli import cli
+
+        with app.app_context():
+            runner = CliRunner()
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from", "2026-01-16",  # Friday
+                    "--to", "2026-01-19",    # Monday
+                    "--type", "sick",
+                ],
+                input="y\n",
+            )
+
+            assert result.exit_code == 0
+            assert "Working Days: 2" in result.output
+            assert "Weekend Days: 2 (excluded)" in result.output
+
+            # Verify only working days created
+            leave_days = LeaveDay.query.all()
+            assert len(leave_days) == 2
+
+    def test_leave_request_cli_weekend_only(self, app):
+        """Test CLI with weekend-only range."""
+        from click.testing import CliRunner
+        from src.waqt.cli import cli
+
+        with app.app_context():
+            runner = CliRunner()
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from", "2026-01-17",  # Saturday
+                    "--to", "2026-01-18",    # Sunday
+                ],
+            )
+
+            assert result.exit_code == 1
+            assert "No working days in the selected range" in result.output
+
+    def test_leave_request_cli_invalid_date_range(self, app):
+        """Test CLI with invalid date range (end before start)."""
+        from click.testing import CliRunner
+        from src.waqt.cli import cli
+
+        with app.app_context():
+            runner = CliRunner()
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from", "2026-01-20",
+                    "--to", "2026-01-10",
+                ],
+            )
+
+            assert result.exit_code == 1
+            assert "End date must be on or after start date" in result.output
+
+    def test_leave_request_cli_cancel(self, app):
+        """Test cancelling leave request in CLI."""
+        from click.testing import CliRunner
+        from src.waqt.cli import cli
+
+        with app.app_context():
+            runner = CliRunner()
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from", "2026-01-12",
+                    "--to", "2026-01-16",
+                ],
+                input="n\n",  # Cancel the request
+            )
+
+            assert result.exit_code == 0
+            assert "Leave request cancelled" in result.output
+
+            # Verify no records created
+            leave_days = LeaveDay.query.all()
+            assert len(leave_days) == 0
