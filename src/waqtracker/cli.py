@@ -112,10 +112,7 @@ def start(time: Optional[str], date: Optional[str], description: str):
 
         # Check if there's already an open entry for this date
         # Open entries are identified by is_active=True
-        open_entries = (
-            TimeEntry.query.filter_by(date=entry_date, is_active=True)
-            .all()
-        )
+        open_entries = TimeEntry.query.filter_by(date=entry_date, is_active=True).all()
 
         if open_entries:
             click.echo(
@@ -692,10 +689,10 @@ def config_reset(key: str):
 @cli.command()
 def version():
     """Display version information.
-    
+
     Shows the current version number and git commit SHA.
     Useful for debugging and checking if updates are available.
-    
+
     Examples:
         waqt version
     """
@@ -704,20 +701,20 @@ def version():
         # Show short SHA (first 7 characters)
         short_sha = GIT_SHA[:7] if len(GIT_SHA) > 7 else GIT_SHA
         click.echo(f"Git commit: {short_sha}")
-    
+
     # Show frozen status
     if is_frozen():
         click.echo("Running as: frozen executable (PyInstaller)")
     else:
         click.echo("Running as: Python source")
-    
+
     click.echo()
 
 
 @cli.group()
 def update():
     """Check for updates and self-update the waqt executable.
-    
+
     Update commands allow you to check for and install new versions of waqt.
     Self-update only works for frozen executables (installed via install.sh).
     If running from source, use 'git pull' and 'uv pip install -e .' instead.
@@ -733,27 +730,29 @@ def update():
 )
 def update_check(prerelease: bool):
     """Check for available updates without installing.
-    
+
     Queries GitHub Releases to see if a newer version is available.
     By default checks stable releases; use --prerelease for dev versions.
-    
+
     Examples:
         waqt update check
         waqt update check --prerelease
     """
-    click.echo(click.style(f"\n🔍 Checking for updates...", fg="cyan"))
+    click.echo(click.style("\n🔍 Checking for updates...", fg="cyan"))
     click.echo(f"Current version: {VERSION}")
-    
+
     channel = "prerelease (dev)" if prerelease else "stable"
     click.echo(f"Channel: {channel}")
     click.echo()
-    
+
     try:
         update_info = check_for_updates(timeout=10, prerelease=prerelease)
-        
+
         if update_info:
-            new_version = update_info['version']
-            click.echo(click.style(f"✓ Update available: {new_version}", fg="green", bold=True))
+            new_version = update_info["version"]
+            click.echo(
+                click.style(f"✓ Update available: {new_version}", fg="green", bold=True)
+            )
             click.echo(f"Release URL: {update_info['url']}")
             click.echo()
             click.echo("To install the update, run:")
@@ -763,9 +762,9 @@ def update_check(prerelease: bool):
                 click.echo(click.style("  waqt update", fg="yellow"))
         else:
             click.echo(click.style("✓ You are running the latest version", fg="green"))
-        
+
         click.echo()
-        
+
     except Exception as e:
         click.echo(click.style(f"❌ Error checking for updates: {e}", fg="red"))
         raise click.exceptions.Exit(1)
@@ -785,10 +784,10 @@ def update_check(prerelease: bool):
 )
 def update_install(yes: bool, prerelease: bool):
     """Download and install the latest version.
-    
+
     Downloads the latest release from GitHub and replaces the current
     executable. Only works for frozen executables (PyInstaller builds).
-    
+
     Examples:
         waqt update install
         waqt update install --yes
@@ -796,7 +795,11 @@ def update_install(yes: bool, prerelease: bool):
     """
     # Check if running as frozen executable
     if not is_frozen():
-        click.echo(click.style("\n❌ Self-update is only available for frozen executables", fg="red"))
+        click.echo(
+            click.style(
+                "\n❌ Self-update is only available for frozen executables", fg="red"
+            )
+        )
         click.echo()
         click.echo("You are running waqt from source.")
         click.echo("To update, use:")
@@ -805,41 +808,47 @@ def update_install(yes: bool, prerelease: bool):
         click.echo(click.style("  uv pip install -e .", fg="yellow"))
         click.echo()
         raise click.exceptions.Exit(1)
-    
-    click.echo(click.style(f"\n🔍 Checking for updates...", fg="cyan"))
+
+    click.echo(click.style("\n🔍 Checking for updates...", fg="cyan"))
     click.echo(f"Current version: {VERSION}")
-    
+
     channel = "prerelease (dev)" if prerelease else "stable"
     click.echo(f"Channel: {channel}")
     click.echo()
-    
+
     try:
         update_info = check_for_updates(timeout=10, prerelease=prerelease)
-        
+
         if not update_info:
-            click.echo(click.style("✓ You are already running the latest version", fg="green"))
+            click.echo(
+                click.style("✓ You are already running the latest version", fg="green")
+            )
             click.echo()
             return
-        
-        new_version = update_info['version']
-        click.echo(click.style(f"Update available: {new_version}", fg="green", bold=True))
+
+        new_version = update_info["version"]
+        click.echo(
+            click.style(f"Update available: {new_version}", fg="green", bold=True)
+        )
         click.echo(f"Release URL: {update_info['url']}")
         click.echo()
-        
+
         # Confirm installation unless --yes flag is set
         if not yes:
             if not click.confirm(f"Do you want to install version {new_version}?"):
                 click.echo("Update cancelled.")
                 return
-        
+
         # Perform the update
         click.echo()
         download_and_install_update(update_info, confirm=False)
-        
+
         click.echo()
-        click.echo(click.style("Update complete! Please restart waqt.", fg="green", bold=True))
+        click.echo(
+            click.style("Update complete! Please restart waqt.", fg="green", bold=True)
+        )
         click.echo()
-        
+
     except Exception as e:
         click.echo(click.style(f"\n❌ Error during update: {e}", fg="red"))
         raise click.exceptions.Exit(1)
