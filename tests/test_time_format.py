@@ -2,9 +2,9 @@
 
 import pytest
 from datetime import time
-from src.waqtracker import create_app, db
-from src.waqtracker.models import Settings
-from src.waqtracker.utils import format_time
+from src.waqt import create_app, db
+from src.waqt.models import Settings
+from src.waqt.utils import format_time
 
 
 @pytest.fixture
@@ -131,7 +131,7 @@ def test_format_time_with_none(app):
 def test_time_format_setting_validation(app):
     """Test that time_format setting validates correctly."""
     with app.app_context():
-        from src.waqtracker.config import validate_config_value
+        from src.waqt.config import validate_config_value
         
         # Valid values
         is_valid, error = validate_config_value("time_format", "12")
@@ -163,7 +163,7 @@ def test_format_time_jinja_filter_in_template(app, client):
     """Test that format_time filter works in template rendering."""
     with app.app_context():
         from datetime import time, date
-        from src.waqtracker.models import TimeEntry
+        from src.waqt.models import TimeEntry
         
         # Set time format to 12-hour
         Settings.set_setting("time_format", "12")
@@ -203,7 +203,7 @@ def test_format_time_in_reports_page(app, client):
     """Test that format_time filter works correctly in reports page."""
     with app.app_context():
         from datetime import time, date
-        from src.waqtracker.models import TimeEntry
+        from src.waqt.models import TimeEntry
         
         # Set time format to 12-hour
         Settings.set_setting("time_format", "12")
