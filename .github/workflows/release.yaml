@@ -92,7 +92,6 @@ jobs:
 
           EXPECTED_ARTIFACTS=(
             "waqtracker-linux-amd64.zip"
-            "waqtracker-macos-amd64.zip"
             "waqtracker-macos-arm64.zip"
             "waqtracker-windows-amd64.zip"
           )
@@ -156,7 +155,6 @@ jobs:
             echo ""
             echo "Download the zip file for your platform below:"
             echo "- **Linux (x64)**: \`waqtracker-linux-amd64.zip\`"
-            echo "- **macOS (Intel)**: \`waqtracker-macos-amd64.zip\`"
             echo "- **macOS (Apple Silicon)**: \`waqtracker-macos-arm64.zip\`"
             echo "- **Windows (x64)**: \`waqtracker-windows-amd64.zip\`"
             echo ""
