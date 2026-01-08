@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [project]
-name = "waqtracker"
+name = "waqt"
 version = "0.1.0"
 description = "A portable Python time tracking application for managing work hours, overtime, vacation days, sick leaves, and work activities."
 readme = "README.md"
@@ -45,8 +45,8 @@ build = [
 ]
 
 [project.scripts]
-waqt = "waqtracker.cli:main"
-waqt-mcp = "waqtracker.mcp_server:main"
+waqt = "waqt.cli:main"
+waqt-mcp = "waqt.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/GMouaad/waqt"

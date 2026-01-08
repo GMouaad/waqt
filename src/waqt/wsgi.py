@@ -1,6 +1,6 @@
 """Main entry point for the Waqt application."""
 
-from waqtracker import create_app
+from waqt import create_app
 import os
 
 app = create_app()

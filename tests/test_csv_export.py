@@ -5,10 +5,10 @@ import csv
 import io
 from datetime import date, time
 from click.testing import CliRunner
-from src.waqtracker import create_app, db
-from src.waqtracker.models import TimeEntry
-from src.waqtracker.utils import export_time_entries_to_csv
-from src.waqtracker.cli import cli
+from src.waqt import create_app, db
+from src.waqt.models import TimeEntry
+from src.waqt.utils import export_time_entries_to_csv
+from src.waqt.cli import cli
 
 
 @pytest.fixture

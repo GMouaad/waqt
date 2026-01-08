@@ -49,7 +49,7 @@ try {
 }
 
 # Download
-$Filename = "waqtracker-windows-$Arch.zip"
+$Filename = "waqt-windows-$Arch.zip"
 $Url = "https://github.com/$Repo/releases/download/$Version/$Filename"
 # Resolve $env:TEMP to long path (fixes 8.3 short path issues like C:\Users\TERRY~1.ANE)
 $TempBase = (Get-Item $env:TEMP).FullName
@@ -69,14 +69,7 @@ try {
     # Install
     Write-Info "Installing to $InstallDir..."
     New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-    Move-Item -Path (Join-Path $TempDir "waqtracker.exe") -Destination (Join-Path $InstallDir "waqtracker.exe") -Force
-
-    # Create a batch wrapper for 'waqt' command
-    $WaqtBatch = @"
-@echo off
-"%~dp0waqtracker.exe" %*
-"@
-    $WaqtBatch | Out-File -FilePath (Join-Path $InstallDir "waqt.cmd") -Encoding ASCII
+    Move-Item -Path (Join-Path $TempDir "waqt.exe") -Destination (Join-Path $InstallDir "waqt.exe") -Force
 } catch {
     Write-Err "Installation failed. $_"
 } finally {
@@ -114,14 +107,14 @@ if ($env:GITHUB_ACTIONS) {
 
 # Verify
 Write-Info "Successfully installed waqt!"
-& "$InstallDir\waqtracker.exe" --version
+& "$InstallDir\waqt.exe" --version
 
 Write-Host ""
-Write-Info "Installation complete! You can now use 'waqt' or 'waqtracker' commands."
+Write-Info "Installation complete! You can now use 'waqt' commands."
 Write-Host ""
 Write-Host "  Quick start:"
 Write-Host "    waqt --version      # Check version"
-Write-Host "    waqtracker          # Start the web server (http://localhost:5555)"
+Write-Host "    waqt ui             # Start the web UI (http://localhost:5555)"
 Write-Host "    waqt start          # Start time tracking from CLI"
 Write-Host "    waqt summary        # View summary"
 Write-Host ""

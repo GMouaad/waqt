@@ -123,7 +123,7 @@ main() {
     fi
 
     # Download URL
-    FILENAME="waqtracker-${OS}-${ARCH}.zip"
+    FILENAME="waqt-${OS}-${ARCH}.zip"
     URL="https://github.com/${REPO}/releases/download/${VERSION}/${FILENAME}"
 
     info "Downloading ${URL}..."
@@ -146,18 +146,15 @@ main() {
 
     # Install
     mkdir -p "$INSTALL_DIR"
-    mv "${DOWNLOAD_PATH}/waqtracker" "${INSTALL_DIR}/waqtracker"
-    chmod +x "${INSTALL_DIR}/waqtracker"
-
-    # Create symlink for 'waqt' command
-    ln -sf "${INSTALL_DIR}/waqtracker" "${INSTALL_DIR}/waqt"
+    mv "${DOWNLOAD_PATH}/waqt" "${INSTALL_DIR}/waqt"
+    chmod +x "${INSTALL_DIR}/waqt"
 
     # Cleanup (trap will also handle this on exit)
     rm -rf "$DOWNLOAD_PATH"
 
     # Verify installation
     info "Successfully installed waqt!"
-    "${INSTALL_DIR}/waqtracker" --version
+    "${INSTALL_DIR}/waqt" --version
 
     # Add to PATH if not already there
     if [[ ":$PATH:" != *":${INSTALL_DIR}:"* ]]; then
@@ -167,11 +164,11 @@ main() {
     fi
 
     echo ""
-    info "Installation complete! You can now use 'waqt' or 'waqtracker' commands."
+    info "Installation complete! You can now use 'waqt' commands."
     echo ""
     echo "  Quick start:"
     echo "    waqt --version      # Check version"
-    echo "    waqtracker          # Start the web server (http://localhost:5555)"
+    echo "    waqt ui             # Start the web UI (http://localhost:5555)"
     echo "    waqt start          # Start time tracking from CLI"
     echo "    waqt summary        # View summary"
     echo ""

@@ -10,8 +10,8 @@ through the MCP protocol by an MCP client.
 import os
 import tempfile
 
-from waqtracker import create_app, db
-from waqtracker.mcp_server import (
+from waqt import create_app, db
+from waqt.mcp_server import (
     start,
     end,
     summary,

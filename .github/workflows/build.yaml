@@ -106,19 +106,19 @@ jobs:
 
       - name: Inject version info
         run: |
-          sed -i.bak "s|^VERSION = .*|VERSION = \"${{ steps.version.outputs.version }}\"|" src/waqtracker/_version.py
-          sed -i.bak "s|^GIT_SHA = .*|GIT_SHA = \"${{ steps.version.outputs.git_sha }}\"|" src/waqtracker/_version.py
-          sed -i.bak "s|^REPO_URL = .*|REPO_URL = \"https://github.com/${{ github.repository }}\"|" src/waqtracker/_version.py
-          rm -f src/waqtracker/_version.py.bak
-          cat src/waqtracker/_version.py
+          sed -i.bak "s|^VERSION = .*|VERSION = \"${{ steps.version.outputs.version }}\"|" src/waqt/_version.py
+          sed -i.bak "s|^GIT_SHA = .*|GIT_SHA = \"${{ steps.version.outputs.git_sha }}\"|" src/waqt/_version.py
+          sed -i.bak "s|^REPO_URL = .*|REPO_URL = \"https://github.com/${{ github.repository }}\"|" src/waqt/_version.py
+          rm -f src/waqt/_version.py.bak
+          cat src/waqt/_version.py
         shell: bash
 
       - name: Build executable (Unix)
         if: runner.os != 'Windows'
         run: |
-          pyinstaller --onefile src/waqtracker/__main__.py --name waqtracker \
-            --add-data "src/waqtracker/templates:waqtracker/templates" \
-            --add-data "src/waqtracker/static:waqtracker/static" \
+          pyinstaller --onefile src/waqt/__main__.py --name waqt \
+            --add-data "src/waqt/templates:waqt/templates" \
+            --add-data "src/waqt/static:waqt/static" \
             --hidden-import=werkzeug \
             --hidden-import=flask \
             --hidden-import=click
@@ -127,9 +127,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          pyinstaller --onefile src/waqtracker/__main__.py --name waqtracker \
-            --add-data "src/waqtracker/templates;waqtracker/templates" \
-            --add-data "src/waqtracker/static;waqtracker/static" \
+          pyinstaller --onefile src/waqt/__main__.py --name waqt \
+            --add-data "src/waqt/templates;waqt/templates" \
+            --add-data "src/waqt/static;waqt/static" \
             --hidden-import=werkzeug \
             --hidden-import=flask \
             --hidden-import=click
@@ -138,16 +138,16 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           cd dist
-          zip waqtracker-${{ matrix.platform }}.zip waqtracker
+          zip waqt-${{ matrix.platform }}.zip waqt
 
       - name: Create zip (Windows)
         if: runner.os == 'Windows'
         run: |
           cd dist
-          Compress-Archive -Path waqtracker.exe -DestinationPath waqtracker-${{ matrix.platform }}.zip
+          Compress-Archive -Path waqt.exe -DestinationPath waqt-${{ matrix.platform }}.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: waqtracker-${{ matrix.platform }}-${{ contains(steps.version.outputs.version, 'dev') && 'dev' || 'rc' }}
-          path: dist/waqtracker-${{ matrix.platform }}.zip
+          name: waqt-${{ matrix.platform }}-${{ contains(steps.version.outputs.version, 'dev') && 'dev' || 'rc' }}
+          path: dist/waqt-${{ matrix.platform }}.zip

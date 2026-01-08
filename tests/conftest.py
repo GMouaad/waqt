@@ -75,7 +75,7 @@ def live_server(app):
 @pytest.fixture(scope="function")
 def app():
     """Create a test Flask application instance."""
-    from src.waqtracker import create_app, db
+    from src.waqt import create_app, db
     
     # Create a temporary database file
     db_fd, db_path = tempfile.mkstemp()
