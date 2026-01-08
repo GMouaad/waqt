@@ -1,6 +1,15 @@
 """Route handlers for the time tracking application."""
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    Response,
+    jsonify,
+)
 from datetime import datetime, timedelta
 from . import db
 from .models import TimeEntry, LeaveDay, Settings
@@ -44,27 +53,33 @@ def timer_status():
     entry = get_open_entry()
     if entry:
         is_paused = entry.last_pause_start_time is not None
-        
+
         # Calculate elapsed time since start
         start_dt = datetime.combine(entry.date, entry.start_time)
         now = datetime.now()
-        
+
         if is_paused:
             # If paused, elapsed time is fixed at the pause start time minus accumulated pauses
             # Actually simpler: elapsed = (pause_start - start) - previous_pauses
-            current_duration_seconds = (entry.last_pause_start_time - start_dt).total_seconds() - (entry.accumulated_pause_seconds or 0)
+            current_duration_seconds = (
+                entry.last_pause_start_time - start_dt
+            ).total_seconds() - (entry.accumulated_pause_seconds or 0)
         else:
             # If running: elapsed = (now - start) - previous_pauses
-            current_duration_seconds = (now - start_dt).total_seconds() - (entry.accumulated_pause_seconds or 0)
-            
-        return jsonify({
-            "active": True,
-            "is_paused": is_paused,
-            "start_time": entry.start_time.strftime("%H:%M:%S"),
-            "elapsed_seconds": int(max(0, current_duration_seconds)),
-            "description": entry.description
-        })
-    
+            current_duration_seconds = (now - start_dt).total_seconds() - (
+                entry.accumulated_pause_seconds or 0
+            )
+
+        return jsonify(
+            {
+                "active": True,
+                "is_paused": is_paused,
+                "start_time": entry.start_time.strftime("%H:%M:%S"),
+                "elapsed_seconds": int(max(0, current_duration_seconds)),
+                "description": entry.description,
+            }
+        )
+
     return jsonify({"active": False})
 
 
@@ -73,46 +88,51 @@ def session_alert_check():
     """Check if session alert should be shown."""
     # Get the alert feature flag
     alert_enabled = Settings.get_bool("alert_on_max_work_session", default=False)
-    
+
     if not alert_enabled:
         return jsonify({"alert": False, "enabled": False})
-    
+
     # Get current timer entry
     entry = get_open_entry()
     if not entry:
         return jsonify({"alert": False, "enabled": True, "reason": "no_active_timer"})
-    
+
     # Don't alert if timer is paused
     if entry.last_pause_start_time is not None:
         return jsonify({"alert": False, "enabled": True, "reason": "timer_paused"})
-    
+
     # Calculate current session duration in hours
     start_dt = datetime.combine(entry.date, entry.start_time)
     now = datetime.now()
-    current_duration_seconds = max(0, (now - start_dt).total_seconds() - (entry.accumulated_pause_seconds or 0))
+    current_duration_seconds = max(
+        0, (now - start_dt).total_seconds() - (entry.accumulated_pause_seconds or 0)
+    )
     current_duration_hours = current_duration_seconds / 3600.0
-    
+
     # Get the maximum session hours threshold
     max_session_hours = Settings.get_float("max_work_session_hours", default=10.0)
-    
+
     # Alert if session exceeds 8 hours and is approaching the max threshold
     # We consider "approaching" as when session is > 8 hours
     if current_duration_hours > 8.0:
-        return jsonify({
-            "alert": True,
+        return jsonify(
+            {
+                "alert": True,
+                "enabled": True,
+                "current_hours": round(current_duration_hours, 2),
+                "max_hours": max_session_hours,
+                "exceeded_standard": True,
+            }
+        )
+
+    return jsonify(
+        {
+            "alert": False,
             "enabled": True,
             "current_hours": round(current_duration_hours, 2),
             "max_hours": max_session_hours,
-            "exceeded_standard": True
-        })
-    
-    return jsonify({
-        "alert": False, 
-        "enabled": True, 
-        "current_hours": round(current_duration_hours, 2),
-        "max_hours": max_session_hours
-    })
-
+        }
+    )
 
 
 @bp.route("/api/timer/start", methods=["POST"])
@@ -122,32 +142,34 @@ def start_timer():
         # Check if already running
         if get_open_entry():
             return jsonify({"success": False, "message": "Timer already running"}), 400
-            
+
         data = request.get_json() or {}
         description = data.get("description", "").strip()
         if not description:
             description = "Work"
-        
+
         now = datetime.now()
-        
+
         entry = TimeEntry(
             date=now.date(),
             start_time=now.time(),
             end_time=now.time(),  # Marker for open entry
-            duration_hours=0.0,   # Marker for open entry
+            duration_hours=0.0,  # Marker for open entry
             is_active=True,
-            description=description
+            description=description,
         )
-        
+
         db.session.add(entry)
         db.session.commit()
-        
-        return jsonify({
-            "success": True, 
-            "message": "Timer started",
-            "start_time": now.strftime("%H:%M:%S")
-        })
-        
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Timer started",
+                "start_time": now.strftime("%H:%M:%S"),
+            }
+        )
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -160,18 +182,15 @@ def pause_timer():
         entry = get_open_entry()
         if not entry:
             return jsonify({"success": False, "message": "No active timer"}), 400
-            
+
         if entry.last_pause_start_time:
-             return jsonify({"success": False, "message": "Timer already paused"}), 400
+            return jsonify({"success": False, "message": "Timer already paused"}), 400
 
         entry.last_pause_start_time = datetime.now()
         db.session.commit()
-        
-        return jsonify({
-            "success": True, 
-            "message": "Timer paused"
-        })
-        
+
+        return jsonify({"success": True, "message": "Timer paused"})
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -184,26 +203,25 @@ def resume_timer():
         entry = get_open_entry()
         if not entry:
             return jsonify({"success": False, "message": "No active timer"}), 400
-            
+
         if not entry.last_pause_start_time:
-             return jsonify({"success": False, "message": "Timer is not paused"}), 400
+            return jsonify({"success": False, "message": "Timer is not paused"}), 400
 
         # Calculate how long we were paused
         pause_duration = (datetime.now() - entry.last_pause_start_time).total_seconds()
-        
+
         # Add to accumulated pauses
-        entry.accumulated_pause_seconds = (entry.accumulated_pause_seconds or 0) + pause_duration
-        
+        entry.accumulated_pause_seconds = (
+            entry.accumulated_pause_seconds or 0
+        ) + pause_duration
+
         # Clear pause start time to indicate running
         entry.last_pause_start_time = None
-        
+
         db.session.commit()
-        
-        return jsonify({
-            "success": True, 
-            "message": "Timer resumed"
-        })
-        
+
+        return jsonify({"success": True, "message": "Timer resumed"})
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -216,9 +234,9 @@ def stop_timer():
         entry = get_open_entry()
         if not entry:
             return jsonify({"success": False, "message": "No active timer"}), 400
-            
+
         now = datetime.now()
-        
+
         # If stopped while paused, effective end time is when it was paused
         if entry.last_pause_start_time:
             # We don't add the current incomplete pause to accumulated_pause_seconds
@@ -230,33 +248,33 @@ def stop_timer():
             effective_end_dt = now
 
         end_time = effective_end_dt.time()
-        
+
         # Calculate duration: (End - Start) - Pauses
         # Note: calculate_duration returns hours. We need to handle the pause subtraction.
         # Let's calculate raw duration in seconds first
         start_dt = datetime.combine(entry.date, entry.start_time)
-        
+
         # Handle midnight crossing for end time if needed (though effective_end_dt has date)
         # But TimeEntry stores date and time separately. `entry.date` is the start date.
         # effective_end_dt might be on the next day.
-        
+
         total_elapsed_seconds = (effective_end_dt - start_dt).total_seconds()
-        actual_work_seconds = total_elapsed_seconds - (entry.accumulated_pause_seconds or 0)
-        
+        actual_work_seconds = total_elapsed_seconds - (
+            entry.accumulated_pause_seconds or 0
+        )
+
         duration_hours = actual_work_seconds / 3600.0
-        
+
         entry.end_time = end_time
         entry.duration_hours = duration_hours
         entry.is_active = False
-        
+
         db.session.commit()
-        
-        return jsonify({
-            "success": True, 
-            "message": "Timer stopped",
-            "duration": duration_hours
-        })
-        
+
+        return jsonify(
+            {"success": True, "message": "Timer stopped", "duration": duration_hours}
+        )
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -327,12 +345,12 @@ def time_entry():
             existing_entries = TimeEntry.query.filter_by(
                 date=date, is_active=False
             ).all()
-            
+
             if existing_entries:
                 flash(
                     f"An entry already exists for {date}. "
                     "Only one entry per day is allowed. Please edit the existing entry instead.",
-                    "error"
+                    "error",
                 )
                 return redirect(url_for("main.time_entry"))
 
@@ -370,7 +388,7 @@ def time_entry():
 def edit_time_entry(entry_id):
     """Edit an existing time entry."""
     entry = TimeEntry.query.get_or_404(entry_id)
-    
+
     if request.method == "POST":
         try:
             # Parse form data
@@ -636,6 +654,7 @@ def export_csv():
     except Exception as e:
         # Log unexpected errors for debugging
         import logging
+
         logging.error(f"Unexpected error during CSV export: {str(e)}", exc_info=True)
         flash("An unexpected error occurred during export. Please try again.", "error")
         return redirect(url_for("main.reports"))
@@ -648,16 +667,16 @@ def settings():
         try:
             # Get all current settings first
             all_settings = Settings.get_all_settings()
-            
+
             # Track if any changes were made
             changes_made = False
             errors = []
             updates = []  # Store updates to apply after validation
-            
+
             # First pass: Validate all values
             for key in CONFIG_DEFAULTS.keys():
                 config_type = CONFIG_TYPES.get(key)
-                
+
                 # Get the new value from form
                 if config_type == "bool":
                     # Checkbox: checked = "on", unchecked = not in form
@@ -665,36 +684,40 @@ def settings():
                 else:
                     new_value = request.form.get(key, "").strip()
                     if not new_value:
-                        errors.append(f"{CONFIG_DISPLAY_NAMES.get(key, key)}: Value cannot be empty")
+                        errors.append(
+                            f"{CONFIG_DISPLAY_NAMES.get(key, key)}: Value cannot be empty"
+                        )
                         continue
-                
+
                 # Get current value
                 current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
-                
+
                 # Skip if value hasn't changed
                 if new_value == current_value:
                     continue
-                
+
                 # Validate the new value
                 is_valid, error_message = validate_config_value(key, new_value)
                 if not is_valid:
-                    errors.append(f"{CONFIG_DISPLAY_NAMES.get(key, key)}: {error_message}")
+                    errors.append(
+                        f"{CONFIG_DISPLAY_NAMES.get(key, key)}: {error_message}"
+                    )
                     continue
-                
+
                 # Normalize boolean values
                 if config_type == "bool":
                     new_value = normalize_bool_value(new_value)
-                
+
                 # Store for later update
                 updates.append((key, new_value))
                 changes_made = True
-            
+
             # If validation passed, apply all updates atomically
             if not errors and updates:
                 for key, value in updates:
                     Settings.update_setting(key, value)
                 db.session.commit()
-            
+
             # Show appropriate flash message
             if errors:
                 for error in errors:
@@ -706,23 +729,23 @@ def settings():
                 flash("Settings updated successfully!", "success")
             else:
                 flash("No changes were made.", "info")
-            
+
             return redirect(url_for("main.settings"))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f"Error updating settings: {str(e)}", "error")
             return redirect(url_for("main.settings"))
-    
+
     # GET request - show settings form
     all_settings = Settings.get_all_settings()
-    
+
     # Prepare settings data for template
     settings_data = []
     for key in sorted(CONFIG_DEFAULTS.keys()):
         current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
         default_value = CONFIG_DEFAULTS[key]
-        
+
         setting_dict = {
             "key": key,
             "display_name": CONFIG_DISPLAY_NAMES.get(key, key),
@@ -733,14 +756,14 @@ def settings():
             "input_type": get_config_input_type(key),
             "is_modified": current_value != default_value,
         }
-        
+
         # Add validation bounds for numeric fields
         bounds = get_config_validation_bounds(key)
         if bounds:
             setting_dict.update(bounds)
-        
+
         settings_data.append(setting_dict)
-    
+
     return render_template(
         "settings.html",
         settings_data=settings_data,

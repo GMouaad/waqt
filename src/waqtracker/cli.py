@@ -352,8 +352,10 @@ def edit_entry(
                 "Note: The system now enforces one entry per day. "
                 "Please delete the extra entries manually."
             )
-            click.echo("You can use the UI to delete entries, or specify --start to select.")
-            
+            click.echo(
+                "You can use the UI to delete entries, or specify --start to select."
+            )
+
             # If start time provided, try to match it
             if start:
                 try:
@@ -420,9 +422,7 @@ def edit_entry(
         if description:
             entry.description = description.strip()
             if not entry.description:
-                click.echo(
-                    click.style("Error: Description cannot be empty.", fg="red")
-                )
+                click.echo(click.style("Error: Description cannot be empty.", fg="red"))
                 raise click.exceptions.Exit(1)
 
         # Recalculate duration if times were changed
@@ -439,9 +439,11 @@ def edit_entry(
         db.session.commit()
 
         # Display success message
-        click.echo(click.style("✓ Time entry updated successfully!", fg="green", bold=True))
+        click.echo(
+            click.style("✓ Time entry updated successfully!", fg="green", bold=True)
+        )
         click.echo(f"Date: {entry_date}")
-        
+
         if start:
             click.echo(
                 f"Start time: {original_start.strftime('%H:%M')} → "
