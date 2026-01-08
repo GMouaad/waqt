@@ -49,7 +49,7 @@
                         <li>Dashboard Timer: One-click start/stop/pause/resume</li>
                         <li>Time Entry Management: Add, view, and delete entries</li>
                         <li>Reports: Weekly and monthly summaries</li>
-                        <li>Leave Management: Track vacation and sick days</li>
+                        <li>Leave Management: Track vacation and sick days with multi-day selection</li>
                     </ul>
                 </div>
                 
@@ -67,9 +67,51 @@ waqt summary
 # Export time entries
 waqt export --period week
 
+# Request multi-day leave (excludes weekends)
+waqt leave-request --from 2026-01-13 --to 2026-01-19
+
 # Configuration management
 waqt config list
 waqt config set weekly_hours 40</code></pre>
+                </div>
+            </div>
+
+            <div class="feature-highlight">
+                <h3><i class="fas fa-calendar-check"></i> Multi-Day Leave Management</h3>
+                <p>Request leave spanning multiple days with automatic weekend exclusion and working hours calculation.</p>
+                
+                <div class="feature-details">
+                    <div class="feature-section">
+                        <h4><i class="fas fa-laptop"></i> Web Interface</h4>
+                        <ul>
+                            <li><strong>Date Range Selection:</strong> Choose start and end dates for your leave</li>
+                            <li><strong>Live Preview:</strong> See total days, working days, and excluded weekends in real-time</li>
+                            <li><strong>Automatic Calculation:</strong> Working hours calculated based on your configured hours per day</li>
+                            <li><strong>Weekend Exclusion:</strong> Saturdays and Sundays are automatically excluded from leave records</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-section">
+                        <h4><i class="fas fa-terminal"></i> Command Line</h4>
+                        <pre><code># Request vacation for a full week (Mon-Sun → creates 5 records for Mon-Fri)
+waqt leave-request --from 2026-01-13 --to 2026-01-19 --type vacation --desc "Winter break"
+
+# Request sick leave with description
+waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical leave"
+
+# Single day leave (backward compatible)
+waqt leave-request --from 2026-01-15 --to 2026-01-15</code></pre>
+                    </div>
+                    
+                    <div class="feature-section">
+                        <h4><i class="fas fa-info-circle"></i> How It Works</h4>
+                        <ul>
+                            <li><strong>Working Days Only:</strong> Only Monday-Friday are counted as working days</li>
+                            <li><strong>Weekend Detection:</strong> Saturdays and Sundays are automatically detected and excluded</li>
+                            <li><strong>Clear Feedback:</strong> See exactly which days will be recorded before confirming</li>
+                            <li><strong>Example:</strong> Jan 12-19 (Mon-Sun) = 6 working days, 2 weekends excluded, 48 hours</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
