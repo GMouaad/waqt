@@ -84,6 +84,15 @@ def compare_versions(version1: str, version2: str) -> int:
         return 1
 
     # Both are same type (both prerelease or both release)
+    # If both are prerelease, compare their suffixes lexicographically
+    if v1[3] and v2[3]:
+        if v1[4] < v2[4]:
+            return -1
+        elif v1[4] > v2[4]:
+            return 1
+
+    # Either both are releases with identical numeric parts, or both
+    # are prereleases with identical suffixes
     return 0
 
 
@@ -146,7 +155,7 @@ def check_for_updates(
 
     Returns:
         Dictionary with update info if update available, None otherwise.
-        Dictionary contains: 'version', 'url', 'tag_name', 'is_prerelease'
+        Dictionary contains: 'version', 'url', 'tag_name', 'is_prerelease', 'assets'
     """
     # Extract owner/repo from REPO_URL
     # Example: "https://github.com/GMouaad/waqt" -> "GMouaad/waqt"
@@ -194,20 +203,18 @@ def check_for_updates(
         if e.code == 404:
             # Release not found (e.g., 'dev' tag doesn't exist yet)
             return None
-        raise
+        # Wrap non-404 HTTP errors with consistent error message
+        raise Exception(f"Failed to check for updates: HTTP {e.code} - {e.reason}")
     except (urllib.error.URLError, json.JSONDecodeError, KeyError) as e:
         # Network error or invalid response
         raise Exception(f"Failed to check for updates: {e}")
 
 
-def download_and_install_update(
-    release_info: Dict[str, str], confirm: bool = True
-) -> bool:
+def download_and_install_update(release_info: Dict[str, str]) -> bool:
     """Download and install an update.
 
     Args:
         release_info: Release information from check_for_updates()
-        confirm: If True, prompt user for confirmation before proceeding
 
     Returns:
         True if update was successful
@@ -254,7 +261,23 @@ def download_and_install_update(
         # Download the asset
         print(f"Downloading {expected_asset_name}...")
         try:
-            urllib.request.urlretrieve(asset_url, zip_path)
+            local_file, headers = urllib.request.urlretrieve(asset_url, zip_path)
+            # Verify download size if Content-Length header is present
+            if headers is not None:
+                content_length = headers.get("Content-Length")
+                if content_length is not None:
+                    try:
+                        expected_size = int(content_length)
+                        actual_size = Path(local_file).stat().st_size
+                        if actual_size != expected_size:
+                            raise Exception(
+                                f"Downloaded file size mismatch: "
+                                f"expected {expected_size} bytes, "
+                                f"got {actual_size} bytes"
+                            )
+                    except ValueError:
+                        # Content-Length was not a valid integer, skip check
+                        pass
         except Exception as e:
             raise Exception(f"Failed to download update: {e}")
 
@@ -262,6 +285,11 @@ def download_and_install_update(
         print("Extracting...")
         try:
             with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                # Validate paths to prevent path traversal attacks
+                for member in zip_ref.namelist():
+                    # Check for path traversal attempts
+                    if member.startswith("/") or ".." in member:
+                        raise Exception(f"Archive contains unsafe path: {member}")
                 zip_ref.extractall(extract_path)
         except Exception as e:
             raise Exception(f"Failed to extract update: {e}")
@@ -279,9 +307,12 @@ def download_and_install_update(
 
         # Replace the current executable
         print("Installing update...")
+
+        # Initialize backup_path before try block to avoid NameError in except
+        backup_path = Path(current_exe).with_suffix(".bak")
+
         try:
             # Backup current executable
-            backup_path = Path(current_exe).with_suffix(".bak")
             if backup_path.exists():
                 backup_path.unlink()
             shutil.copy2(current_exe, backup_path)
@@ -306,6 +337,9 @@ def download_and_install_update(
                     shutil.copy2(backup_path, current_exe)
                     backup_path.unlink()
                     print("Restored previous version after error")
-                except Exception:
-                    pass
+                except Exception as restore_error:
+                    # Log restore failure but don't fail the exception chain
+                    print(
+                        f"Failed to restore backup after update error: {restore_error}"
+                    )
             raise Exception(f"Failed to install update: {e}")

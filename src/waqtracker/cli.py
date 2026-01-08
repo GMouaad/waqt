@@ -711,15 +711,18 @@ def version():
     click.echo()
 
 
-@cli.group()
-def update():
+@cli.group(invoke_without_command=True)
+@click.pass_context
+def update(ctx):
     """Check for updates and self-update the waqt executable.
 
     Update commands allow you to check for and install new versions of waqt.
     Self-update only works for frozen executables (installed via install.sh).
     If running from source, use 'git pull' and 'uv pip install -e .' instead.
     """
-    pass
+    # If no subcommand is provided, default to 'install'
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(update_install, yes=False, prerelease=False)
 
 
 @update.command("check")
@@ -843,7 +846,7 @@ def update_install(yes: bool, prerelease: bool):
 
         # Perform the update
         click.echo()
-        download_and_install_update(update_info, confirm=False)
+        download_and_install_update(update_info)
 
         click.echo()
         click.echo(
@@ -854,21 +857,6 @@ def update_install(yes: bool, prerelease: bool):
     except Exception as e:
         click.echo(click.style(f"\n❌ Error during update: {e}", fg="red"))
         raise click.exceptions.Exit(1)
-
-
-# Make 'waqt update' without subcommand default to 'waqt update install'
-@update.command("default", hidden=True)
-@click.option("--yes", "-y", is_flag=True)
-@click.option("--prerelease", is_flag=True)
-@click.pass_context
-def update_default(ctx, yes: bool, prerelease: bool):
-    """Default update command (hidden, just redirects to install)."""
-    ctx.invoke(update_install, yes=yes, prerelease=prerelease)
-
-
-# Set default command for update group
-update.invoke_without_command = True
-update.callback = lambda **kwargs: None
 
 
 def main():
