@@ -2,15 +2,15 @@
 
 ## Overview
 
-The Waqtracker MCP (Model Context Protocol) server exposes time tracking functionality to LLM applications and AI assistants. It provides the same core features as the CLI interface, allowing AI tools to track work hours, generate reports, and manage time entries.
+The Waqt MCP (Model Context Protocol) server exposes time tracking functionality to LLM applications and AI assistants. It provides the same core features as the CLI interface, allowing AI tools to track work hours, generate reports, and manage time entries.
 
 ## What is MCP?
 
-Model Context Protocol (MCP) is an open protocol that standardizes how applications provide context to Large Language Models (LLMs). The Waqtracker MCP server implements this protocol, making time tracking functionality available to any MCP-compatible AI assistant.
+Model Context Protocol (MCP) is an open protocol that standardizes how applications provide context to Large Language Models (LLMs). The Waqt MCP server implements this protocol, making time tracking functionality available to any MCP-compatible AI assistant.
 
 ## Installation
 
-The MCP server is included with the Waqtracker package. After installing Waqtracker:
+The MCP server is included with the Waqt package. After installing Waqt:
 
 ```bash
 # Install waqt with MCP support
@@ -36,7 +36,7 @@ The server will start and listen for MCP protocol messages on stdin/stdout.
 
 ### Using with MCP Clients
 
-To use the Waqtracker MCP server with an MCP-compatible client, you'll need to configure the client to connect to the server. Here's an example configuration for Claude Desktop:
+To use the Waqt MCP server with an MCP-compatible client, you'll need to configure the client to connect to the server. Here's an example configuration for Claude Desktop:
 
 **Claude Desktop Configuration** (`claude_desktop_config.json`):
 
@@ -416,5 +416,5 @@ pytest tests/test_mcp_server.py --cov=src.waqt.mcp_server
 
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io/)
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
-- [Waqtracker CLI Documentation](../README.md#cli-usage-waqt)
-- [Waqtracker Usage Guide](./usage.md)
+- [Waqt CLI Documentation](../README.md#cli-usage-waqt)
+- [Waqt Usage Guide](./usage.md)
