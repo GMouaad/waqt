@@ -44,21 +44,37 @@ This workflow builds executables for all supported platforms:
 
 ### 2. Release Publishing (`release.yaml`)
 
-This workflow publishes a new release with attached artifacts:
-- **Trigger**: Manual dispatch or tag push
+This workflow publishes a draft release as an official release:
+- **Trigger**: Manual dispatch via GitHub Actions UI
+- **Prerequisites**: A draft release must exist (created by the Dev Build workflow)
 - **Process**:
-  1. Builds executables for all platforms
-  2. Generates release notes
-  3. Publishes release with assets
+  1. Finds the latest draft release
+  2. Verifies the Dev Build workflow passed for that commit
+  3. Verifies all expected artifacts are attached to the draft release:
+     - `waqtracker-linux-amd64.zip`
+     - `waqtracker-macos-arm64.zip`
+     - `waqtracker-windows-amd64.zip`
+  4. Builds the final release notes (keeps AI-generated notes or uses custom notes)
+  5. Publishes the draft release as the latest release
 
 ### 3. Development Builds (`dev-build.yaml`)
 
 This workflow runs on every push to `main` or `develop` branches:
-- **Trigger**: Push to `main` or `develop`
+- **Trigger**: Push to `main` or `develop`, or pull requests
 - **Process**:
-  1. Runs tests
-  2. Builds executables
-  3. Creates a "dev" release (or uploads artifacts)
+  1. Runs tests across multiple Python versions (3.11, 3.12)
+  2. Builds executables for all platforms (Linux, macOS, Windows)
+  3. Creates/updates a draft release with artifacts (main branch only)
+  
+**Draft Release Creation** (main branch only):
+- Tag format: `v0.1.${run_number}-dev` (e.g., `v0.1.123-dev`)
+- Downloads all build artifacts from the workflow
+- Creates or updates a draft release on GitHub
+- Uploads the following artifacts to the draft release:
+  - `waqtracker-linux-amd64.zip`
+  - `waqtracker-macos-arm64.zip`
+  - `waqtracker-windows-amd64.zip`
+- These artifacts are then available for the Release workflow to verify and publish
 
 ## Version Injection
 
