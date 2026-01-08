@@ -285,7 +285,7 @@ chmod +x start.sh
 ### On Windows:
 
 ```bash
-start.bat
+.\start.ps1
 ```
 
 These scripts will:

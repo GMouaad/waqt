@@ -224,7 +224,7 @@ waqt ui
 
 **Alternative:** Use the quick start scripts:
 - Linux/macOS: `./start.sh`
-- Windows: `start.bat`
+- Windows: `.\start.ps1`
 
 ## CLI Usage (`waqt`)
 
@@ -319,6 +319,7 @@ waqt config reset weekly_hours
 - `standard_hours_per_day`: Standard working hours per day (default: 8)
 - `pause_duration_minutes`: Default pause/break duration in minutes (default: 45)
 - `auto_end`: Feature flag for auto-ending work sessions (default: false)
+- `time_format`: Time display format (12 or 24) (default: 24)
 
 **Configuration Features:**
 - All settings persist in the database

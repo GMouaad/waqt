@@ -29,7 +29,7 @@ Linux/macOS:
 
 Windows:
 ```bash
-start.bat
+.\start.ps1
 ```
 
 **Manual start:**
@@ -103,9 +103,11 @@ The easiest way to track time is using the **Dashboard Timer**. It automatically
 1. Click **"Add Time Entry"** from the dashboard or navigation menu
 2. Fill in the required fields:
    - **Date**: Select the date for this entry
-   - **Start Time**: When you started working (e.g., 09:00)
-   - **End Time**: When you finished working (e.g., 17:00)
+   - **Start Time**: When you started working (e.g., 09:00 or 9:00 AM)
+   - **End Time**: When you finished working (e.g., 17:00 or 5:00 PM)
    - **Description**: What you worked on
+
+   *Note: Time inputs automatically adapt to your configured `time_format` setting (12h or 24h).*
 3. Click **"Save Entry"**
 4. The entry will appear in your recent entries list
 
@@ -120,7 +122,7 @@ You can edit any completed time entry to correct mistakes or update information.
 2. Find the entry you want to edit in the table
 3. Click the blue **"Edit"** button next to the entry
 4. Update any of the following fields:
-   - **Start Time**: Adjust the start time
+   - **Start Time**: Adjust the start time (format depends on your settings)
    - **End Time**: Adjust the end time
    - **Description**: Update what you worked on
 5. Click **"Update Entry"**
@@ -451,6 +453,9 @@ waqt config get <setting_name>
 #### Standard Work Hours
 - **`standard_hours_per_day`**: Number of hours considered standard work per day (default: 8)
 - **`weekly_hours`**: Expected weekly working hours (default: 40)
+
+#### Display Settings
+- **`time_format`**: Time display format. Options: `12` for 12-hour format (AM/PM) or `24` for 24-hour format (default: 24).
 
 #### Timer Settings
 - **`pause_duration_minutes`**: Default pause/break duration in minutes (default: 45)

@@ -81,4 +81,4 @@ echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
 
-python -m waqtracker.wsgi
+python -m waqt.wsgi
