@@ -2,9 +2,9 @@
 
 import pytest
 from datetime import date, time
-from src.waqtracker import create_app, db
-from src.waqtracker.models import TimeEntry, LeaveDay
-from src.waqtracker.mcp_server import (
+from src.waqt import create_app, db
+from src.waqt.models import TimeEntry, LeaveDay
+from src.waqt.mcp_server import (
     start,
     end,
     summary,
@@ -529,7 +529,7 @@ def test_overtime_detection(app):
     with app.app_context():
         # Create multiple entries in the same week to exceed 40 hours
         from datetime import timedelta
-        from src.waqtracker.utils import get_week_bounds
+        from src.waqt.utils import get_week_bounds
         
         today = date.today()
         week_start, week_end = get_week_bounds(today)

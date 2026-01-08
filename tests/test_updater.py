@@ -1,7 +1,7 @@
 """Unit tests for the updater module."""
 
 import pytest
-from src.waqtracker.updater import (
+from src.waqt.updater import (
     parse_version,
     compare_versions,
     get_platform_info,
@@ -133,7 +133,7 @@ class TestUpdateChecking:
         """Test checking for stable updates (integration test)."""
         # This is an integration test that requires network access
         # It's marked as slow and may be skipped in CI
-        from src.waqtracker.updater import check_for_updates
+        from src.waqt.updater import check_for_updates
 
         try:
             # This may return None if already on latest, or update info
