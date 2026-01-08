@@ -416,6 +416,13 @@ main {
     gap: 1rem;
 }
 
+/* Force 1 column for quick actions when in the sidebar (desktop) */
+@media (min-width: 1025px) {
+    .dashboard-columns .action-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .action-card {
     background: var(--bg-secondary);
     padding: 1.5rem;
@@ -729,13 +736,35 @@ footer p {
     margin-top: 2rem;
 }
 
+.dashboard-columns {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+    margin-top: 1.5rem;
+}
+
+.calendar-section {
+    margin-top: 0; /* Remove top margin when in grid */
+}
+
 .calendar-container {
     background: var(--bg-secondary);
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 2px 4px var(--shadow);
-    max-width: 800px;
-    margin: 0 auto;
+    width: 100%;
+}
+
+/* Responsive Dashboard Grid */
+@media (max-width: 1024px) {
+    .dashboard-columns {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions-section .action-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
 }
 
 .calendar-grid {

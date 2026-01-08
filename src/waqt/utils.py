@@ -128,6 +128,31 @@ def format_time(time_obj: Optional[datetime_time], time_format: Optional[str] = 
         return time_obj.strftime("%H:%M")
 
 
+def parse_time_input(time_str: str, time_format: str = "24") -> datetime.time:
+    """
+    Parse a time string based on the configured format.
+    
+    Args:
+        time_str: Time string to parse (e.g., '14:30' or '02:30 PM')
+        time_format: Expected format ('12' or '24')
+        
+    Returns:
+        datetime.time object
+        
+    Raises:
+        ValueError: If time string format is invalid
+    """
+    if time_format == "12":
+        try:
+            # Normalize input to uppercase to ensure AM/PM matching is robust
+            return datetime.strptime(time_str.upper(), "%I:%M %p").time()
+        except ValueError:
+            # Fallback to 24-hour format if 12-hour parsing fails
+            return datetime.strptime(time_str, "%H:%M").time()
+    else:
+        return datetime.strptime(time_str, "%H:%M").time()
+
+
 def get_standard_hours_per_day() -> float:
     """Get the configured standard hours per day from settings."""
     return Settings.get_float("standard_hours_per_day", 8.0)

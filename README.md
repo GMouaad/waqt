@@ -54,6 +54,8 @@ curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash
 irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1 | iex
 ```
 
+*Note: If you encounter an execution policy error, you may need to run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` first.*
+
 These installers will:
 - Download the latest stable release for your platform
 - Install to `~/.waqt/bin` (Unix) or `%LOCALAPPDATA%\waqt` (Windows)

@@ -22,6 +22,7 @@ from .utils import (
     export_time_entries_to_csv,
     get_time_entries_for_period,
     generate_calendar_data,
+    parse_time_input,
 )
 from .config import (
     CONFIG_DEFAULTS,
@@ -387,17 +388,8 @@ def time_entry():
             # Parse date and times
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
             
-            if time_format == "12":
-                try:
-                    start_time = datetime.strptime(start_time_str, "%I:%M %p").time()
-                    end_time = datetime.strptime(end_time_str, "%I:%M %p").time()
-                except ValueError:
-                    # Fallback to 24-hour format if 12-hour parsing fails
-                    start_time = datetime.strptime(start_time_str, "%H:%M").time()
-                    end_time = datetime.strptime(end_time_str, "%H:%M").time()
-            else:
-                start_time = datetime.strptime(start_time_str, "%H:%M").time()
-                end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            start_time = parse_time_input(start_time_str, time_format)
+            end_time = parse_time_input(end_time_str, time_format)
 
             # Calculate duration
             duration = calculate_duration(start_time, end_time)
@@ -477,17 +469,8 @@ def edit_time_entry(entry_id):
                 return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
 
             # Parse times
-            if time_format == "12":
-                try:
-                    start_time = datetime.strptime(start_time_str, "%I:%M %p").time()
-                    end_time = datetime.strptime(end_time_str, "%I:%M %p").time()
-                except ValueError:
-                    # Fallback to 24-hour format if 12-hour parsing fails
-                    start_time = datetime.strptime(start_time_str, "%H:%M").time()
-                    end_time = datetime.strptime(end_time_str, "%H:%M").time()
-            else:
-                start_time = datetime.strptime(start_time_str, "%H:%M").time()
-                end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            start_time = parse_time_input(start_time_str, time_format)
+            end_time = parse_time_input(end_time_str, time_format)
 
             # Calculate duration
             duration = calculate_duration(start_time, end_time)
