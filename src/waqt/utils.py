@@ -7,6 +7,91 @@ from typing import List, Dict, Tuple, Optional
 from .models import TimeEntry, LeaveDay, Settings
 
 
+def is_weekend(check_date: date) -> bool:
+    """
+    Check if a given date falls on a weekend (Saturday or Sunday).
+    
+    Args:
+        check_date: Date to check
+        
+    Returns:
+        True if the date is Saturday (5) or Sunday (6), False otherwise
+    """
+    return check_date.weekday() in (5, 6)
+
+
+def get_date_range(start_date: date, end_date: date) -> List[date]:
+    """
+    Generate a list of dates between start_date and end_date (inclusive).
+    
+    Args:
+        start_date: Start date (inclusive)
+        end_date: End date (inclusive)
+        
+    Returns:
+        List of date objects from start_date to end_date
+    """
+    if start_date > end_date:
+        return []
+    
+    date_list = []
+    current_date = start_date
+    while current_date <= end_date:
+        date_list.append(current_date)
+        current_date += timedelta(days=1)
+    
+    return date_list
+
+
+def get_working_days_in_range(start_date: date, end_date: date) -> List[date]:
+    """
+    Get all working days (excluding weekends) in a date range.
+    
+    Args:
+        start_date: Start date (inclusive)
+        end_date: End date (inclusive)
+        
+    Returns:
+        List of date objects that are working days (Monday-Friday)
+    """
+    all_dates = get_date_range(start_date, end_date)
+    return [d for d in all_dates if not is_weekend(d)]
+
+
+def calculate_leave_hours(start_date: date, end_date: date) -> Dict:
+    """
+    Calculate leave statistics for a date range.
+    
+    Args:
+        start_date: Start date of leave
+        end_date: End date of leave
+        
+    Returns:
+        Dictionary with:
+        - total_days: Total calendar days in range
+        - working_days: Number of working days (excluding weekends)
+        - weekend_days: Number of weekend days
+        - working_hours: Total working hours (working_days * standard_hours_per_day)
+    """
+    all_dates = get_date_range(start_date, end_date)
+    working_days_list = get_working_days_in_range(start_date, end_date)
+    
+    total_days = len(all_dates)
+    working_days = len(working_days_list)
+    weekend_days = total_days - working_days
+    
+    # Get standard hours per day from settings
+    standard_hours_per_day = get_standard_hours_per_day()
+    working_hours = working_days * standard_hours_per_day
+    
+    return {
+        "total_days": total_days,
+        "working_days": working_days,
+        "weekend_days": weekend_days,
+        "working_hours": working_hours,
+    }
+
+
 def format_time(time_obj: Optional[datetime_time], time_format: Optional[str] = None) -> str:
     """
     Format a time object according to the user's preferred time format.
