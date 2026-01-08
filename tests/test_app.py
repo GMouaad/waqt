@@ -153,3 +153,139 @@ def test_settings_model(app):
         # Get non-existent setting with default
         value = Settings.get_setting("nonexistent", "default")
         assert value == "default"
+
+
+def test_edit_time_entry_page(client, app):
+    """Test the edit time entry page."""
+    with app.app_context():
+        # Create a test entry
+        entry = TimeEntry(
+            date=date(2024, 1, 15),
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Test work",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+        entry_id = entry.id
+
+    # Access the edit page
+    response = client.get(f"/time-entry/{entry_id}/edit")
+    assert response.status_code == 200
+    assert b"Edit Time Entry" in response.data
+    assert b"Test work" in response.data
+
+
+def test_edit_time_entry_post(client, app):
+    """Test editing a time entry via POST."""
+    with app.app_context():
+        # Create a test entry
+        entry = TimeEntry(
+            date=date(2024, 1, 15),
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Original description",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+        entry_id = entry.id
+
+    # Edit the entry
+    response = client.post(
+        f"/time-entry/{entry_id}/edit",
+        data={
+            "start_time": "08:30",
+            "end_time": "17:30",
+            "description": "Updated description",
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+    assert b"Time entry updated successfully!" in response.data
+
+    # Verify changes in database
+    with app.app_context():
+        updated_entry = TimeEntry.query.get(entry_id)
+        assert updated_entry.start_time == time(8, 30)
+        assert updated_entry.end_time == time(17, 30)
+        assert updated_entry.duration_hours == 9.0
+        assert updated_entry.description == "Updated description"
+
+
+def test_prevent_duplicate_entries(client, app):
+    """Test that creating a duplicate entry for the same date is prevented."""
+    with app.app_context():
+        # Create a test entry
+        entry = TimeEntry(
+            date=date(2024, 1, 15),
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="First entry",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+    # Try to create another entry for the same date
+    response = client.post(
+        "/time-entry",
+        data={
+            "date": "2024-01-15",
+            "start_time": "10:00",
+            "end_time": "18:00",
+            "description": "Duplicate entry",
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+    assert b"An entry already exists" in response.data
+    assert b"Only one entry per day is allowed" in response.data
+
+    # Verify only one entry exists
+    with app.app_context():
+        entries = TimeEntry.query.filter_by(date=date(2024, 1, 15)).all()
+        assert len(entries) == 1
+        assert entries[0].description == "First entry"
+
+
+def test_edit_time_entry_invalid_time(client, app):
+    """Test editing a time entry with times that would result in very long duration."""
+    with app.app_context():
+        # Create a test entry
+        entry = TimeEntry(
+            date=date(2024, 1, 15),
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Test work",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+        entry_id = entry.id
+
+    # Edit with times that cross midnight (17:00 to 09:00 = 16 hours)
+    # This should actually succeed because calculate_duration handles midnight crossing
+    response = client.post(
+        f"/time-entry/{entry_id}/edit",
+        data={
+            "start_time": "17:00",
+            "end_time": "09:00",
+            "description": "Night shift",
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+    assert b"Time entry updated successfully!" in response.data
+
+    # Verify entry was updated with 16 hour duration (crossing midnight)
+    with app.app_context():
+        updated_entry = TimeEntry.query.get(entry_id)
+        assert updated_entry.start_time == time(17, 0)
+        assert updated_entry.end_time == time(9, 0)
+        assert updated_entry.duration_hours == 16.0  # 17:00 to 09:00 next day

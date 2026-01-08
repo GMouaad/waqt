@@ -323,6 +323,19 @@ def time_entry():
                 flash("End time must be after start time.", "error")
                 return redirect(url_for("main.time_entry"))
 
+            # Check for existing entries on this date (excluding active ones)
+            existing_entries = TimeEntry.query.filter_by(
+                date=date, is_active=False
+            ).all()
+            
+            if existing_entries:
+                flash(
+                    f"An entry already exists for {date}. "
+                    "Only one entry per day is allowed. Please edit the existing entry instead.",
+                    "error"
+                )
+                return redirect(url_for("main.time_entry"))
+
             # Create new entry
             entry = TimeEntry(
                 date=date,
@@ -351,6 +364,60 @@ def time_entry():
 
     # GET request - show form
     return render_template("time_entry.html", today=datetime.now().date())
+
+
+@bp.route("/time-entry/<int:entry_id>/edit", methods=["GET", "POST"])
+def edit_time_entry(entry_id):
+    """Edit an existing time entry."""
+    entry = TimeEntry.query.get_or_404(entry_id)
+    
+    if request.method == "POST":
+        try:
+            # Parse form data
+            start_time_str = request.form.get("start_time")
+            end_time_str = request.form.get("end_time")
+            description = request.form.get("description", "").strip()
+
+            # Validate inputs
+            if not all([start_time_str, end_time_str, description]):
+                flash("All fields are required.", "error")
+                return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
+
+            # Parse times
+            start_time = datetime.strptime(start_time_str, "%H:%M").time()
+            end_time = datetime.strptime(end_time_str, "%H:%M").time()
+
+            # Calculate duration
+            duration = calculate_duration(start_time, end_time)
+
+            if duration <= 0:
+                flash("End time must be after start time.", "error")
+                return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
+
+            # Update entry
+            entry.start_time = start_time
+            entry.end_time = end_time
+            entry.duration_hours = duration
+            entry.description = description
+
+            db.session.commit()
+
+            flash(
+                f"Time entry updated successfully! Duration: {duration:.2f} hours",
+                "success",
+            )
+            return redirect(url_for("main.index"))
+
+        except ValueError as e:
+            flash(f"Invalid time format: {str(e)}", "error")
+            return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error updating time entry: {str(e)}", "error")
+            return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
+
+    # GET request - show form with existing data
+    return render_template("edit_time_entry.html", entry=entry)
 
 
 @bp.route("/time-entry/<int:entry_id>/delete", methods=["POST"])

@@ -240,6 +240,226 @@ def end(time: Optional[str], date: Optional[str]):
 
 @cli.command()
 @click.option(
+    "--date",
+    "-d",
+    type=str,
+    required=True,
+    help="Date of the entry to edit in YYYY-MM-DD format",
+)
+@click.option(
+    "--start",
+    "-s",
+    type=str,
+    default=None,
+    help="New start time in HH:MM format",
+)
+@click.option(
+    "--end",
+    "-e",
+    type=str,
+    default=None,
+    help="New end time in HH:MM format",
+)
+@click.option(
+    "--description",
+    "--desc",
+    type=str,
+    default=None,
+    help="New description",
+)
+def edit_entry(
+    date: str,
+    start: Optional[str],
+    end: Optional[str],
+    description: Optional[str],
+):
+    """Edit an existing time entry.
+
+    Modify the details of a time entry for a specific date. You can update
+    the start time, end time, and/or description. At least one field must
+    be provided to update.
+
+    Examples:
+        waqt edit-entry --date 2026-01-08 --desc "Updated description"
+        waqt edit-entry -d 2026-01-08 --start 09:00 --end 17:30
+        waqt edit-entry -d 2026-01-08 -s 08:30 -e 17:00 --desc "Full day work"
+    """
+    app = create_app()
+    with app.app_context():
+        # Parse date
+        try:
+            entry_date = datetime.strptime(date, "%Y-%m-%d").date()
+        except ValueError:
+            click.echo(
+                click.style(
+                    f"Error: Invalid date format '{date}'. Use YYYY-MM-DD.",
+                    fg="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+
+        # Check if at least one field to update is provided
+        if not any([start, end, description]):
+            click.echo(
+                click.style(
+                    "Error: At least one field must be provided to update.",
+                    fg="red",
+                )
+            )
+            click.echo(
+                "Use --start, --end, or --description to specify what to change."
+            )
+            raise click.exceptions.Exit(1)
+
+        # Find entries for this date (excluding active/open entries)
+        entries = (
+            TimeEntry.query.filter_by(date=entry_date, is_active=False)
+            .order_by(TimeEntry.created_at.desc())
+            .all()
+        )
+
+        if not entries:
+            click.echo(
+                click.style(
+                    f"Error: No completed time entry found for {entry_date}.",
+                    fg="red",
+                )
+            )
+            click.echo(
+                "Note: Cannot edit entries that are currently active. "
+                "Run 'waqt end' first."
+            )
+            raise click.exceptions.Exit(1)
+
+        # Handle multiple entries per day (legacy case)
+        if len(entries) > 1:
+            click.echo(
+                click.style(
+                    f"⚠ Multiple entries found for {entry_date}:",
+                    fg="yellow",
+                    bold=True,
+                )
+            )
+            click.echo()
+            for idx, entry in enumerate(entries, 1):
+                click.echo(
+                    f"  {idx}. {entry.start_time.strftime('%H:%M')}-"
+                    f"{entry.end_time.strftime('%H:%M')} "
+                    f"({format_hours(entry.duration_hours)}) - {entry.description[:50]}"
+                )
+            click.echo()
+            click.echo(
+                "Note: The system now enforces one entry per day. "
+                "Please delete the extra entries manually."
+            )
+            click.echo("You can use the UI to delete entries, or specify --start to select.")
+            
+            # If start time provided, try to match it
+            if start:
+                try:
+                    start_time = datetime.strptime(start, "%H:%M").time()
+                    matching = [e for e in entries if e.start_time == start_time]
+                    if len(matching) == 1:
+                        entry = matching[0]
+                        click.echo(
+                            f"\nMatching entry by start time: "
+                            f"{entry.start_time.strftime('%H:%M')}"
+                        )
+                    else:
+                        click.echo(
+                            click.style(
+                                f"Error: Could not uniquely identify entry by start time.",
+                                fg="red",
+                            )
+                        )
+                        raise click.exceptions.Exit(1)
+                except ValueError:
+                    click.echo(
+                        click.style(
+                            f"Error: Invalid time format '{start}'. Use HH:MM.",
+                            fg="red",
+                        )
+                    )
+                    raise click.exceptions.Exit(1)
+            else:
+                raise click.exceptions.Exit(1)
+        else:
+            entry = entries[0]
+
+        # Store original values for display
+        original_start = entry.start_time
+        original_end = entry.end_time
+        original_description = entry.description
+
+        # Parse and update start time if provided
+        if start:
+            try:
+                entry.start_time = datetime.strptime(start, "%H:%M").time()
+            except ValueError:
+                click.echo(
+                    click.style(
+                        f"Error: Invalid time format '{start}'. Use HH:MM.",
+                        fg="red",
+                    )
+                )
+                raise click.exceptions.Exit(1)
+
+        # Parse and update end time if provided
+        if end:
+            try:
+                entry.end_time = datetime.strptime(end, "%H:%M").time()
+            except ValueError:
+                click.echo(
+                    click.style(
+                        f"Error: Invalid time format '{end}'. Use HH:MM.", fg="red"
+                    )
+                )
+                raise click.exceptions.Exit(1)
+
+        # Update description if provided
+        if description:
+            entry.description = description.strip()
+            if not entry.description:
+                click.echo(
+                    click.style("Error: Description cannot be empty.", fg="red")
+                )
+                raise click.exceptions.Exit(1)
+
+        # Recalculate duration if times were changed
+        if start or end:
+            duration = calculate_duration(entry.start_time, entry.end_time)
+            if duration <= 0:
+                click.echo(
+                    click.style("Error: End time must be after start time.", fg="red")
+                )
+                raise click.exceptions.Exit(1)
+            entry.duration_hours = duration
+
+        # Commit changes
+        db.session.commit()
+
+        # Display success message
+        click.echo(click.style("✓ Time entry updated successfully!", fg="green", bold=True))
+        click.echo(f"Date: {entry_date}")
+        
+        if start:
+            click.echo(
+                f"Start time: {original_start.strftime('%H:%M')} → "
+                f"{entry.start_time.strftime('%H:%M')}"
+            )
+        if end:
+            click.echo(
+                f"End time: {original_end.strftime('%H:%M')} → "
+                f"{entry.end_time.strftime('%H:%M')}"
+            )
+        if start or end:
+            click.echo(f"Duration: {format_hours(entry.duration_hours)}")
+        if description:
+            click.echo(f"Description: {original_description} → {entry.description}")
+
+
+@cli.command()
+@click.option(
     "--period",
     "-p",
     type=click.Choice(["week", "month"], case_sensitive=False),
