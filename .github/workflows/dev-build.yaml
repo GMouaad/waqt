@@ -110,15 +110,15 @@ jobs:
           This is an automated development build. Use the Release workflow to publish this as an official release.
 
           ### Artifacts
-          - Linux (x64): \`waqtracker-linux-amd64.zip\`
-          - macOS (Apple Silicon): \`waqtracker-macos-arm64.zip\`
-          - Windows (x64): \`waqtracker-windows-amd64.zip\`
+          - Linux (x64): \`waqt-linux-amd64.zip\`
+          - macOS (Apple Silicon): \`waqt-macos-arm64.zip\`
+          - Windows (x64): \`waqt-windows-amd64.zip\`
           EOF
           
           # Create new draft release
           if ! gh release create "$TAG" \
             --draft \
-            --title "waqtracker $TAG" \
+            --title "waqt $TAG" \
             --notes-file release_notes.md \
             --target "${{ github.sha }}"; then
             echo "Error: Failed to create draft release for tag $TAG"

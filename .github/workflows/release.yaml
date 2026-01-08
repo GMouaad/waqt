@@ -91,9 +91,9 @@ jobs:
           echo "$ASSETS"
 
           EXPECTED_ARTIFACTS=(
-            "waqtracker-linux-amd64.zip"
-            "waqtracker-macos-arm64.zip"
-            "waqtracker-windows-amd64.zip"
+            "waqt-linux-amd64.zip"
+            "waqt-macos-arm64.zip"
+            "waqt-windows-amd64.zip"
           )
 
           missing=0
@@ -154,20 +154,20 @@ jobs:
             echo "**Download Executable:**"
             echo ""
             echo "Download the zip file for your platform below:"
-            echo "- **Linux (x64)**: \`waqtracker-linux-amd64.zip\`"
-            echo "- **macOS (Apple Silicon)**: \`waqtracker-macos-arm64.zip\`"
-            echo "- **Windows (x64)**: \`waqtracker-windows-amd64.zip\`"
+            echo "- **Linux (x64)**: \`waqt-linux-amd64.zip\`"
+            echo "- **macOS (Apple Silicon)**: \`waqt-macos-arm64.zip\`"
+            echo "- **Windows (x64)**: \`waqt-windows-amd64.zip\`"
             echo ""
             echo "Extract the zip file and run the executable:"
             echo '```bash'
             echo "# Linux/macOS"
-            echo "unzip waqtracker-*.zip"
-            echo "chmod +x waqtracker  # macOS/Linux only"
-            echo "./waqtracker"
+            echo "unzip waqt-*.zip"
+            echo "chmod +x waqt  # macOS/Linux only"
+            echo "./waqt"
             echo ""
             echo "# Windows PowerShell"
-            echo "Expand-Archive waqtracker-windows-amd64.zip"
-            echo ".\\waqtracker.exe"
+            echo "Expand-Archive waqt-windows-amd64.zip"
+            echo ".\\waqt.exe"
             echo '```'
             echo ""
             echo "**Install from Source:**"
@@ -176,7 +176,7 @@ jobs:
             echo "cd waqt"
             echo "uv venv && source .venv/bin/activate"
             echo "uv pip install -e ."
-            echo "python -m waqtracker.wsgi"
+            echo "python -m waqt.wsgi"
             echo '```'
             echo ""
             echo "See https://github.com/GMouaad/waqt for more info."
@@ -188,7 +188,7 @@ jobs:
       - name: Publish release
         run: |
           gh release edit ${{ steps.draft.outputs.tag }} \
-            --title "waqtracker ${{ steps.draft.outputs.tag }}" \
+            --title "waqt ${{ steps.draft.outputs.tag }}" \
             --notes-file body.md \
             --draft=false \
             --latest
