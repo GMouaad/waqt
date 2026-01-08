@@ -28,11 +28,14 @@ class TimeEntry(db.Model):
 
     def to_dict(self):
         """Convert to dictionary for JSON serialization."""
+        # Import here to avoid circular imports
+        from .utils import format_time
+        
         return {
             "id": self.id,
             "date": self.date.isoformat(),
-            "start_time": self.start_time.strftime("%H:%M"),
-            "end_time": self.end_time.strftime("%H:%M"),
+            "start_time": format_time(self.start_time),
+            "end_time": format_time(self.end_time),
             "duration_hours": self.duration_hours,
             "description": self.description,
             "created_at": self.created_at.isoformat(),

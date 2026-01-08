@@ -14,6 +14,7 @@ from .utils import (
     format_hours,
     export_time_entries_to_csv,
     get_time_entries_for_period,
+    format_time,
 )
 from ._version import VERSION, GIT_SHA
 from .config import (
@@ -142,7 +143,7 @@ def start(time: Optional[str], date: Optional[str], description: str):
 
         click.echo(click.style("✓ Time tracking started!", fg="green", bold=True))
         click.echo(f"Date: {entry_date}")
-        click.echo(f"Start time: {start_time.strftime('%H:%M')}")
+        click.echo(f"Start time: {format_time(start_time)}")
         click.echo(f"Description: {description}")
         click.echo("\nRun 'waqt end' when you're done to record the session duration.")
 
@@ -232,8 +233,8 @@ def end(time: Optional[str], date: Optional[str]):
 
         click.echo(click.style("✓ Time tracking ended!", fg="green", bold=True))
         click.echo(f"Date: {entry_date}")
-        click.echo(f"Start time: {open_entry.start_time.strftime('%H:%M')}")
-        click.echo(f"End time: {end_time.strftime('%H:%M')}")
+        click.echo(f"Start time: {format_time(open_entry.start_time)}")
+        click.echo(f"End time: {format_time(end_time)}")
         click.echo(f"Duration: {format_hours(duration)}")
         click.echo(f"Description: {open_entry.description}")
 
@@ -343,8 +344,8 @@ def edit_entry(
             click.echo()
             for idx, entry in enumerate(entries, 1):
                 click.echo(
-                    f"  {idx}. {entry.start_time.strftime('%H:%M')}-"
-                    f"{entry.end_time.strftime('%H:%M')} "
+                    f"  {idx}. {format_time(entry.start_time)}-"
+                    f"{format_time(entry.end_time)} "
                     f"({format_hours(entry.duration_hours)}) - {entry.description[:50]}"
                 )
             click.echo()
@@ -365,7 +366,7 @@ def edit_entry(
                         entry = matching[0]
                         click.echo(
                             f"\nMatching entry by start time: "
-                            f"{entry.start_time.strftime('%H:%M')}"
+                            f"{format_time(entry.start_time)}"
                         )
                         # Mark that this entry was selected by start time
                         # We won't update start_time again since it was used for selection
@@ -451,13 +452,13 @@ def edit_entry(
 
         if start:
             click.echo(
-                f"Start time: {original_start.strftime('%H:%M')} → "
-                f"{entry.start_time.strftime('%H:%M')}"
+                f"Start time: {format_time(original_start)} → "
+                f"{format_time(entry.start_time)}"
             )
         if end:
             click.echo(
-                f"End time: {original_end.strftime('%H:%M')} → "
-                f"{entry.end_time.strftime('%H:%M')}"
+                f"End time: {format_time(original_end)} → "
+                f"{format_time(entry.end_time)}"
             )
         if start or end:
             click.echo(f"Duration: {format_hours(entry.duration_hours)}")
@@ -589,8 +590,8 @@ def summary(period: str, date: Optional[str]):
             for entry in entries[-5:]:  # Show last 5 entries
                 overtime_marker = " ⚠" if entry.duration_hours > 8.0 else ""
                 click.echo(
-                    f"{entry.date} | {entry.start_time.strftime('%H:%M')}-"
-                    f"{entry.end_time.strftime('%H:%M')} | "
+                    f"{entry.date} | {format_time(entry.start_time)}-"
+                    f"{format_time(entry.end_time)} | "
                     f"{format_hours(entry.duration_hours)}{overtime_marker} | "
                     f"{entry.description[:40]}"
                 )

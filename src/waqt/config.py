@@ -8,6 +8,7 @@ CONFIG_DEFAULTS = {
     "auto_end": "false",
     "alert_on_max_work_session": "false",
     "max_work_session_hours": "10",
+    "time_format": "24",
 }
 
 # Configuration value types for automatic type handling
@@ -18,6 +19,7 @@ CONFIG_TYPES = {
     "auto_end": "bool",
     "alert_on_max_work_session": "bool",
     "max_work_session_hours": "float",
+    "time_format": "text",
 }
 
 CONFIG_DESCRIPTIONS = {
@@ -27,6 +29,7 @@ CONFIG_DESCRIPTIONS = {
     "auto_end": "Feature flag: Auto-end work session after 8h 45m (default: false)",
     "alert_on_max_work_session": "Feature flag: Alert when session exceeds 8 hours and approaches max limit (default: false)",
     "max_work_session_hours": "Maximum work session hours threshold for alerts (default: 10)",
+    "time_format": "Time display format: 24-hour (HH:MM) or 12-hour (hh:MM AM/PM) (default: 24)",
 }
 
 CONFIG_VALIDATORS = {
@@ -38,6 +41,7 @@ CONFIG_VALIDATORS = {
     "alert_on_max_work_session": lambda v: isinstance(v, str)
     and v.lower() in ("true", "false", "1", "0", "yes", "no", "on", "off"),
     "max_work_session_hours": lambda v: 1 <= float(v) <= 24,
+    "time_format": lambda v: isinstance(v, str) and v in ("12", "24"),
 }
 
 CONFIG_VALIDATION_MESSAGES = {
@@ -47,6 +51,7 @@ CONFIG_VALIDATION_MESSAGES = {
     "auto_end": "Must be a boolean value (true/false, yes/no, 1/0, on/off)",
     "alert_on_max_work_session": "Must be a boolean value (true/false, yes/no, 1/0, on/off)",
     "max_work_session_hours": "Must be between 1 and 24 hours",
+    "time_format": "Must be either '12' for 12-hour format or '24' for 24-hour format",
 }
 
 # Display names for UI (user-friendly labels)
@@ -57,6 +62,7 @@ CONFIG_DISPLAY_NAMES = {
     "auto_end": "Auto-End Work Session",
     "alert_on_max_work_session": "Alert on Max Work Session",
     "max_work_session_hours": "Max Work Session Hours",
+    "time_format": "Time Display Format",
 }
 
 
@@ -114,8 +120,10 @@ def get_config_input_type(key):
         key: Configuration key
         
     Returns:
-        str: HTML input type ('number', 'checkbox', 'text')
+        str: HTML input type ('number', 'checkbox', 'text', 'select')
     """
+    if key == "time_format":
+        return "select"
     config_type = CONFIG_TYPES.get(key, "text")
     if config_type == "bool":
         return "checkbox"
@@ -141,3 +149,22 @@ def get_config_validation_bounds(key):
         "max_work_session_hours": {"min": "1", "max": "24"},
     }
     return bounds.get(key, {})
+
+
+def get_config_select_options(key):
+    """
+    Get select dropdown options for configuration fields.
+    
+    Args:
+        key: Configuration key
+        
+    Returns:
+        list: List of tuples (value, label) for select options, or empty list
+    """
+    options = {
+        "time_format": [
+            ("24", "24-hour (HH:MM) - e.g., 13:30"),
+            ("12", "12-hour (hh:MM AM/PM) - e.g., 01:30 PM"),
+        ],
+    }
+    return options.get(key, [])

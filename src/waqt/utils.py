@@ -2,9 +2,43 @@
 
 import csv
 import io
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, time as datetime_time
 from typing import List, Dict, Tuple, Optional
 from .models import TimeEntry, LeaveDay, Settings
+
+
+def format_time(time_obj: Optional[datetime_time], time_format: Optional[str] = None) -> str:
+    """
+    Format a time object according to the user's preferred time format.
+    
+    Args:
+        time_obj: datetime.time object to format. If None, returns an empty string.
+        time_format: Time format preference ('12' or '24'). If None, reads from settings.
+    
+    Returns:
+        Formatted time string (e.g., '13:30' or '01:30 PM'), or empty string if time_obj is None
+    """
+    if time_obj is None:
+        return ""
+    
+    if time_format is None:
+        time_format = Settings.get_setting("time_format", "24")
+    
+    if time_format == "12":
+        # Convert to 12-hour format with AM/PM
+        hour = time_obj.hour
+        minute = time_obj.minute
+        am_pm = "AM" if hour < 12 else "PM"
+        
+        # Convert hour to 12-hour format
+        display_hour = hour % 12
+        if display_hour == 0:
+            display_hour = 12
+        
+        return f"{display_hour:d}:{minute:02d} {am_pm}"
+    else:
+        # Default to 24-hour format
+        return time_obj.strftime("%H:%M")
 
 
 def get_standard_hours_per_day() -> float:
@@ -261,8 +295,8 @@ def export_time_entries_to_csv(
         row = [
             entry.date.isoformat(),
             entry.date.strftime("%A"),
-            entry.start_time.strftime("%H:%M"),
-            entry.end_time.strftime("%H:%M"),
+            format_time(entry.start_time),
+            format_time(entry.end_time),
             f"{entry.duration_hours:.2f}",
             format_hours(entry.duration_hours),
             entry.description,

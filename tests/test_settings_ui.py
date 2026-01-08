@@ -318,3 +318,107 @@ def test_settings_navigation_link_exists(client, app):
         # Check for both href and Settings text in navigation
         assert b'href="/settings"' in response.data
         assert b"Settings" in response.data
+
+
+def test_settings_page_displays_time_format_dropdown(client, app):
+    """Test that time_format select dropdown is displayed with correct options."""
+    with app.app_context():
+        response = client.get("/settings")
+        assert response.status_code == 200
+        
+        # Check that Time Display Format is present
+        assert b"Time Display Format" in response.data
+        
+        # Check that the select dropdown exists
+        assert b'name="time_format"' in response.data
+        assert b'id="time_format"' in response.data
+        
+        # Check that both options are present
+        assert b"24-hour (HH:MM)" in response.data
+        assert b"12-hour (hh:MM AM/PM)" in response.data
+        assert b'value="24"' in response.data
+        assert b'value="12"' in response.data
+
+
+def test_settings_time_format_update(client, app):
+    """Test updating the time_format value via the settings page POST request."""
+    with app.app_context():
+        # Initially, time_format should be default (24)
+        assert Settings.get_setting("time_format", "24") == "24"
+        
+        # Update to 12-hour format
+        response = client.post("/settings", data={
+            "standard_hours_per_day": "8",
+            "weekly_hours": "40",
+            "pause_duration_minutes": "45",
+            "auto_end": "",
+            "alert_on_max_work_session": "",
+            "max_work_session_hours": "10",
+            "time_format": "12",
+        }, follow_redirects=True)
+        
+        assert response.status_code == 200
+        assert b"Settings updated successfully!" in response.data
+        
+        # Verify the value was updated in the database
+        assert Settings.get_setting("time_format") == "12"
+        
+        # Update back to 24-hour format
+        response = client.post("/settings", data={
+            "standard_hours_per_day": "8",
+            "weekly_hours": "40",
+            "pause_duration_minutes": "45",
+            "auto_end": "",
+            "alert_on_max_work_session": "",
+            "max_work_session_hours": "10",
+            "time_format": "24",
+        }, follow_redirects=True)
+        
+        assert response.status_code == 200
+        assert b"Settings updated successfully!" in response.data
+        assert Settings.get_setting("time_format") == "24"
+
+
+def test_settings_time_format_shows_selected_value(client, app):
+    """Test that the dropdown shows the currently selected time format value correctly."""
+    with app.app_context():
+        # Set to 12-hour format
+        Settings.set_setting("time_format", "12")
+        
+        response = client.get("/settings")
+        assert response.status_code == 200
+        
+        # Check that 12 is selected
+        assert b'value="12" selected' in response.data
+        
+        # Set to 24-hour format
+        Settings.set_setting("time_format", "24")
+        
+        response = client.get("/settings")
+        assert response.status_code == 200
+        
+        # Check that 24 is selected
+        assert b'value="24" selected' in response.data
+
+
+def test_settings_time_format_validation(client, app):
+    """Test that time_format only accepts valid values (12 or 24)."""
+    with app.app_context():
+        # Test invalid value
+        response = client.post("/settings", data={
+            "standard_hours_per_day": "8",
+            "weekly_hours": "40",
+            "pause_duration_minutes": "45",
+            "auto_end": "",
+            "alert_on_max_work_session": "",
+            "max_work_session_hours": "10",
+            "time_format": "invalid",
+        }, follow_redirects=True)
+        
+        assert response.status_code == 200
+        assert b"Time Display Format:" in response.data
+        
+        # The setting should not have been updated
+        # (should still be default or previous valid value)
+        time_format = Settings.get_setting("time_format", "24")
+        assert time_format in ["12", "24"]
