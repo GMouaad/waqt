@@ -347,7 +347,6 @@ def generate_calendar_data(year: int, month: int) -> Dict:
             - prev_month: Dict with year and month for previous month
             - next_month: Dict with year and month for next month
     """
-    from . import db
     
     # Get month boundaries
     month_start = date(year, month, 1)

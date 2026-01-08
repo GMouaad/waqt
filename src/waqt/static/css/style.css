@@ -26,6 +26,11 @@
     --badge-vacation-text: #155724;
     --badge-sick-bg: #fff3cd;
     --badge-sick-text: #856404;
+    --warning-bg: #fff3cd;
+    --warning-border: #ffc107;
+    --entry-bg: #d4edda;
+    --entry-border: #28a745;
+    --entry-text: #155724;
 }
 
 [data-theme="dark"] {
@@ -55,6 +60,11 @@
     --badge-vacation-text: #7bc67e;
     --badge-sick-bg: #5a4a1e;
     --badge-sick-text: #f5d677;
+    --warning-bg: #3d3420;
+    --warning-border: #ffc107;
+    --entry-bg: #1e4620;
+    --entry-border: #28a745;
+    --entry-text: #7bc67e;
 }
 
 /* Reset and Base Styles */
@@ -795,13 +805,13 @@ footer p {
 }
 
 .calendar-day.has-entry {
-    background: #d4edda;
-    border-color: #28a745;
+    background: var(--entry-bg);
+    border-color: var(--entry-border);
 }
 
 [data-theme="dark"] .calendar-day.has-entry {
-    background: #1e4620;
-    border-color: #28a745;
+    background: var(--entry-bg);
+    border-color: var(--entry-border);
 }
 
 .calendar-day.has-leave {
@@ -811,22 +821,22 @@ footer p {
 
 .calendar-day.has-leave.leave-vacation {
     background: var(--badge-vacation-bg);
-    border-color: #28a745;
+    border-color: var(--entry-border);
 }
 
 .calendar-day.has-leave.leave-sick {
     background: var(--badge-sick-bg);
-    border-color: #ffc107;
+    border-color: var(--warning-border);
 }
 
 .calendar-day.no-entry:not(.today) {
-    background: #fff3cd;
-    border-color: #ffc107;
+    background: var(--warning-bg);
+    border-color: var(--warning-border);
 }
 
 [data-theme="dark"] .calendar-day.no-entry:not(.today) {
-    background: #3d3420;
-    border-color: #ffc107;
+    background: var(--warning-bg);
+    border-color: var(--warning-border);
 }
 
 .calendar-day-info {
@@ -835,12 +845,12 @@ footer p {
 }
 
 .calendar-hours {
-    color: #155724;
+    color: var(--entry-text);
     font-weight: 600;
 }
 
 [data-theme="dark"] .calendar-hours {
-    color: #7bc67e;
+    color: var(--entry-text);
 }
 
 .calendar-day-badge {
@@ -874,33 +884,33 @@ footer p {
 }
 
 .legend-color.has-entry-color {
-    background: #d4edda;
-    border-color: #28a745;
+    background: var(--entry-bg);
+    border-color: var(--entry-border);
 }
 
 [data-theme="dark"] .legend-color.has-entry-color {
-    background: #1e4620;
-    border-color: #28a745;
+    background: var(--entry-bg);
+    border-color: var(--entry-border);
 }
 
 .legend-color.has-leave-vacation {
     background: var(--badge-vacation-bg);
-    border-color: #28a745;
+    border-color: var(--entry-border);
 }
 
 .legend-color.has-leave-sick {
     background: var(--badge-sick-bg);
-    border-color: #ffc107;
+    border-color: var(--warning-border);
 }
 
 .legend-color.no-entry-color {
-    background: #fff3cd;
-    border-color: #ffc107;
+    background: var(--warning-bg);
+    border-color: var(--warning-border);
 }
 
 [data-theme="dark"] .legend-color.no-entry-color {
-    background: #3d3420;
-    border-color: #ffc107;
+    background: var(--warning-bg);
+    border-color: var(--warning-border);
 }
 
 /* Calendar Tooltip */

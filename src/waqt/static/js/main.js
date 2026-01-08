@@ -384,8 +384,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const tooltipBody = document.getElementById('tooltip-body');
             const tooltipAddEntry = document.getElementById('tooltip-add-entry');
             
-            // Format date nicely
-            const dateObj = new Date(data.date + 'T00:00:00');
+            // Format date nicely - parse the date in a timezone-safe manner
+            // data.date is in YYYY-MM-DD format
+            const [year, month, day] = data.date.split('-').map(num => parseInt(num, 10));
+            const dateObj = new Date(year, month - 1, day);
             const formattedDate = dateObj.toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
