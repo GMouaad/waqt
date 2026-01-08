@@ -8,10 +8,11 @@ This guide explains how to use the Waqt application to manage your work hours, o
 2. [Dashboard Overview](#dashboard-overview)
 3. [Tracking Work Hours](#tracking-work-hours)
 4. [Managing Leave Days](#managing-leave-days)
-5. [Viewing Reports](#viewing-reports)
-6. [Understanding Overtime Calculations](#understanding-overtime-calculations)
-7. [Common Workflows](#common-workflows)
-8. [Tips and Best Practices](#tips-and-best-practices)
+5. [Common Workflows](#common-workflows)
+6. [Tips and Best Practices](#tips-and-best-practices)
+7. [Advanced Usage](#advanced-usage)
+8. [Configuration](#configuration)
+9. [Troubleshooting](#troubleshooting)
 
 ## Running the Application
 
@@ -149,6 +150,144 @@ waqt edit-entry -d 2026-01-08 -s 08:00 -e 18:00 --desc "Full day development wor
 - `--end` or `-e`: New end time (HH:MM format)
 - `--description` or `--desc`: New description text
 - At least one field (start, end, or description) must be provided
+
+## Managing Leave Days
+
+The Leave Management feature allows you to track vacation days and sick leave. You can request single-day or multi-day leave, and the system automatically excludes weekends when calculating working hours.
+
+### Adding Single-Day Leave
+
+**Via UI:**
+1. Navigate to **Leave** in the menu
+2. Select **Leave Type** (Vacation or Sick Leave)
+3. Choose a **Start Date** and **End Date** (set both to the same day for single-day leave)
+4. Add an optional **Description**
+5. Review the **Leave Preview** showing working hours
+6. Click **"Add Leave"**
+
+**Via CLI:**
+```bash
+# Add a single sick day
+waqt leave-request --from 2026-01-15 --to 2026-01-15 --type sick --desc "Doctor appointment"
+
+# Add a single vacation day
+waqt leave-request --from 2026-01-20 --to 2026-01-20 --type vacation
+```
+
+### Adding Multi-Day Leave
+
+The system automatically handles multi-day leave requests by:
+- Creating individual records for each working day (Monday-Friday)
+- Excluding weekends (Saturday and Sunday)
+- Calculating total working hours based on standard hours per day (default: 8 hours)
+
+**Via UI:**
+1. Navigate to **Leave** in the menu
+2. Select **Leave Type** (Vacation or Sick Leave)
+3. Choose a **Start Date** and **End Date** for your leave period
+4. Add an optional **Description**
+5. Review the **Leave Preview** which shows:
+   - Total calendar days in the range
+   - Number of working days (Mon-Fri only)
+   - Number of weekend days excluded
+   - Total working hours
+6. Click **"Add Leave"**
+
+**Example:** Requesting leave from Monday, Jan 12 to Sunday, Jan 19:
+- Total days: 8
+- Working days: 6 (excludes Saturday and Sunday)
+- Weekend days excluded: 2
+- Working hours: 48 (6 days × 8 hours)
+
+**Via CLI:**
+```bash
+# Request a week of vacation (excludes weekends automatically)
+waqt leave-request --from 2026-01-13 --to 2026-01-19 --type vacation --desc "Winter vacation"
+
+# Request medical leave spanning multiple days
+waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical leave"
+```
+
+The CLI will show you a summary and ask for confirmation before creating the leave records:
+```
+📅 Leave Request Summary
+==================================================
+Start Date: 2026-01-13 (Monday)
+End Date: 2026-01-19 (Sunday)
+Leave Type: Vacation
+Description: Winter vacation
+
+Total Days: 7
+Working Days: 5 (Mon-Fri)
+Weekend Days: 2 (excluded)
+Working Hours: 40:00
+
+Create leave records for these dates? [y/N]:
+```
+
+### Weekend Exclusion
+
+Weekends are automatically detected and excluded from leave requests:
+- **Saturday** (day 6 of the week)
+- **Sunday** (day 7 of the week)
+
+This ensures that:
+- You only use leave days for actual working days
+- Working hours calculations are accurate
+- Leave balances reflect real working days taken
+
+**Example scenarios:**
+- **Fri-Mon leave** (4 calendar days): Only Friday and Monday are recorded as leave (2 working days)
+- **Weekend-only**: If you select only Saturday and Sunday, the system will warn you that no working days are in the range
+- **Full week**: Monday to Sunday (7 days) creates 5 leave records (Mon-Fri only)
+
+### Viewing Leave History
+
+**Via UI:**
+1. Navigate to **Leave** in the menu
+2. View the **Leave History** table showing:
+   - Date and day of week
+   - Leave type (Vacation or Sick Leave)
+   - Description
+   - Delete button for each record
+
+**Current Year Summary:**
+The Leave page displays counters for the current year:
+- **Vacation Days**: Total vacation days taken
+- **Sick Days**: Total sick days taken
+- **Total Leave**: Combined total
+
+### Deleting Leave Records
+
+**Via UI:**
+1. Find the leave record in the **Leave History** table
+2. Click the red **"Delete"** button
+3. Confirm the deletion
+
+**Note:** When you delete a leave day, the counters are automatically updated to reflect the change.
+
+### Leave and Reports
+
+Leave days are included in monthly reports but not in weekly reports:
+- **Monthly Reports**: Show vacation days and sick days taken during the month
+- **Weekly Reports**: Focus only on time entries and overtime
+
+### Tips for Managing Leave
+
+**Planning Ahead:**
+- Add leave requests in advance to plan your schedule
+- Use descriptive notes to remember the reason for leave
+- Check your leave balance regularly
+
+**Multi-Day Requests:**
+- The system automatically handles weekends - just select your desired date range
+- Review the preview before submitting to ensure the correct days are selected
+- Use the CLI for bulk leave requests when planning extended time off
+
+**Accuracy:**
+- Only working days (Mon-Fri) consume your leave balance
+- Weekend days in your date range are ignored
+- Working hours are calculated based on your configured standard hours per day
 
 ## Common Workflows
 
