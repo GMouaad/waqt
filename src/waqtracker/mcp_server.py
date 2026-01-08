@@ -19,6 +19,7 @@ from .utils import (
     format_hours,
     export_time_entries_to_csv,
     get_time_entries_for_period,
+    format_time,
 )
 
 
@@ -167,7 +168,7 @@ def start(
             "message": "Time tracking started!",
             "entry": {
                 "date": entry_date.isoformat(),
-                "start_time": start_time.strftime("%H:%M"),
+                "start_time": format_time(start_time),
                 "description": description,
             },
         }
@@ -242,8 +243,8 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
             "message": "Time tracking ended!",
             "entry": {
                 "date": entry_date.isoformat(),
-                "start_time": open_entry.start_time.strftime("%H:%M"),
-                "end_time": end_time.strftime("%H:%M"),
+                "start_time": format_time(open_entry.start_time),
+                "end_time": format_time(end_time),
                 "duration": format_hours(duration),
                 "duration_hours": duration,
                 "description": open_entry.description,
@@ -323,8 +324,8 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
         for entry in entries[-5:]:  # Last 5 entries
             recent_entries.append({
                 "date": entry.date.isoformat(),
-                "start_time": entry.start_time.strftime("%H:%M"),
-                "end_time": entry.end_time.strftime("%H:%M"),
+                "start_time": format_time(entry.start_time),
+                "end_time": format_time(entry.end_time),
                 "duration": format_hours(entry.duration_hours),
                 "duration_hours": entry.duration_hours,
                 "description": entry.description,
@@ -425,8 +426,8 @@ def list_entries(
                 "id": entry.id,
                 "date": entry.date.isoformat(),
                 "day_of_week": entry.date.strftime("%A"),
-                "start_time": entry.start_time.strftime("%H:%M"),
-                "end_time": entry.end_time.strftime("%H:%M"),
+                "start_time": format_time(entry.start_time),
+                "end_time": format_time(entry.end_time),
                 "duration": format_hours(entry.duration_hours),
                 "duration_hours": entry.duration_hours,
                 "description": entry.description,

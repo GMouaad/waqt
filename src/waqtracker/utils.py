@@ -292,8 +292,8 @@ def export_time_entries_to_csv(
         row = [
             entry.date.isoformat(),
             entry.date.strftime("%A"),
-            entry.start_time.strftime("%H:%M"),
-            entry.end_time.strftime("%H:%M"),
+            format_time(entry.start_time),
+            format_time(entry.end_time),
             f"{entry.duration_hours:.2f}",
             format_hours(entry.duration_hours),
             entry.description,
