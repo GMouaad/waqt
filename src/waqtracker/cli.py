@@ -757,9 +757,11 @@ def update_check(prerelease: bool):
             click.echo()
             click.echo("To install the update, run:")
             if prerelease:
-                click.echo(click.style("  waqt update --prerelease", fg="yellow"))
+                click.echo(
+                    click.style("  waqt update install --prerelease", fg="yellow")
+                )
             else:
-                click.echo(click.style("  waqt update", fg="yellow"))
+                click.echo(click.style("  waqt update install", fg="yellow"))
         else:
             click.echo(click.style("✓ You are running the latest version", fg="green"))
 

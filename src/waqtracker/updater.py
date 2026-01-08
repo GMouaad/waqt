@@ -210,10 +210,12 @@ def download_and_install_update(
         confirm: If True, prompt user for confirmation before proceeding
 
     Returns:
-        True if update was successful, False otherwise
+        True if update was successful
 
     Raises:
-        Exception: If not running as frozen executable or download fails
+        Exception: If not running as frozen executable, no asset found for
+            platform, download fails, extraction fails, or installation fails.
+            On installation failure, attempts to restore previous version.
     """
     if not is_frozen():
         raise Exception(
