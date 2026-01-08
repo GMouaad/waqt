@@ -68,12 +68,20 @@ curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash
 iex "& { $(irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1) } -Prerelease"
 ```
 
+**Note:** You can also switch between stable and prerelease channels using the update command:
+```bash
+waqt update install --prerelease  # Switch to prerelease
+waqt update install               # Switch back to stable
+```
+
 After installation, use `waqt` or `waqtracker` commands:
 ```bash
 waqt --version      # Check version
 waqtracker          # Start the web server (http://localhost:5555)
 waqt start          # Start time tracking from CLI
 waqt summary        # View summary
+waqt update check   # Check for updates
+waqt update         # Self-update to latest version
 ```
 
 ---
@@ -316,6 +324,45 @@ waqt config reset weekly_hours
 - Configuration changes immediately affect calculations
 - Values are validated before being saved
 - Non-default values are marked with an asterisk (*) in list output
+
+#### Check for Updates
+Check if a newer version of waqt is available:
+```bash
+# Check for stable release updates
+waqt update check
+
+# Check for prerelease (dev) updates
+waqt update check --prerelease
+```
+
+#### Self-Update
+Update waqt to the latest version (frozen executables only):
+```bash
+# Update to latest stable release
+waqt update
+
+# Update with confirmation prompt
+waqt update install
+
+# Update without confirmation
+waqt update install --yes
+
+# Update to latest prerelease (dev channel)
+waqt update install --prerelease
+```
+
+**Note:** Self-update only works for frozen executables (installed via `install.sh` or `install.ps1`). If running from source, update using:
+```bash
+cd <waqt-repo-directory>
+git pull
+uv pip install -e .  # or: pip install -e .
+```
+
+#### Display Version Information
+Show the current version and git commit:
+```bash
+waqt version
+```
 
 #### Reference (Placeholder)
 Display reference information:
