@@ -970,3 +970,25 @@ footer p {
         height: 16px;
     }
 }
+
+/* Leave Preview Box */
+.preview-box {
+    margin-top: 10px;
+    padding: 1rem;
+    background-color: var(--bg-primary);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.preview-content {
+    margin-top: 5px;
+}
+
+/* Text Utilities */
+.text-error {
+    color: var(--error-text) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}

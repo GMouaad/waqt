@@ -60,9 +60,9 @@
                 </div>
             </div>
             
-            <div id="leave-preview" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; display: none;">
+            <div id="leave-preview" class="preview-box" style="display: none;">
                 <strong>Leave Preview:</strong>
-                <div id="leave-preview-content" style="margin-top: 5px;"></div>
+                <div id="leave-preview-content" class="preview-content"></div>
             </div>
         </form>
     </div>
@@ -141,7 +141,7 @@
         const end = new Date(endDate + 'T00:00:00');
         
         if (start > end) {
-            previewContent.innerHTML = '<span style="color: #d32f2f;">End date must be on or after start date.</span>';
+            previewContent.innerHTML = '<span class="text-error">End date must be on or after start date.</span>';
             previewDiv.style.display = 'block';
             return;
         }
@@ -152,7 +152,7 @@
         const workingHours = workingDays.length * standardHoursPerDay;
         
         if (workingDays.length === 0) {
-            previewContent.innerHTML = '<span style="color: #f57c00;">Only weekends selected. No working days will be recorded.</span>';
+            previewContent.innerHTML = '<span class="text-warning">Only weekends selected. No working days will be recorded.</span>';
             previewDiv.style.display = 'block';
             return;
         }
@@ -161,7 +161,7 @@
         html += `<div><strong>${allDates.length}</strong> total day${allDates.length !== 1 ? 's' : ''}</div>`;
         html += `<div><strong>${workingDays.length}</strong> working day${workingDays.length !== 1 ? 's' : ''} (Mon-Fri)</div>`;
         if (weekendDays > 0) {
-            html += `<div><span style="color: #666;">${weekendDays} weekend day${weekendDays !== 1 ? 's' : ''} excluded</span></div>`;
+            html += `<div><span class="text-secondary">${weekendDays} weekend day${weekendDays !== 1 ? 's' : ''} excluded</span></div>`;
         }
         html += `<div><strong>${workingHours}</strong> working hours</div>`;
         html += '</div>';
