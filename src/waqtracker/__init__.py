@@ -55,8 +55,15 @@ def create_app():
     # Register routes
     with app.app_context():
         from . import routes
+        from .utils import format_time
 
         app.register_blueprint(routes.bp)
+        
+        # Register Jinja filters
+        @app.template_filter('format_time')
+        def format_time_filter(time_obj):
+            """Jinja filter to format time according to user settings."""
+            return format_time(time_obj)
 
         # Create tables if they don't exist
         db.create_all()

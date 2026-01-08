@@ -37,6 +37,25 @@
                                 >
                                 <span class="checkbox-label">Enable</span>
                             </label>
+                        {% elif setting.input_type == 'select' %}
+                            <div class="select-wrapper">
+                                <select 
+                                    id="{{ setting.key }}" 
+                                    name="{{ setting.key }}"
+                                    class="form-control"
+                                    data-testid="input-{{ setting.key }}"
+                                    required
+                                >
+                                    {% for value, label in setting.options %}
+                                        <option value="{{ value }}" {% if setting.current_value == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <span class="input-hint">
+                                    Default: {{ setting.default_value }}-hour format
+                                </span>
+                            </div>
                         {% elif setting.input_type == 'number' %}
                             <div class="number-input-wrapper">
                                 <input 
@@ -187,6 +206,12 @@
 }
 
 .number-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.select-wrapper {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;

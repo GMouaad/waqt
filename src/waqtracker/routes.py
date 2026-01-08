@@ -31,6 +31,7 @@ from .config import (
     normalize_bool_value,
     get_config_input_type,
     get_config_validation_bounds,
+    get_config_select_options,
 )
 
 bp = Blueprint("main", __name__)
@@ -770,6 +771,11 @@ def settings():
         bounds = get_config_validation_bounds(key)
         if bounds:
             setting_dict.update(bounds)
+
+        # Add select options for dropdown fields
+        options = get_config_select_options(key)
+        if options:
+            setting_dict["options"] = options
 
         settings_data.append(setting_dict)
 

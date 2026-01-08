@@ -96,7 +96,7 @@
                     {% for entry in entries %}
                     <tr>
                         <td>{{ entry.date.strftime('%Y-%m-%d (%a)') }}</td>
-                        <td>{{ entry.start_time.strftime('%H:%M') }} - {{ entry.end_time.strftime('%H:%M') }}</td>
+                        <td>{{ entry.start_time|format_time }} - {{ entry.end_time|format_time }}</td>
                         <td>{{ "%.2f"|format(entry.duration_hours) }}h</td>
                         <td>{{ entry.description }}</td>
                         <td>

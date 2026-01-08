@@ -70,7 +70,7 @@
                     {% for entry in recent_entries %}
                     <tr data-testid="entry-row-{{ entry.id }}">
                         <td>{{ entry.date.strftime('%Y-%m-%d') }}</td>
-                        <td>{{ entry.start_time.strftime('%H:%M') }} - {{ entry.end_time.strftime('%H:%M') }}</td>
+                        <td>{{ entry.start_time|format_time }} - {{ entry.end_time|format_time }}</td>
                         <td>{{ "%.2f"|format(entry.duration_hours) }}h</td>
                         <td>{{ entry.description }}</td>
                         <td>
