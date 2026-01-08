@@ -8,7 +8,7 @@ from io import StringIO
 
 def test_main_no_args_starts_web_app():
     """Test that running without arguments starts the web application."""
-    from waqtracker.__main__ import main
+    from waqt.__main__ import main
     
     # Mock sys.argv to simulate no arguments
     with patch.object(sys, 'argv', ['waqtracker']):
@@ -40,7 +40,7 @@ def test_main_no_args_starts_web_app():
 
 def test_main_port_from_env():
     """Test that port is configured from PORT environment variable."""
-    from waqtracker.__main__ import main
+    from waqt.__main__ import main
     
     # Mock sys.argv
     with patch.object(sys, 'argv', ['waqtracker']):
@@ -65,7 +65,7 @@ def test_main_port_from_env():
 
 def test_main_with_args_runs_cli():
     """Test that running with arguments invokes the CLI."""
-    from waqtracker.__main__ import main
+    from waqt.__main__ import main
     
     # Mock sys.argv to simulate CLI arguments
     with patch.object(sys, 'argv', ['waqtracker', '--version']):
@@ -80,7 +80,7 @@ def test_main_with_args_runs_cli():
 
 def test_main_help_message_frozen_mode():
     """Test that help message shows correct CLI name in frozen mode."""
-    from waqtracker.__main__ import main
+    from waqt.__main__ import main
     
     # Mock sys.argv and sys.frozen
     with patch.object(sys, 'argv', ['waqtracker']):
@@ -102,7 +102,7 @@ def test_main_help_message_frozen_mode():
 
 def test_main_help_message_package_mode():
     """Test that help message shows 'waqt' in package mode."""
-    from waqtracker.__main__ import main
+    from waqt.__main__ import main
     
     # Mock sys.argv (single element = no args, package mode)
     with patch.object(sys, 'argv', ['waqtracker']):
@@ -121,7 +121,7 @@ def test_main_help_message_package_mode():
 
 def test_main_error_handling():
     """Test that errors during app creation are handled gracefully."""
-    from waqtracker.__main__ import main
+    from waqt.__main__ import main
     
     # Mock sys.argv to simulate no arguments
     with patch.object(sys, 'argv', ['waqtracker']):
@@ -147,7 +147,7 @@ def test_main_error_handling():
 
 def test_main_debug_mode_from_env():
     """Test that debug mode is enabled when FLASK_DEBUG is set."""
-    from waqtracker.__main__ import main
+    from waqt.__main__ import main
     
     # Mock sys.argv
     with patch.object(sys, 'argv', ['waqtracker']):
@@ -168,7 +168,7 @@ def test_main_debug_mode_from_env():
 
 def test_main_host_binding():
     """Test that Flask binds to localhost only for security."""
-    from waqtracker.__main__ import main
+    from waqt.__main__ import main
     
     # Mock sys.argv
     with patch.object(sys, 'argv', ['waqtracker']):

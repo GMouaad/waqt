@@ -2,9 +2,9 @@
 
 import pytest
 from click.testing import CliRunner
-from src.waqtracker import create_app, db
-from src.waqtracker.models import Settings
-from src.waqtracker.cli import cli
+from src.waqt import create_app, db
+from src.waqt.models import Settings
+from src.waqt.cli import cli
 
 
 @pytest.fixture

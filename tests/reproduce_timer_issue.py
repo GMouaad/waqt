@@ -1,8 +1,8 @@
 import pytest
 from datetime import datetime, time
-from src.waqtracker.models import TimeEntry
-from src.waqtracker.routes import get_open_entry
-from src.waqtracker import create_app, db
+from src.waqt.models import TimeEntry
+from src.waqt.routes import get_open_entry
+from src.waqt import create_app, db
 
 @pytest.fixture
 def app():

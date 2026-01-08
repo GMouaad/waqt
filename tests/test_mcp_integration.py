@@ -50,7 +50,7 @@ def test_mcp_server_starts():
 def test_mcp_module_can_be_imported():
     """Test that the MCP server module can be imported."""
     result = subprocess.run(
-        [sys.executable, "-c", "from waqtracker.mcp_server import mcp, main"],
+        [sys.executable, "-c", "from waqt.mcp_server import mcp, main"],
         capture_output=True,
         text=True,
     )
@@ -63,7 +63,7 @@ def test_mcp_server_has_tools():
         [
             sys.executable,
             "-c",
-            "from waqtracker.mcp_server import start, end, summary, list_entries, export_entries; "
+            "from waqt.mcp_server import start, end, summary, list_entries, export_entries; "
             "print('success')",
         ],
         capture_output=True,

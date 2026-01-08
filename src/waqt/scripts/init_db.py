@@ -1,7 +1,7 @@
 """Initialize the database and create default settings."""
 
-from waqtracker import create_app, db
-from waqtracker.models import Settings
+from waqt import create_app, db
+from waqt.models import Settings
 
 
 def init_database():
@@ -30,7 +30,7 @@ def init_database():
 
         db.session.commit()
         print("\n✅ Database initialization complete!")
-        print("You can now run the app with: python -m waqtracker.wsgi")
+        print("You can now run the app with: python -m waqt.wsgi")
 
 
 if __name__ == "__main__":
