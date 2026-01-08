@@ -91,6 +91,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: v0.1.${{ github.run_number }}-dev
+          COMMIT_SHA: ${{ github.sha }}
         run: |
           echo "Creating or updating draft release with tag: $TAG"
           
@@ -102,24 +103,27 @@ jobs:
           fi
           
           # Create release notes
-          cat > release_notes.md << 'EOF'
-          Automated draft release from commit ${{ github.sha }}
+          cat > release_notes.md << EOF
+          Automated draft release from commit ${COMMIT_SHA}
 
           ## What's New
           This is an automated development build. Use the Release workflow to publish this as an official release.
 
           ### Artifacts
-          - Linux (x64): `waqtracker-linux-amd64.zip`
-          - macOS (Apple Silicon): `waqtracker-macos-arm64.zip`
-          - Windows (x64): `waqtracker-windows-amd64.zip`
+          - Linux (x64): \`waqtracker-linux-amd64.zip\`
+          - macOS (Apple Silicon): \`waqtracker-macos-arm64.zip\`
+          - Windows (x64): \`waqtracker-windows-amd64.zip\`
           EOF
           
           # Create new draft release
-          gh release create "$TAG" \
+          if ! gh release create "$TAG" \
             --draft \
             --title "waqtracker $TAG" \
             --notes-file release_notes.md \
-            --target "${{ github.sha }}"
+            --target "${{ github.sha }}"; then
+            echo "Error: Failed to create draft release for tag $TAG"
+            exit 1
+          fi
           
           echo "Draft release created successfully"
 
@@ -130,8 +134,17 @@ jobs:
         run: |
           echo "Uploading artifacts to release $TAG..."
           
-          # Upload all zip files from the artifacts directory
-          find artifacts -name "*.zip" -type f | while read -r file; do
+          # Find all zip files from the artifacts directory
+          zip_files=$(find artifacts -name "*.zip" -type f)
+          
+          # Fail if no zip artifacts were found
+          if [ -z "$zip_files" ]; then
+            echo "Error: No .zip artifacts found in artifacts/ directory. Failing release upload step." >&2
+            exit 1
+          fi
+          
+          # Upload all found zip files
+          echo "$zip_files" | while read -r file; do
             echo "Uploading: $file"
             gh release upload "$TAG" "$file" --clobber
           done
