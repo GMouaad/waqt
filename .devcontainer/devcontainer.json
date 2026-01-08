@@ -1,5 +1,5 @@
 {
-	"name": "Waqtracker Development",
+	"name": "Waqt Development",
 	"build": {
 		"dockerfile": "Dockerfile",
 		"context": "."
@@ -41,7 +41,7 @@
 		}
 	},
 
-	"postCreateCommand": "uv pip install -e '.[dev]' && python -m waqtracker.scripts.init_db",
+	"postCreateCommand": "uv pip install -e '.[dev]' && python -m waqt.scripts.init_db",
 
 	"remoteUser": "vscode",
 

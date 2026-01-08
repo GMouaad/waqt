@@ -35,7 +35,7 @@ iex "& { $(irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1) 
 After installation, use these commands:
 ```bash
 waqt --version      # Check version
-waqtracker          # Start the web server (http://localhost:5555)
+waqt          # Start the web server (http://localhost:5555)
 waqt start          # Start time tracking from CLI
 waqt summary        # View summary
 ```
@@ -194,7 +194,7 @@ The Waqt application is designed to be **self-initializing**. When you run the a
 If you prefer to initialize the database manually before running the app, you can use:
 
 ```bash
-python -m waqtracker.scripts.init_db
+python -m waqt.scripts.init_db
 ```
 
 This creates a `time_tracker.db` file in your project directory with all default settings.
@@ -204,7 +204,7 @@ This creates a `time_tracker.db` file in your project directory with all default
 Start the Flask development server:
 
 ```bash
-python -m waqtracker.wsgi
+waqt ui
 ```
 
 You should see output like:
@@ -341,9 +341,9 @@ To verify your installation is working correctly:
 - Another application is using port 5555
 - Find and stop the other application
 - Or set the `PORT` environment variable to use a different port (e.g., 5556):
-  - Linux/macOS: `PORT=5556 python -m waqtracker.wsgi`
-  - Windows (CMD): `set PORT=5556 && python -m waqtracker.wsgi`
-  - Windows (PowerShell): `$env:PORT=5556; python -m waqtracker.wsgi`
+  - Linux/macOS: `PORT=5556 waqt ui`
+  - Windows (CMD): `set PORT=5556 && waqt ui`
+  - Windows (PowerShell): `$env:PORT=5556; waqt ui`
 
 ### Virtual Environment Not Activating
 

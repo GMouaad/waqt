@@ -13,7 +13,7 @@ Model Context Protocol (MCP) is an open protocol that standardizes how applicati
 The MCP server is included with the Waqtracker package. After installing Waqtracker:
 
 ```bash
-# Install waqtracker with MCP support
+# Install waqt with MCP support
 pip install -e .
 
 # Or using uv
@@ -43,7 +43,7 @@ To use the Waqtracker MCP server with an MCP-compatible client, you'll need to c
 ```json
 {
   "mcpServers": {
-    "waqtracker": {
+    "waqt": {
       "command": "waqt-mcp",
       "env": {}
     }
@@ -355,7 +355,7 @@ Example error response:
 
 ### Server Won't Start
 
-- Ensure waqtracker is properly installed: `pip install -e .`
+- Ensure waqt is properly installed: `pip install -e .`
 - Check that database is initialized: `python init_db.py`
 - Verify Python version: Requires Python 3.11+
 
@@ -409,7 +409,7 @@ pytest tests/test_mcp_server.py -v
 pytest tests/test_mcp_server.py::test_start_basic -v
 
 # Run with coverage
-pytest tests/test_mcp_server.py --cov=src.waqtracker.mcp_server
+pytest tests/test_mcp_server.py --cov=src.waqt.mcp_server
 ```
 
 ## References
