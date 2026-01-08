@@ -32,7 +32,7 @@ def format_time(time_obj: datetime_time, time_format: Optional[str] = None) -> s
         if display_hour == 0:
             display_hour = 12
         
-        return f"{display_hour:02d}:{minute:02d} {am_pm}"
+        return f"{display_hour:d}:{minute:02d} {am_pm}"
     else:
         # Default to 24-hour format
         return time_obj.strftime("%H:%M")

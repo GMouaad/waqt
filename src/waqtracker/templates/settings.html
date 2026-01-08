@@ -53,7 +53,11 @@
                                     {% endfor %}
                                 </select>
                                 <span class="input-hint">
-                                    Default: {{ setting.default_value }}-hour format
+                                    {% if setting.key == 'time_format' %}
+                                        Default: 24-hour format
+                                    {% else %}
+                                        Default: {{ setting.default_value }}
+                                    {% endif %}
                                 </span>
                             </div>
                         {% elif setting.input_type == 'number' %}

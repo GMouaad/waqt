@@ -54,15 +54,15 @@ def test_format_time_12_hour(app):
         # Set time format to 12-hour
         Settings.set_setting("time_format", "12")
         
-        # Test morning time
+        # Test morning time (single digit hour)
         time_obj = time(9, 30)
         formatted = format_time(time_obj)
-        assert formatted == "09:30 AM"
+        assert formatted == "9:30 AM"
         
-        # Test afternoon time
+        # Test afternoon time (single digit hour)
         time_obj = time(14, 45)
         formatted = format_time(time_obj)
-        assert formatted == "02:45 PM"
+        assert formatted == "2:45 PM"
         
         # Test midnight
         time_obj = time(0, 0)
@@ -77,7 +77,7 @@ def test_format_time_12_hour(app):
         # Test 1 PM
         time_obj = time(13, 0)
         formatted = format_time(time_obj)
-        assert formatted == "01:00 PM"
+        assert formatted == "1:00 PM"
         
         # Test 11 PM
         time_obj = time(23, 59)
@@ -104,7 +104,7 @@ def test_format_time_with_explicit_format(app):
         
         # Test with explicit 12-hour format
         formatted = format_time(time_obj, "12")
-        assert formatted == "03:30 PM"
+        assert formatted == "3:30 PM"
 
 
 def test_time_format_setting_validation(app):

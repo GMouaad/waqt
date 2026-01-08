@@ -7,13 +7,6 @@ from . import db
 logger = logging.getLogger(__name__)
 
 
-def _format_time_for_dict(time_obj):
-    """Helper to format time for dictionary serialization."""
-    # Import here to avoid circular imports
-    from .utils import format_time
-    return format_time(time_obj)
-
-
 class TimeEntry(db.Model):
     """Model for tracking work time entries."""
 
@@ -35,11 +28,14 @@ class TimeEntry(db.Model):
 
     def to_dict(self):
         """Convert to dictionary for JSON serialization."""
+        # Import here to avoid circular imports
+        from .utils import format_time
+        
         return {
             "id": self.id,
             "date": self.date.isoformat(),
-            "start_time": _format_time_for_dict(self.start_time),
-            "end_time": _format_time_for_dict(self.end_time),
+            "start_time": format_time(self.start_time),
+            "end_time": format_time(self.end_time),
             "duration_hours": self.duration_hours,
             "description": self.description,
             "created_at": self.created_at.isoformat(),
