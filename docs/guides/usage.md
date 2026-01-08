@@ -228,8 +228,8 @@ Create leave records for these dates? [y/N]:
 ### Weekend Exclusion
 
 Weekends are automatically detected and excluded from leave requests:
-- **Saturday** (day 6 of the week)
-- **Sunday** (day 7 of the week)
+- **Saturday** (weekday 5 in Python's `weekday()` method)
+- **Sunday** (weekday 6 in Python's `weekday()` method)
 
 This ensures that:
 - You only use leave days for actual working days

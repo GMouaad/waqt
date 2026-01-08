@@ -73,8 +73,9 @@ def calculate_leave_hours(start_date: date, end_date: date) -> Dict:
         - weekend_days: Number of weekend days
         - working_hours: Total working hours (working_days * standard_hours_per_day)
     """
+    # Generate date range once and reuse it
     all_dates = get_date_range(start_date, end_date)
-    working_days_list = get_working_days_in_range(start_date, end_date)
+    working_days_list = [d for d in all_dates if not is_weekend(d)]
     
     total_days = len(all_dates)
     working_days = len(working_days_list)

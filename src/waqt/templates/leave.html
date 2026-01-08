@@ -110,8 +110,8 @@
     const previewDiv = document.getElementById('leave-preview');
     const previewContent = document.getElementById('leave-preview-content');
     
-    // Get standard hours from backend
-    const standardHoursPerDay = {{ standard_hours_per_day }};
+    // Get standard hours from backend (safely serialized)
+    const standardHoursPerDay = {{ standard_hours_per_day | tojson }};
     
     function isWeekend(date) {
         const day = date.getDay();
