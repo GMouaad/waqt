@@ -110,6 +110,9 @@
     const previewDiv = document.getElementById('leave-preview');
     const previewContent = document.getElementById('leave-preview-content');
     
+    // Get standard hours from backend
+    const standardHoursPerDay = {{ standard_hours_per_day }};
+    
     function isWeekend(date) {
         const day = date.getDay();
         return day === 0 || day === 6; // Sunday = 0, Saturday = 6
@@ -146,7 +149,7 @@
         const allDates = getDateRange(start, end);
         const workingDays = allDates.filter(d => !isWeekend(d));
         const weekendDays = allDates.length - workingDays.length;
-        const workingHours = workingDays.length * 8; // Standard 8 hours per day
+        const workingHours = workingDays.length * standardHoursPerDay;
         
         if (workingDays.length === 0) {
             previewContent.innerHTML = '<span style="color: #f57c00;">Only weekends selected. No working days will be recorded.</span>';

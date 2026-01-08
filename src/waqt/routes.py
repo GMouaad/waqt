@@ -640,6 +640,7 @@ def leave():
         sick_count=sick_count,
         current_year=current_year,
         today=datetime.now().date(),
+        standard_hours_per_day=Settings.get_float("standard_hours_per_day", 8.0),
     )
 
 
