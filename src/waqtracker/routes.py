@@ -29,10 +29,10 @@ bp = Blueprint("main", __name__)
 
 def get_open_entry():
     """Get the currently running timer entry if any."""
-    today = datetime.now().date()
-    # Find entry with is_active=True
+    # Find entry with is_active=True (don't restrict to today's date)
+    # This handles cases where a timer was started late at night and is still running
     return (
-        TimeEntry.query.filter_by(date=today, is_active=True)
+        TimeEntry.query.filter_by(is_active=True)
         .order_by(TimeEntry.created_at.desc())
         .first()
     )
