@@ -385,7 +385,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const tooltipAddEntry = document.getElementById('tooltip-add-entry');
             
             // Format date nicely - parse the date in a timezone-safe manner
-            // data.date is in YYYY-MM-DD format
+            // We deliberately avoid using `new Date(data.date)` because parsing
+            // bare 'YYYY-MM-DD' strings is implementation-dependent and often
+            // treated as UTC, which can cause off-by-one-day errors depending
+            // on the user's timezone. Constructing the Date from (year, month - 1, day)
+            // ensures consistent local calendar dates.
             const [year, month, day] = data.date.split('-').map(num => parseInt(num, 10));
             const dateObj = new Date(year, month - 1, day);
             const formattedDate = dateObj.toLocaleDateString('en-US', { 
@@ -403,7 +407,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.has_leave) {
                 const leaveIcon = data.leave.leave_type === 'vacation' ? '🏖️' : '🤒';
                 const leaveLabel = data.leave.leave_type === 'vacation' ? 'Vacation' : 'Sick Leave';
-                bodyHTML += `<div class="tooltip-entry"><strong>${leaveIcon} ${leaveLabel}</strong>`;
+                const leaveIconAria = data.leave.leave_type === 'vacation' ? 'Vacation day' : 'Sick leave';
+                bodyHTML += `<div class="tooltip-entry"><strong><span role="img" aria-label="${leaveIconAria}">${leaveIcon}</span> ${leaveLabel}</strong>`;
                 if (data.leave.description) {
                     bodyHTML += `<br>${data.leave.description}`;
                 }
@@ -422,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 bodyHTML += `<div style="margin-top: 0.5rem;"><strong>Total: ${data.total_hours}h</strong></div>`;
             } else if (!data.has_leave) {
-                bodyHTML += '<div style="color: var(--warning-color);">⚠️ No entry for this day</div>';
+                bodyHTML += '<div style="color: var(--text-secondary);"><span role="img" aria-label="Warning">⚠️</span> No entry for this day</div>';
             }
             
             tooltipBody.innerHTML = bodyHTML;

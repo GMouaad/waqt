@@ -88,7 +88,11 @@
                                     {% endif %}
                                     {% if day.has_leave %}
                                         <div class="calendar-day-badge">
-                                            {% if day.leave_type == 'vacation' %}🏖️{% else %}🤒{% endif %}
+                                            {% if day.leave_type == 'vacation' %}
+                                                <span role="img" aria-label="Vacation day">🏖️</span>
+                                            {% else %}
+                                                <span role="img" aria-label="Sick leave">🤒</span>
+                                            {% endif %}
                                         </div>
                                     {% endif %}
                                 </div>

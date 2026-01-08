@@ -183,3 +183,23 @@ def test_dashboard_includes_calendar(client):
     assert b"calendar-section" in response.data
     assert b"Monthly Overview" in response.data
     assert b"calendar-grid" in response.data
+
+
+def test_calendar_api_endpoint_out_of_range_date(client):
+    """Test the calendar day details API endpoint with date out of valid range."""
+    # Test year too far in the past
+    response = client.get("/api/calendar/day/1800-01-01")
+    assert response.status_code == 400
+    
+    data = response.get_json()
+    assert data["success"] is False
+    assert "out of valid range" in data["message"]
+    
+    # Test year too far in the future
+    response = client.get("/api/calendar/day/2200-01-01")
+    assert response.status_code == 400
+    
+    data = response.get_json()
+    assert data["success"] is False
+    assert "out of valid range" in data["message"]
+

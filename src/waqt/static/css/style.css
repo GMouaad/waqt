@@ -809,11 +809,6 @@ footer p {
     border-color: var(--entry-border);
 }
 
-[data-theme="dark"] .calendar-day.has-entry {
-    background: var(--entry-bg);
-    border-color: var(--entry-border);
-}
-
 .calendar-day.has-leave {
     border-width: 2px;
     border-style: dashed;
@@ -834,11 +829,6 @@ footer p {
     border-color: var(--warning-border);
 }
 
-[data-theme="dark"] .calendar-day.no-entry:not(.today) {
-    background: var(--warning-bg);
-    border-color: var(--warning-border);
-}
-
 .calendar-day-info {
     font-size: 0.75rem;
     text-align: center;
@@ -847,10 +837,6 @@ footer p {
 .calendar-hours {
     color: var(--entry-text);
     font-weight: 600;
-}
-
-[data-theme="dark"] .calendar-hours {
-    color: var(--entry-text);
 }
 
 .calendar-day-badge {
@@ -888,11 +874,6 @@ footer p {
     border-color: var(--entry-border);
 }
 
-[data-theme="dark"] .legend-color.has-entry-color {
-    background: var(--entry-bg);
-    border-color: var(--entry-border);
-}
-
 .legend-color.has-leave-vacation {
     background: var(--badge-vacation-bg);
     border-color: var(--entry-border);
@@ -904,11 +885,6 @@ footer p {
 }
 
 .legend-color.no-entry-color {
-    background: var(--warning-bg);
-    border-color: var(--warning-border);
-}
-
-[data-theme="dark"] .legend-color.no-entry-color {
     background: var(--warning-bg);
     border-color: var(--warning-border);
 }
