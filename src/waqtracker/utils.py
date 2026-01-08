@@ -7,17 +7,20 @@ from typing import List, Dict, Tuple, Optional
 from .models import TimeEntry, LeaveDay, Settings
 
 
-def format_time(time_obj: datetime_time, time_format: Optional[str] = None) -> str:
+def format_time(time_obj: Optional[datetime_time], time_format: Optional[str] = None) -> str:
     """
     Format a time object according to the user's preferred time format.
     
     Args:
-        time_obj: datetime.time object to format
+        time_obj: datetime.time object to format. If None, returns an empty string.
         time_format: Time format preference ('12' or '24'). If None, reads from settings.
     
     Returns:
-        Formatted time string (e.g., '13:30' or '01:30 PM')
+        Formatted time string (e.g., '13:30' or '01:30 PM'), or empty string if time_obj is None
     """
+    if time_obj is None:
+        return ""
+    
     if time_format is None:
         time_format = Settings.get_setting("time_format", "24")
     

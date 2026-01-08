@@ -21,6 +21,12 @@ def app():
         db.drop_all()
 
 
+@pytest.fixture
+def client(app):
+    """Create a test client for the app."""
+    return app.test_client()
+
+
 def test_format_time_24_hour(app):
     """Test time formatting with 24-hour format."""
     with app.app_context():
@@ -107,6 +113,21 @@ def test_format_time_with_explicit_format(app):
         assert formatted == "3:30 PM"
 
 
+def test_format_time_with_none(app):
+    """Test format_time with None input for defensive programming."""
+    with app.app_context():
+        # Test with None time_obj
+        formatted = format_time(None)
+        assert formatted == ""
+        
+        # Test with None and explicit format
+        formatted = format_time(None, "12")
+        assert formatted == ""
+        
+        formatted = format_time(None, "24")
+        assert formatted == ""
+
+
 def test_time_format_setting_validation(app):
     """Test that time_format setting validates correctly."""
     with app.app_context():
@@ -129,3 +150,79 @@ def test_time_format_setting_validation(app):
         is_valid, error = validate_config_value("time_format", "invalid")
         assert is_valid is False
         assert error is not None
+
+
+def test_format_time_jinja_filter_registered(app):
+    """Test that the format_time Jinja filter is properly registered."""
+    with app.app_context():
+        # Check that the filter is registered in the Jinja environment
+        assert 'format_time' in app.jinja_env.filters
+
+
+def test_format_time_jinja_filter_in_template(app, client):
+    """Test that format_time filter works in template rendering."""
+    with app.app_context():
+        from datetime import time, date
+        from src.waqtracker.models import TimeEntry
+        
+        # Set time format to 12-hour
+        Settings.set_setting("time_format", "12")
+        
+        # Create a test time entry
+        entry = TimeEntry(
+            date=date.today(),
+            start_time=time(9, 30),
+            end_time=time(17, 45),
+            duration_hours=8.25,
+            description="Test entry"
+        )
+        db.session.add(entry)
+        db.session.commit()
+        
+        # Get the dashboard page
+        response = client.get("/")
+        assert response.status_code == 200
+        
+        # Check that times are displayed in 12-hour format
+        assert b"9:30 AM" in response.data
+        assert b"5:45 PM" in response.data
+        
+        # Change to 24-hour format
+        Settings.set_setting("time_format", "24")
+        
+        # Get the dashboard page again
+        response = client.get("/")
+        assert response.status_code == 200
+        
+        # Check that times are displayed in 24-hour format
+        assert b"09:30" in response.data
+        assert b"17:45" in response.data
+
+
+def test_format_time_in_reports_page(app, client):
+    """Test that format_time filter works correctly in reports page."""
+    with app.app_context():
+        from datetime import time, date
+        from src.waqtracker.models import TimeEntry
+        
+        # Set time format to 12-hour
+        Settings.set_setting("time_format", "12")
+        
+        # Create a test time entry
+        entry = TimeEntry(
+            date=date.today(),
+            start_time=time(14, 15),
+            end_time=time(18, 30),
+            duration_hours=4.25,
+            description="Report test entry"
+        )
+        db.session.add(entry)
+        db.session.commit()
+        
+        # Get the reports page
+        response = client.get("/reports")
+        assert response.status_code == 200
+        
+        # Check that times are displayed in 12-hour format
+        assert b"2:15 PM" in response.data
+        assert b"6:30 PM" in response.data

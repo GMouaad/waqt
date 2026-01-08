@@ -687,20 +687,26 @@ def settings():
             for key in CONFIG_DEFAULTS.keys():
                 config_type = CONFIG_TYPES.get(key)
 
+                # Get current value first
+                current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
+
                 # Get the new value from form
                 if config_type == "bool":
                     # Checkbox: checked = "on", unchecked = not in form
                     new_value = "true" if request.form.get(key) == "on" else "false"
                 else:
-                    new_value = request.form.get(key, "").strip()
-                    if not new_value:
-                        errors.append(
-                            f"{CONFIG_DISPLAY_NAMES.get(key, key)}: Value cannot be empty"
-                        )
-                        continue
-
-                # Get current value
-                current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
+                    # Check if field is in the form at all
+                    if key not in request.form:
+                        # Field not provided - use current value
+                        new_value = current_value
+                    else:
+                        # Field provided - validate even if empty
+                        new_value = request.form.get(key, "").strip()
+                        if not new_value:
+                            errors.append(
+                                f"{CONFIG_DISPLAY_NAMES.get(key, key)}: Value cannot be empty"
+                            )
+                            continue
 
                 # Skip if value hasn't changed
                 if new_value == current_value:
