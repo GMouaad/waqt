@@ -184,7 +184,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 
 2. **Manually install dependencies:**
    ```bash
-   pip install -e ".[dev]"
+   uv pip install -e ".[dev]"
    ```
 
 ### Database Issues

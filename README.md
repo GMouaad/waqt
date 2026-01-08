@@ -232,6 +232,19 @@ waqt ui
 
 The `waqt` command-line tool provides a quick and convenient way to track time from your terminal.
 
+**Using uv (Recommended):**
+You can run commands directly without activating a virtual environment:
+```bash
+uv run waqt start
+uv run waqt summary
+```
+
+**Using activated environment:**
+```bash
+waqt start
+waqt summary
+```
+
 ### Available Commands
 
 #### Start Tracking Time

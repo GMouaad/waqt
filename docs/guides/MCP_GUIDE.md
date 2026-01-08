@@ -14,10 +14,10 @@ The MCP server is included with the Waqt package. After installing Waqt:
 
 ```bash
 # Install waqt with MCP support
-pip install -e .
-
-# Or using uv
 uv pip install -e .
+
+# Or using pip (legacy)
+pip install -e .
 ```
 
 The `waqt-mcp` command will be available after installation.
@@ -28,6 +28,12 @@ The `waqt-mcp` command will be available after installation.
 
 The MCP server runs in stdio mode, which is the standard transport for MCP:
 
+**Using uv (Recommended):**
+```bash
+uv run waqt-mcp
+```
+
+**Using activated environment:**
 ```bash
 waqt-mcp
 ```
@@ -44,12 +50,15 @@ To use the Waqt MCP server with an MCP-compatible client, you'll need to configu
 {
   "mcpServers": {
     "waqt": {
-      "command": "waqt-mcp",
+      "command": "uv",
+      "args": ["run", "waqt-mcp"],
       "env": {}
     }
   }
 }
 ```
+
+**Note:** If using the legacy installation method, replace `command` with `waqt-mcp` and remove `args`.
 
 **Using with other MCP clients:**
 
@@ -355,7 +364,7 @@ Example error response:
 
 ### Server Won't Start
 
-- Ensure waqt is properly installed: `pip install -e .`
+- Ensure waqt is properly installed: `uv pip install -e .`
 - Check that database is initialized: `python init_db.py`
 - Verify Python version: Requires Python 3.11+
 

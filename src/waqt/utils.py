@@ -128,7 +128,7 @@ def format_time(time_obj: Optional[datetime_time], time_format: Optional[str] = 
         return time_obj.strftime("%H:%M")
 
 
-def parse_time_input(time_str: str, time_format: str = "24") -> datetime.time:
+def parse_time_input(time_str: str, time_format: str = "24") -> datetime_time:
     """
     Parse a time string based on the configured format.
     

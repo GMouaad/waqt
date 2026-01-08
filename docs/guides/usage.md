@@ -43,6 +43,12 @@ Windows:
    waqt ui
    ```
 
+**Using uv (Recommended):**
+You can run the application directly without manual activation:
+```bash
+uv run waqt ui
+```
+
 3. Open your browser to `http://localhost:5555`
 
 ### Stopping the Server

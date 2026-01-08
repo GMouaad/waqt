@@ -32,7 +32,7 @@ This project includes comprehensive end-to-end (E2E) browser tests using Playwri
 
 1. **Install Dependencies**:
    ```bash
-   pip install -e ".[dev]"
+   uv pip install -e ".[dev]"
    ```
 
 2. **Install Playwright Browsers** (required for E2E tests):
