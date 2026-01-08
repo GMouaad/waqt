@@ -2,9 +2,9 @@
 
 import pytest
 from datetime import time, date
-from src.waqtracker import create_app, db
-from src.waqtracker.models import TimeEntry, LeaveDay, Settings
-from src.waqtracker.utils import (
+from src.waqt import create_app, db
+from src.waqt.models import TimeEntry, LeaveDay, Settings
+from src.waqt.utils import (
     calculate_duration,
     calculate_daily_overtime,
     get_week_bounds,

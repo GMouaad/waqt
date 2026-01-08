@@ -1,8 +1,8 @@
 """Unit tests for the settings UI."""
 
 import pytest
-from src.waqtracker import create_app, db
-from src.waqtracker.models import Settings
+from src.waqt import create_app, db
+from src.waqt.models import Settings
 
 
 @pytest.fixture

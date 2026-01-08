@@ -195,7 +195,7 @@ uv pip install -e ".[dev]"
 pytest tests/ -v
 
 # With coverage
-pytest tests/ --cov=src.waqtracker
+pytest tests/ --cov=src.waqt
 ```
 
 ### Code Formatting and Linting

@@ -3,8 +3,8 @@
 import pytest
 import json
 from datetime import datetime, time, date
-from src.waqtracker import create_app, db
-from src.waqtracker.models import TimeEntry
+from src.waqt import create_app, db
+from src.waqt.models import TimeEntry
 
 @pytest.fixture
 def app():

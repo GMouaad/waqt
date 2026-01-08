@@ -1,4 +1,4 @@
-"""CLI interface for waqtracker time tracking application."""
+"""CLI interface for waqt time tracking application."""
 
 import click
 from datetime import datetime
@@ -34,7 +34,7 @@ from .updater import (
 @click.group()
 @click.version_option(version=VERSION, prog_name="waqt")
 def cli():
-    """Waqt - Time tracking CLI for waqtracker application.
+    """Waqt - Time tracking CLI for waqt application.
 
     A command-line interface for tracking work hours, managing time entries,
     and generating reports.
@@ -1084,6 +1084,56 @@ def update_install(yes: bool, prerelease: bool):
 
     except Exception as e:
         click.echo(click.style(f"\n❌ Error during update: {e}", fg="red"))
+        raise click.exceptions.Exit(1)
+
+
+@cli.command()
+@click.option(
+    "--port",
+    "-p",
+    type=int,
+    default=5555,
+    help="Port to run the web server on (default: 5555)",
+)
+@click.option(
+    "--host",
+    "-h",
+    type=str,
+    default="127.0.0.1",
+    help="Host to bind the web server to (default: 127.0.0.1)",
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    help="Run in debug mode (not recommended for production)",
+)
+def ui(port: int, host: str, debug: bool):
+    """Start the web UI for interactive time tracking.
+
+    Launches the Flask web application that provides a graphical interface
+    for managing time entries, viewing reports, and configuring settings.
+
+    Examples:
+        waqt ui
+        waqt ui --port 8080
+        waqt ui --host 0.0.0.0 --port 8000
+        waqt ui --debug
+    """
+    click.echo(click.style("\n🚀 Starting waqt web application...", fg="cyan", bold=True))
+    click.echo(f"Access the application at: http://{host}:{port}")
+    click.echo("\nPress Ctrl+C to stop the server.")
+    click.echo("-" * 50)
+    click.echo()
+
+    try:
+        app = create_app()
+        app.run(debug=debug, host=host, port=port)
+    except Exception as e:
+        click.echo(click.style(f"\n❌ Error starting application: {e}", fg="red"))
+        click.echo("\nPlease check that:")
+        click.echo(f"  - Port {port} is not already in use")
+        click.echo("  - You have write permissions in the current directory")
+        click.echo("  - All required dependencies are available")
         raise click.exceptions.Exit(1)
 
 

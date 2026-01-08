@@ -25,7 +25,7 @@ This repository contains a portable Python time tracking application built with 
 ```
 waqt/
 ├── src/
-│   └── waqtracker/          # Main application package
+│   └── waqt/          # Main application package
 │       ├── __init__.py      # Flask app factory
 │       ├── models.py        # SQLAlchemy models
 │       ├── routes.py        # Route handlers
@@ -147,8 +147,8 @@ waqt/
 1. Create virtual environment: `python -m venv venv`
 2. Activate: `source venv/bin/activate` (Unix) or `venv\Scripts\activate` (Windows)
 3. Install dependencies: `pip install -e .`
-4. Initialize database: `python -m waqtracker.scripts.init_db`
-5. Run app: `python -m waqtracker.wsgi`
+4. Initialize database: `python -m waqt.scripts.init_db`
+5. Run app: `python -m waqt.wsgi`
 
 ### Running Tests
 ```bash
@@ -199,7 +199,7 @@ def new_feature():
 
 ### Database Query Example
 ```python
-from src.waqtracker.models import TimeEntry
+from src.waqt.models import TimeEntry
 from datetime import datetime
 
 # Get all entries for a date

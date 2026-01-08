@@ -43,12 +43,12 @@ The fastest and most modern way to set up the development environment:
 
 5. **Initialize Database**
    ```bash
-   python -m waqtracker.scripts.init_db
+   python -m waqt.scripts.init_db
    ```
 
 6. **Run the Application**
    ```bash
-   python -m waqtracker.wsgi
+   python -m waqt.wsgi
    ```
 
 ### Legacy: Using pip (Deprecated)
@@ -74,19 +74,19 @@ The fastest and most modern way to set up the development environment:
 
 4. **Initialize Database**
    ```bash
-   python -m waqtracker.scripts.init_db
+   python -m waqt.scripts.init_db
    ```
 
 5. **Run the Application**
    ```bash
-   python -m waqtracker.wsgi
+   python -m waqt.wsgi
    ```
 
 ## Running Tests
 
 ```bash
 pytest tests/ -v
-pytest tests/ --cov=src.waqtracker  # With coverage report
+pytest tests/ --cov=src.waqt  # With coverage report
 ```
 
 ## Code Style
@@ -107,7 +107,7 @@ pytest tests/ --cov=src.waqtracker  # With coverage report
 
 3. Run linting:
    ```bash
-   flake8 src/waqtracker/ tests/
+   flake8 src/waqt/ tests/
    ```
 
 4. Commit your changes:
@@ -120,7 +120,7 @@ pytest tests/ --cov=src.waqtracker  # With coverage report
 
 ## Project Structure
 
-- `src/waqtracker/` - Main application code
+- `src/waqt/` - Main application code
   - `__init__.py` - Flask app factory
   - `models.py` - Database models
   - `routes.py` - Route handlers

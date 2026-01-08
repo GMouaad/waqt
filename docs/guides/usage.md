@@ -39,7 +39,7 @@ start.bat
 
 2. Run the application:
    ```bash
-   python -m waqtracker.wsgi
+   waqt ui
    ```
 
 3. Open your browser to `http://localhost:5555`
@@ -284,8 +284,8 @@ GROUP BY month;
 You can automate time entry creation with scripts:
 
 ```python
-from waqtracker import create_app, db
-from waqtracker.models import TimeEntry
+from waqt import create_app, db
+from waqt.models import TimeEntry
 from datetime import datetime, time
 ```
 

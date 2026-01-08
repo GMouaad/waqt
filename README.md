@@ -75,10 +75,10 @@ waqt update install --prerelease  # Switch to prerelease
 waqt update install               # Switch back to stable
 ```
 
-After installation, use `waqt` or `waqtracker` commands:
+After installation, use `waqt` commands:
 ```bash
 waqt --version      # Check version
-waqtracker          # Start the web server (http://localhost:5555)
+waqt ui             # Start the web UI (http://localhost:5555)
 waqt start          # Start time tracking from CLI
 waqt summary        # View summary
 waqt update check   # Check for updates
@@ -94,31 +94,31 @@ Alternatively, you can manually download a pre-built executable for your platfor
 1. **Download the latest release:**
    - Go to the [Releases page](https://github.com/GMouaad/waqt/releases)
    - Download the zip file for your platform:
-     - **Linux (x64)**: `waqtracker-linux-amd64.zip`
-     - **macOS (Intel)**: `waqtracker-macos-amd64.zip`
-     - **macOS (Apple Silicon)**: `waqtracker-macos-arm64.zip`
-     - **Windows (x64)**: `waqtracker-windows-amd64.zip`
+     - **Linux (x64)**: `waqt-linux-amd64.zip`
+     - **macOS (Intel)**: `waqt-macos-amd64.zip`
+     - **macOS (Apple Silicon)**: `waqt-macos-arm64.zip`
+     - **Windows (x64)**: `waqt-windows-amd64.zip`
 
 2. **Extract and run:**
    ```bash
    # Linux/macOS
-   unzip waqtracker-*.zip
-   chmod +x waqtracker  # macOS/Linux only
-   ./waqtracker
+   unzip waqt-*.zip
+   chmod +x waqt  # macOS/Linux only
+   ./waqt
    
    # Windows PowerShell
-   Expand-Archive waqtracker-windows-amd64.zip
-   .\waqtracker.exe
+   Expand-Archive waqt-windows-amd64.zip
+   .\waqt.exe
    ```
 
 3. **Access:** Open `http://localhost:5555` in your browser
 
 **CLI Usage:** When running the standalone executable, pass CLI commands directly as arguments:
 ```bash
-./waqtracker --version      # Check version
-./waqtracker start          # Start time tracking
-./waqtracker end            # End time tracking
-./waqtracker summary        # View summary
+./waqt --version      # Check version
+./waqt start          # Start time tracking
+./waqt end            # End time tracking
+./waqt summary        # View summary
 ```
 
 ### Option 2: Using uv (Recommended for Source Installation)
@@ -148,7 +148,7 @@ The fastest way to get started from source is using `uv`, a modern Python packag
    uv venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    uv pip install -e .
-   python -m waqtracker.wsgi   # Database initialized automatically on first run
+   waqt ui   # Database initialized automatically on first run
    ```
 
 3. **Access:** Open `http://localhost:5555`
@@ -178,7 +178,7 @@ The easiest way to get started is using the pre-configured development container
 
 4. **Run the application:**
    ```bash
-   python -m waqtracker.wsgi
+   waqt ui
    ```
    Access at `http://localhost:5555`
 
@@ -215,7 +215,7 @@ pip install -e .
 
 4. Run the application:
 ```bash
-python -m waqtracker.wsgi
+waqt ui
 ```
 
 *Note: The database is automatically initialized and migrated on first run.*
@@ -410,7 +410,7 @@ Add to your Claude Desktop configuration (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "waqtracker": {
+    "waqt": {
       "command": "waqt-mcp",
       "env": {}
     }
@@ -447,7 +447,7 @@ For detailed usage instructions, workflows, and examples, see the **[Usage Guide
 ```
 waqt/
 ├── src/
-│   └── waqtracker/          # Main application package
+│   └── waqt/          # Main application package
 │       ├── __init__.py      # Flask app initialization
 │       ├── models.py        # Database models
 │       ├── routes.py        # Application routes

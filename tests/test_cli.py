@@ -3,9 +3,9 @@
 import pytest
 from click.testing import CliRunner
 from datetime import date, time
-from src.waqtracker import create_app, db
-from src.waqtracker.models import TimeEntry, LeaveDay
-from src.waqtracker.cli import cli
+from src.waqt import create_app, db
+from src.waqt.models import TimeEntry, LeaveDay
+from src.waqt.cli import cli
 
 
 @pytest.fixture
