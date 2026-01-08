@@ -282,3 +282,242 @@ def test_full_workflow(runner, app):
         assert result3.exit_code == 0
         assert "Week Summary" in result3.output
         assert "Total Hours" in result3.output
+
+
+def test_edit_entry_command_basic(runner, app):
+    """Test basic edit-entry command functionality."""
+    with app.app_context():
+        # Create a test entry first
+        test_date = date(2024, 1, 15)
+        entry = TimeEntry(
+            date=test_date,
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Original description",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        # Edit the description
+        result = runner.invoke(
+            cli, ["edit-entry", "--date", "2024-01-15", "--desc", "Updated description"]
+        )
+        assert result.exit_code == 0
+        assert "Time entry updated successfully!" in result.output
+        assert "Updated description" in result.output
+
+        # Verify the entry was updated
+        updated_entry = TimeEntry.query.filter_by(date=test_date).first()
+        assert updated_entry.description == "Updated description"
+
+
+def test_edit_entry_command_times(runner, app):
+    """Test edit-entry command with time changes."""
+    with app.app_context():
+        # Create a test entry first
+        test_date = date(2024, 1, 15)
+        entry = TimeEntry(
+            date=test_date,
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Test work",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        # Edit the times
+        result = runner.invoke(
+            cli,
+            ["edit-entry", "--date", "2024-01-15", "--start", "08:30", "--end", "17:30"],
+        )
+        assert result.exit_code == 0
+        assert "Time entry updated successfully!" in result.output
+
+        # Verify the entry was updated
+        updated_entry = TimeEntry.query.filter_by(date=test_date).first()
+        assert updated_entry.start_time == time(8, 30)
+        assert updated_entry.end_time == time(17, 30)
+        assert updated_entry.duration_hours == 9.0
+
+
+def test_edit_entry_command_all_fields(runner, app):
+    """Test edit-entry command updating all fields at once."""
+    with app.app_context():
+        # Create a test entry first
+        test_date = date(2024, 1, 15)
+        entry = TimeEntry(
+            date=test_date,
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Original description",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        # Edit all fields
+        result = runner.invoke(
+            cli,
+            [
+                "edit-entry",
+                "--date",
+                "2024-01-15",
+                "--start",
+                "08:00",
+                "--end",
+                "18:00",
+                "--desc",
+                "Complete update",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "Time entry updated successfully!" in result.output
+
+        # Verify all changes
+        updated_entry = TimeEntry.query.filter_by(date=test_date).first()
+        assert updated_entry.start_time == time(8, 0)
+        assert updated_entry.end_time == time(18, 0)
+        assert updated_entry.duration_hours == 10.0
+        assert updated_entry.description == "Complete update"
+
+
+def test_edit_entry_command_no_entry(runner, app):
+    """Test edit-entry command when no entry exists."""
+    with app.app_context():
+        result = runner.invoke(
+            cli, ["edit-entry", "--date", "2024-01-15", "--desc", "New description"]
+        )
+        assert result.exit_code != 0
+        assert "No completed time entry found" in result.output
+
+
+def test_edit_entry_command_no_fields(runner, app):
+    """Test edit-entry command without any fields to update."""
+    with app.app_context():
+        # Create a test entry
+        entry = TimeEntry(
+            date=date(2024, 1, 15),
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Test work",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        result = runner.invoke(cli, ["edit-entry", "--date", "2024-01-15"])
+        assert result.exit_code != 0
+        assert "At least one field must be provided" in result.output
+
+
+def test_edit_entry_command_invalid_time_format(runner, app):
+    """Test edit-entry command with invalid time format."""
+    with app.app_context():
+        # Create a test entry
+        entry = TimeEntry(
+            date=date(2024, 1, 15),
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Test work",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        result = runner.invoke(
+            cli, ["edit-entry", "--date", "2024-01-15", "--start", "invalid"]
+        )
+        assert result.exit_code != 0
+        assert "Invalid time format" in result.output
+
+
+def test_edit_entry_command_active_entry(runner, app):
+    """Test edit-entry command on active entry (should fail)."""
+    with app.app_context():
+        # Create an active entry
+        entry = TimeEntry(
+            date=date.today(),
+            start_time=time(9, 0),
+            end_time=time(9, 0),
+            duration_hours=0.0,
+            description="Active work",
+            is_active=True,
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        result = runner.invoke(
+            cli,
+            [
+                "edit-entry",
+                "--date",
+                date.today().isoformat(),
+                "--desc",
+                "New description",
+            ],
+        )
+        assert result.exit_code != 0
+        assert "No completed time entry found" in result.output
+
+
+def test_edit_entry_command_multiple_entries(runner, app):
+    """Test edit-entry command when multiple entries exist for a date."""
+    with app.app_context():
+        # Create multiple entries for the same date (legacy case)
+        test_date = date(2024, 1, 15)
+        entry1 = TimeEntry(
+            date=test_date,
+            start_time=time(9, 0),
+            end_time=time(12, 0),
+            duration_hours=3.0,
+            description="Morning work",
+            is_active=False,
+        )
+        entry2 = TimeEntry(
+            date=test_date,
+            start_time=time(13, 0),
+            end_time=time(17, 0),
+            duration_hours=4.0,
+            description="Afternoon work",
+            is_active=False,
+        )
+        db.session.add(entry1)
+        db.session.add(entry2)
+        db.session.commit()
+
+        # Try to edit without specifying which entry
+        result = runner.invoke(
+            cli, ["edit-entry", "--date", "2024-01-15", "--desc", "Updated"]
+        )
+        assert result.exit_code != 0
+        assert "Multiple entries found" in result.output
+        assert "one entry per day" in result.output
+
+        # Try to edit by specifying start time
+        result2 = runner.invoke(
+            cli,
+            [
+                "edit-entry",
+                "--date",
+                "2024-01-15",
+                "--start",
+                "09:00",
+                "--desc",
+                "Updated morning",
+            ],
+        )
+        assert result2.exit_code == 0
+        assert "Time entry updated successfully!" in result2.output
+
+        # Verify the correct entry was updated
+        updated_entry = TimeEntry.query.filter_by(
+            date=test_date, start_time=time(9, 0)
+        ).first()
+        assert updated_entry.description == "Updated morning"

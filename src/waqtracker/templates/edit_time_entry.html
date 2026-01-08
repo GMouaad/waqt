@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Time Entry - Waqt{% endblock %}
+
+{% block content %}
+<div class="form-page" data-testid="edit-time-entry-page">
+    <h2>Edit Time Entry</h2>
+    <p class="subtitle">Update your work hours and activities for {{ entry.date.strftime('%Y-%m-%d') }}</p>
+    
+    <form method="POST" action="{{ url_for('main.edit_time_entry', entry_id=entry.id) }}" class="form-card" data-testid="edit-time-entry-form">
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" data-testid="input-date" value="{{ entry.date.isoformat() }}" disabled>
+            <p class="field-note">Date cannot be changed. To move an entry to a different date, delete it and create a new one.</p>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="start_time">Start Time *</label>
+                <input type="time" id="start_time" name="start_time" data-testid="input-start-time" value="{{ entry.start_time.strftime('%H:%M') }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="end_time">End Time *</label>
+                <input type="time" id="end_time" name="end_time" data-testid="input-end-time" value="{{ entry.end_time.strftime('%H:%M') }}" required>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description *</label>
+            <textarea id="description" name="description" data-testid="input-description" rows="4" required placeholder="What did you work on?">{{ entry.description }}</textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" data-testid="btn-submit">Update Entry</button>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary" data-testid="btn-cancel">Cancel</a>
+        </div>
+    </form>
+    
+    <div class="info-box">
+        <h3>💡 Tips</h3>
+        <ul>
+            <li>Standard work day is 8 hours</li>
+            <li>Hours over 8 per day are counted as overtime</li>
+            <li>Only one entry per day is allowed</li>
+            <li>Be descriptive in your activity notes for better tracking</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

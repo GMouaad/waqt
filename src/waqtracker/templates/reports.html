@@ -89,6 +89,7 @@
                         <th>Time</th>
                         <th>Duration</th>
                         <th>Description</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -98,6 +99,9 @@
                         <td>{{ entry.start_time.strftime('%H:%M') }} - {{ entry.end_time.strftime('%H:%M') }}</td>
                         <td>{{ "%.2f"|format(entry.duration_hours) }}h</td>
                         <td>{{ entry.description }}</td>
+                        <td>
+                            <a href="{{ url_for('main.edit_time_entry', entry_id=entry.id) }}" class="btn btn-primary btn-small" data-testid="btn-edit-entry-{{ entry.id }}">Edit</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

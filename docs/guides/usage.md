@@ -100,7 +100,56 @@ The easiest way to track time is using the **Dashboard Timer**. It automatically
 
 ### Adding a Time Entry Manually
 1. Click **"Add Time Entry"** from the dashboard or navigation menu
-...
+2. Fill in the required fields:
+   - **Date**: Select the date for this entry
+   - **Start Time**: When you started working (e.g., 09:00)
+   - **End Time**: When you finished working (e.g., 17:00)
+   - **Description**: What you worked on
+3. Click **"Save Entry"**
+4. The entry will appear in your recent entries list
+
+**Note**: The system enforces one entry per day. If you try to add another entry for a date that already has one, you'll receive an error message asking you to edit the existing entry instead.
+
+### Editing a Time Entry
+
+You can edit any completed time entry to correct mistakes or update information.
+
+**Via UI:**
+1. Go to the **Dashboard** or **Reports** page
+2. Find the entry you want to edit in the table
+3. Click the blue **"Edit"** button next to the entry
+4. Update any of the following fields:
+   - **Start Time**: Adjust the start time
+   - **End Time**: Adjust the end time
+   - **Description**: Update what you worked on
+5. Click **"Update Entry"**
+6. The duration will be automatically recalculated
+
+**Via CLI:**
+```bash
+# Edit only the description
+waqt edit-entry --date 2026-01-08 --desc "Updated work description"
+
+# Edit times
+waqt edit-entry --date 2026-01-08 --start 08:30 --end 17:30
+
+# Edit all fields at once
+waqt edit-entry -d 2026-01-08 -s 08:00 -e 18:00 --desc "Full day development work"
+```
+
+**Important Notes:**
+- You cannot edit an active timer. Stop the timer first using the **"Stop"** button or `waqt end` command
+- The date field cannot be changed. If you need to move an entry to a different date, delete it and create a new one
+- Duration is automatically recalculated when you change start or end times
+- For legacy cases where multiple entries exist for one day, the CLI will prompt you to specify which entry to edit using the `--start` parameter for selection
+
+**Command Options:**
+- `--date` or `-d`: Date of the entry to edit (YYYY-MM-DD format, **required**)
+- `--start` or `-s`: New start time (HH:MM format)
+- `--end` or `-e`: New end time (HH:MM format)
+- `--description` or `--desc`: New description text
+- At least one field (start, end, or description) must be provided
+
 ## Common Workflows
 
 ### Daily Routine

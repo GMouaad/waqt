@@ -22,6 +22,7 @@ Additional reference guides:
 - **One-Click Timer**: Interactive dashboard timer with Start, Stop, Pause, and Resume controls for real-time tracking
 - **Session Alerts**: Configurable alerts when work sessions exceed 8 hours (helps comply with labor laws)
 - **Work Hours Tracking**: Track daily work hours (8 hours/day, 40 hours/week standard)
+- **Edit Time Entries**: Correct mistakes in your time logs via UI or CLI using simple date-based editing
 - **Overtime Calculation**: Automatically calculate overtime hours
 - **Vacation Days**: Track and manage vacation days
 - **Sick Leaves**: Record sick leave days
