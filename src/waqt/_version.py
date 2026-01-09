@@ -1,4 +1,4 @@
-"""Version information for waqtracker.
+"""Version information for waqt.
 
 This file is automatically updated during the build process.
 The VERSION in pyproject.toml is the canonical source for development.
