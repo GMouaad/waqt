@@ -555,13 +555,13 @@ def leave_request(
             }
 
         if end < start:
-             return {
+            return {
                 "status": "error",
                 "message": "End date must be on or after start date.",
             }
 
         if leave_type.lower() not in ["vacation", "sick"]:
-             return {
+            return {
                 "status": "error",
                 "message": f"Invalid leave type '{leave_type}'. Use 'vacation' or 'sick'.",
             }
