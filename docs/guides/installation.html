@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation Guide - Waqt Documentation</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                    <i class="fas fa-clock"></i>
+                    <span>Waqt</span>
+                </a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../installation.html">Installation</a></li>
+                <li><a href="../usage.html">Usage</a></li>
+                <li><a href="../documentation.html" class="active">Documentation</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>Installation Guide</h1>
+            <a href="../documentation.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Documentation</a>
+        </div>
+    </div>
+
+    <section class="content-section">
+        <div class="container documentation-content">
+            <p>This guide will help you install and set up the Waqt application on your system.</p>
+
+            <h2 id="quick-install">Quick Install (Recommended)</h2>
+            <p>The fastest way to get started is using our automated installer scripts:</p>
+
+            <h3>Linux/macOS</h3>
+            <pre><code>curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash</code></pre>
+
+            <h3>Windows (PowerShell)</h3>
+            <pre><code>irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1 | iex</code></pre>
+
+            <p>These installers will:</p>
+            <ul>
+                <li>Automatically detect your OS and architecture</li>
+                <li>Download the latest stable release</li>
+                <li>Install to <code>~/.waqt/bin</code> (Unix) or <code>%LOCALAPPDATA%\waqt</code> (Windows)</li>
+                <li>Add the installation directory to your PATH</li>
+                <li>Verify the installation with <code>waqt --version</code></li>
+            </ul>
+
+            <p><strong>Install development build (prerelease):</strong></p>
+            <pre><code># Linux/macOS
+curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash -s -- --prerelease
+
+# Windows PowerShell
+iex "& { $(irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1) } -Prerelease"</code></pre>
+
+            <p>After installation, use these commands:</p>
+            <pre><code>waqt --version      # Check version
+waqt          # Start the web server (http://localhost:5555)
+waqt start          # Start time tracking from CLI
+waqt summary        # View summary</code></pre>
+
+            <p><strong>Security Note:</strong> Review the installer scripts before running:</p>
+            <ul>
+                <li><a href="https://github.com/GMouaad/waqt/blob/main/install.sh" target="_blank">install.sh</a> for Linux/macOS</li>
+                <li><a href="https://github.com/GMouaad/waqt/blob/main/install.ps1" target="_blank">install.ps1</a> for Windows</li>
+            </ul>
+
+            <hr>
+
+            <h2 id="prerequisites">Prerequisites</h2>
+            <p>For manual or source installation, ensure you have the following:</p>
+            <ul>
+                <li><strong>Python 3.10 or higher</strong>: The application requires Python 3.10+
+                    <ul>
+                        <li>Check your Python version: <code>python --version</code> or <code>python3 --version</code></li>
+                        <li>Download from: <a href="https://www.python.org/downloads/" target="_blank">python.org</a></li>
+                    </ul>
+                </li>
+                <li><strong>uv</strong> (Recommended): Modern, fast Python package manager
+                    <ul>
+                        <li>Installation instructions below</li>
+                        <li>Or <strong>pip</strong>: Traditional Python package installer (legacy method)</li>
+                    </ul>
+                </li>
+                <li><strong>Git</strong> (optional): For cloning the repository
+                    <ul>
+                        <li>Download from: <a href="https://git-scm.com/downloads" target="_blank">git-scm.com</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Operating System Support</h3>
+            <p>The Waqt application works on:</p>
+            <ul>
+                <li>Linux (Ubuntu, Debian, Fedora, etc.)</li>
+                <li>macOS</li>
+                <li>Windows 10/11</li>
+            </ul>
+
+            <h2 id="installation-methods">Installation Methods</h2>
+            <p>Choose one of the following installation methods:</p>
+            <h3>Method 1: Using uv (Recommended - Fast & Modern)</h3>
+            <p>This is the <strong>recommended</strong> approach using the modern <code>uv</code> package manager, which is 10-100x faster than pip.</p>
+            <h3>Method 2: Using pip (Legacy)</h3>
+            <p>Traditional installation method using pip. <strong>Note</strong>: This method is deprecated in favor of <code>uv</code>.</p>
+
+            <hr>
+
+            <h2 id="method-1">Method 1: Installation with uv (Recommended)</h2>
+
+            <h3>Step 1: Install uv</h3>
+            <p>First, install the <code>uv</code> package manager:</p>
+
+            <h4>Recommended: Using pip</h4>
+            <pre><code>pip install uv</code></pre>
+
+            <h4>Alternative: Using install script</h4>
+            <p><strong>⚠️ Security Note</strong>: The install scripts download and execute code. Review the script source before running:</p>
+            <ul>
+                <li>Linux/macOS: <a href="https://astral.sh/uv/install.sh" target="_blank">install.sh</a></li>
+                <li>Windows: <a href="https://astral.sh/uv/install.ps1" target="_blank">install.ps1</a></li>
+            </ul>
+
+            <h5>On Linux/macOS:</h5>
+            <pre><code>curl -LsSf https://astral.sh/uv/install.sh | sh</code></pre>
+
+            <h5>On Windows:</h5>
+            <p>Using PowerShell:</p>
+            <pre><code>powershell -c "irm https://astral.sh/uv/install.ps1 | iex"</code></pre>
+
+            <h4>Verify Installation</h4>
+            <p>After installing with any method:</p>
+            <pre><code>uv --version</code></pre>
+
+            <h3>Step 2: Get the Source Code</h3>
+            <h4>Option A: Clone with Git (Recommended)</h4>
+            <pre><code>git clone https://github.com/GMouaad/waqt.git
+cd waqt</code></pre>
+
+            <h4>Option B: Download ZIP</h4>
+            <ol>
+                <li>Visit <a href="https://github.com/GMouaad/waqt" target="_blank">github.com/GMouaad/waqt</a></li>
+                <li>Click "Code" → "Download ZIP"</li>
+                <li>Extract the ZIP file</li>
+                <li>Navigate to the extracted folder</li>
+            </ol>
+
+            <h3>Step 3: Create a Virtual Environment with uv</h3>
+            <p><code>uv</code> automatically manages virtual environments. Create one with:</p>
+            <pre><code>uv venv</code></pre>
+
+            <p>Activate the virtual environment:</p>
+            <h4>On Linux/macOS:</h4>
+            <pre><code>source .venv/bin/activate</code></pre>
+
+            <h4>On Windows:</h4>
+            <pre><code>.venv\Scripts\activate</code></pre>
+
+            <p>You should see <code>(.venv)</code> in your terminal prompt.</p>
+
+            <h3>Step 4: Install Dependencies with uv</h3>
+            <p>Install all dependencies using <code>uv</code>:</p>
+            <pre><code>uv pip install -e .</code></pre>
+
+            <p>This installs:</p>
+            <ul>
+                <li>Flask 3.0.0 (web framework)</li>
+                <li>Flask-SQLAlchemy 3.1.1 (database ORM)</li>
+                <li>python-dateutil 2.8.2 (date/time utilities)</li>
+                <li>Werkzeug 3.0.1 (WSGI utilities)</li>
+            </ul>
+
+            <p><strong>Benefits of uv:</strong></p>
+            <ul>
+                <li>⚡ 10-100x faster than pip</li>
+                <li>🔒 Automatic dependency resolution</li>
+                <li>📦 Built-in virtual environment management</li>
+                <li>🚀 Significantly faster installation times</li>
+            </ul>
+
+            <h3>Step 5: Initialize the Database (Optional)</h3>
+            <p>The Waqt application is designed to be <strong>self-initializing</strong>. When you run the application for the first time, it will automatically:</p>
+            <ul>
+                <li>Create the SQLite database file (<code>time_tracker.db</code>)</li>
+                <li>Create all necessary tables</li>
+                <li>Apply any pending schema migrations</li>
+                <li>Seed default configuration settings</li>
+            </ul>
+
+            <p>If you prefer to initialize the database manually before running the app, you can use:</p>
+            <pre><code>python -m waqt.scripts.init_db</code></pre>
+            <p>This creates a <code>time_tracker.db</code> file in your project directory with all default settings.</p>
+
+            <h3>Step 6: Run the Application</h3>
+            <p>Start the Flask development server:</p>
+
+            <p><strong>Using uv (Recommended):</strong></p>
+            <pre><code>uv run waqt ui</code></pre>
+
+            <p><strong>Using activated environment:</strong></p>
+            <pre><code>waqt ui</code></pre>
+
+            <p>You should see output like:</p>
+            <pre><code> * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in production.
+ * Running on http://0.0.0.0:5555</code></pre>
+
+            <h3>Step 7: Access the Application</h3>
+            <p>Open your web browser and navigate to:</p>
+            <pre><code>http://localhost:5555</code></pre>
+            <p>You should see the Waqt dashboard!</p>
+
+            <hr>
+
+            <h2 id="method-2">Method 2: Installation with pip (Legacy - Deprecated)</h2>
+            <p><strong>⚠️ DEPRECATED</strong>: This method is maintained for backward compatibility but is deprecated. Please use <code>uv</code> (Method 1) for better performance and modern tooling.</p>
+
+            <h3>1. Get the Source Code</h3>
+            <p>Follow the same instructions as Method 1, Step 2.</p>
+
+            <h3>2. Create a Virtual Environment</h3>
+            <p>A virtual environment keeps project dependencies isolated from your system Python.</p>
+
+            <h4>On Linux/macOS:</h4>
+            <pre><code>python3 -m venv venv
+source venv/bin/activate</code></pre>
+
+            <h4>On Windows:</h4>
+            <pre><code>python -m venv venv
+virtualenv\Scripts\activate</code></pre>
+
+            <p>You should see <code>(venv)</code> in your terminal prompt, indicating the virtual environment is active.</p>
+
+            <h3>3. Install Dependencies</h3>
+            <p>With the virtual environment activated, install the required packages:</p>
+            <pre><code>pip install -e .</code></pre>
+
+            <h3>4-7. Complete Setup</h3>
+            <p>Follow Steps 5-7 from Method 1 above to initialize the database and run the application.</p>
+
+            <h2 id="quick-start-scripts">Quick Start Scripts</h2>
+            <p>For convenience, the project includes startup scripts that automate the installation and setup process.</p>
+
+            <h3>Using uv (Recommended):</h3>
+            <p>The scripts now support both <code>uv</code> and <code>pip</code>. They will automatically detect and use <code>uv</code> if available.</p>
+
+            <h3>On Linux/macOS:</h3>
+            <pre><code>chmod +x start.sh
+./start.sh</code></pre>
+
+            <h3>On Windows:</h3>
+            <pre><code>.\start.ps1</code></pre>
+
+            <p>These scripts will:</p>
+            <ul>
+                <li>Detect and use <code>uv</code> if available (falls back to pip)</li>
+                <li>Create a virtual environment (if not exists)</li>
+                <li>Activate the virtual environment</li>
+                <li>Install dependencies (if not installed)</li>
+                <li>Start the application (which handles database initialization)</li>
+            </ul>
+
+            <h2 id="verification">Verification</h2>
+            <p>To verify your installation is working correctly:</p>
+            <ol>
+                <li><strong>Check the Dashboard</strong>: Visit <code>http://localhost:5555</code> and see the dashboard</li>
+                <li><strong>Add a Test Entry</strong>: Click "Add Time Entry" and create a test work log</li>
+                <li><strong>View Reports</strong>: Navigate to the Reports page to see weekly/monthly summaries</li>
+            </ol>
+
+            <h2 id="troubleshooting">Troubleshooting</h2>
+
+            <h3>Python Version Issues</h3>
+            <p><strong>Problem</strong>: <code>python: command not found</code> or wrong version</p>
+            <p><strong>Solution</strong>:</p>
+            <ul>
+                <li>Try <code>python3</code> instead of <code>python</code></li>
+                <li>Install Python 3.10+ from <a href="https://www.python.org/downloads/" target="_blank">python.org</a></li>
+                <li>On Linux: <code>sudo apt install python3</code> (Ubuntu/Debian) or <code>sudo yum install python3</code> (Fedora)</li>
+            </ul>
+
+            <h3>Permission Errors</h3>
+            <p><strong>Problem</strong>: Permission denied when creating files/folders</p>
+            <p><strong>Solution</strong>:</p>
+            <ul>
+                <li>Ensure you have write permissions in the project directory</li>
+                <li>On Linux/macOS, you may need to use <code>chmod</code> to set permissions</li>
+                <li>Don't use <code>sudo</code> with pip; use virtual environments instead</li>
+            </ul>
+
+            <h3>Database Initialization Fails</h3>
+            <p><strong>Problem</strong>: Errors when running <code>init_db.py</code></p>
+            <p><strong>Solution</strong>:</p>
+            <ul>
+                <li>Ensure virtual environment is activated</li>
+                <li>Check that Flask and SQLAlchemy are installed: <code>pip list | grep -i flask</code></li>
+                <li>Delete <code>time_tracker.db</code> if it exists and try again</li>
+                <li>Check file permissions in the project directory</li>
+            </ul>
+
+            <h3>Port Already in Use</h3>
+            <p><strong>Problem</strong>: <code>Address already in use</code> error</p>
+            <p><strong>Solution</strong>:</p>
+            <ul>
+                <li>Another application is using port 5555</li>
+                <li>Find and stop the other application</li>
+                <li>Or set the <code>PORT</code> environment variable to use a different port (e.g., 5556):
+                    <ul>
+                        <li>Linux/macOS: <code>PORT=5556 waqt ui</code></li>
+                        <li>Windows (CMD): <code>set PORT=5556 && waqt ui</code></li>
+                        <li>Windows (PowerShell): <code>$env:PORT=5556; waqt ui</code></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Virtual Environment Not Activating</h3>
+            <p><strong>Problem</strong>: Virtual environment won't activate on Windows</p>
+            <p><strong>Solution</strong>:</p>
+            <ul>
+                <li>You may need to enable script execution:
+                    <pre><code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser</code></pre>
+                </li>
+                <li>Then try activating again</li>
+            </ul>
+
+            <h3>Dependencies Won't Install</h3>
+            <p><strong>Problem</strong>: Package installation fails</p>
+            <p><strong>Solution with uv</strong>:</p>
+            <ul>
+                <li>Update uv: <code>uv self update</code></li>
+                <li>Check your internet connection</li>
+                <li>Clear cache: <code>uv cache clean</code></li>
+                <li>Try installing with pip as fallback: <code>pip install -e .</code></li>
+            </ul>
+
+            <p><strong>Solution with pip (legacy)</strong>:</p>
+            <ul>
+                <li>Update pip: <code>pip install --upgrade pip</code></li>
+                <li>Check your internet connection</li>
+                <li>Try installing packages individually:
+                    <pre><code>pip install Flask==3.0.0
+pip install Flask-SQLAlchemy==3.1.1
+pip install python-dateutil==2.8.2</code></pre>
+                </li>
+            </ul>
+
+            <h3>uv Command Not Found</h3>
+            <p><strong>Problem</strong>: <code>uv: command not found</code></p>
+            <p><strong>Solution</strong>:</p>
+            <ul>
+                <li>Ensure uv is installed: Follow Step 1 of Method 1</li>
+                <li>On Linux/macOS, restart your terminal or run: <code>source ~/.bashrc</code> or <code>source ~/.zshrc</code></li>
+                <li>On Windows, restart PowerShell</li>
+                <li>Alternatively, use pip method (Method 2) as fallback</li>
+            </ul>
+
+            <h2 id="development-installation">Development Installation</h2>
+            <p>If you plan to contribute to the project, install development dependencies:</p>
+
+            <h3>With uv (Recommended):</h3>
+            <pre><code>uv pip install -e ".[dev]"</code></pre>
+
+            <h3>With pip (Legacy):</h3>
+            <pre><code>pip install -e ".[dev]"</code></pre>
+
+            <p>This includes testing and code quality tools:</p>
+            <ul>
+                <li>pytest 9.0.2 (testing framework)</li>
+                <li>pytest-cov 7.0.0 (coverage reporting)</li>
+                <li>flake8 7.0.0 (linting)</li>
+                <li>black 24.1.1 (code formatting)</li>
+            </ul>
+
+            <h2 id="uninstallation">Uninstallation</h2>
+            <p>To remove the Waqt application:</p>
+            <ol>
+                <li>Deactivate virtual environment: <code>deactivate</code></li>
+                <li>Delete the project folder</li>
+            </ol>
+
+            <h3 id="data-backup">Data Backup</h3>
+            <p>Your time tracking data is stored in a platform-specific data directory. If you want to back it up or delete it:</p>
+            <ul>
+                <li><strong>Linux</strong>: <code>~/.local/share/waqt/time_tracker.db</code></li>
+                <li><strong>macOS</strong>: <code>~/Library/Application Support/waqt/time_tracker.db</code></li>
+                <li><strong>Windows</strong>: <code>%LOCALAPPDATA%\GMouaad\waqt\time_tracker.db</code></li>
+            </ul>
+            <p>You can override this location by setting the <code>WAQT_DATA_DIR</code> environment variable.</p>
+            <p><em>Note: Older versions stored data in <code>time_tracker.db</code> within the installation directory. The application automatically migrates this data to the new location on first run.</em></p>
+
+            <h2 id="next-steps">Next Steps</h2>
+            <p>Once installed, proceed to the <a href="usage.html">Usage Guide</a> to learn how to use the Waqt application effectively.</p>
+
+            <h2 id="getting-help">Getting Help</h2>
+            <p>If you encounter issues not covered here:</p>
+            <ol>
+                <li>Check the <a href="usage.html">Usage Guide</a> for operational questions</li>
+                <li>Review the project's <a href="https://github.com/GMouaad/waqt" target="_blank">README.md</a></li>
+                <li>Open an issue on GitHub: <a href="https://github.com/GMouaad/waqt/issues" target="_blank">https://github.com/GMouaad/waqt/issues</a></li>
+            </ol>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="copyright-year">2024</span> Waqt Contributors. Licensed under the MIT License.</p>
+            <p>Made with ❤️ by the Waqt Contributors</p>
+            <div class="footer-links">
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

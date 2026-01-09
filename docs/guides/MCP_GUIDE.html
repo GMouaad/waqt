@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Server Documentation - Waqt</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                    <i class="fas fa-clock"></i>
+                    <span>Waqt</span>
+                </a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../installation.html">Installation</a></li>
+                <li><a href="../usage.html">Usage</a></li>
+                <li><a href="../documentation.html" class="active">Documentation</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>MCP Server Documentation</h1>
+            <a href="../documentation.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Documentation</a>
+        </div>
+    </div>
+
+    <section class="content-section">
+        <div class="container documentation-content">
+            <h2 id="overview">Overview</h2>
+            <p>The Waqt MCP (Model Context Protocol) server exposes time tracking functionality to LLM applications and AI assistants. It provides the same core features as the CLI interface, allowing AI tools to track work hours, generate reports, and manage time entries.</p>
+
+            <h2 id="what-is-mcp">What is MCP?</h2>
+            <p>Model Context Protocol (MCP) is an open protocol that standardizes how applications provide context to Large Language Models (LLMs). The Waqt MCP server implements this protocol, making time tracking functionality available to any MCP-compatible AI assistant.</p>
+
+            <h2 id="installation">Installation</h2>
+            <p>The MCP server is included with the Waqt package. After installing Waqt:</p>
+            <pre><code># Install waqt with MCP support
+uv pip install -e . 
+
+# Or using pip (legacy)
+pip install -e .</code></pre>
+            <p>The <code>waqt-mcp</code> command will be available after installation.</p>
+
+            <h2 id="running-mcp-server">Running the MCP Server</h2>
+
+            <h3>Starting the Server</h3>
+            <p>The MCP server runs in stdio mode, which is the standard transport for MCP:</p>
+
+            <p><strong>Using uv (Recommended):</strong></p>
+            <pre><code>uv run waqt-mcp</code></pre>
+
+            <p><strong>Using activated environment:</strong></p>
+            <pre><code>waqt-mcp</code></pre>
+
+            <p>The server will start and listen for MCP protocol messages on stdin/stdout.</p>
+
+            <h3>Using with MCP Clients</h3>
+            <p>To use the Waqt MCP server with an MCP-compatible client, you'll need to configure the client to connect to the server. Here's an example configuration for Claude Desktop:</p>
+
+            <p><strong>Claude Desktop Configuration</strong> (<code>claude_desktop_config.json</code>):</p>
+            <pre><code>{
+  "mcpServers": {
+    "waqt": {
+      "command": "uv",
+      "args": ["run", "waqt-mcp"],
+      "env": {}
+    }
+  }
+}</code></pre>
+
+            <p><strong>Note:</strong> If using the legacy installation method, replace <code>command</code> with <code>waqt-mcp</code> and remove <code>args</code>.</p>
+
+            <p><strong>Using with other MCP clients:</strong></p>
+            <p>For other MCP clients, refer to their documentation for how to configure stdio-based MCP servers.</p>
+
+            <h2 id="available-tools">Available Tools</h2>
+            <p>The MCP server exposes the following tools that mirror CLI functionality:</p>
+
+            <h3>1. start</h3>
+            <p>Start time tracking for a day.</p>
+            <p><strong>Parameters:</strong></p>
+            <ul>
+                <li><code>time</code> (optional): Start time in HH:MM format (e.g., "09:00"). Defaults to current time.</li>
+                <li><code>date</code> (optional): Date in YYYY-MM-DD format (e.g., "2024-01-15"). Defaults to today.</li>
+                <li><code>description</code> (optional): Description of the work session. Defaults to "Work session".</li>
+            </ul>
+            <p><strong>Returns:</strong> JSON object with status, message, and entry details.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>{
+  "time": "09:00",
+  "date": "2024-01-15",
+  "description": "Morning work session"
+}</code></pre>
+            <p><strong>Response:</strong></p>
+            <pre><code>{
+  "status": "success",
+  "message": "Time tracking started!",
+  "entry": {
+    "date": "2024-01-15",
+    "start_time": "09:00",
+    "description": "Morning work session"
+  }
+}</code></pre>
+
+            <h3>2. end</h3>
+            <p>End time tracking for a day.</p>
+            <p><strong>Parameters:</strong></p>
+            <ul>
+                <li><code>time</code> (optional): End time in HH:MM format (e.g., "17:30"). Defaults to current time.</li>
+                <li><code>date</code> (optional): Date in YYYY-MM-DD format (e.g., "2024-01-15"). Defaults to today.</li>
+            </ul>
+            <p><strong>Returns:</strong> JSON object with status, message, and entry details including calculated duration.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>{
+  "time": "17:30",
+  "date": "2024-01-15"
+}</code></pre>
+            <p><strong>Response:</strong></p>
+            <pre><code>{
+  "status": "success",
+  "message": "Time tracking ended!",
+  "entry": {
+    "date": "2024-01-15",
+    "start_time": "09:00",
+    "end_time": "17:30",
+    "duration": "8:30",
+    "duration_hours": 8.5,
+    "description": "Morning work session"
+  }
+}</code></pre>
+
+            <h3>3. summary</h3>
+            <p>Get time summary for a week or month.</p>
+            <p><strong>Parameters:</strong></p>
+            <ul>
+                <li><code>period</code> (optional): "week" or "month". Defaults to "week".</li>
+                <li><code>date</code> (optional): Reference date in YYYY-MM-DD format. Defaults to today.</li>
+            </ul>
+            <p><strong>Returns:</strong> JSON object with period information, statistics, and recent entries.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>{
+  "period": "week",
+  "date": "2024-01-15"
+}</code></pre>
+            <p><strong>Response:</strong></p>
+            <pre><code>{
+  "status": "success",
+  "period": "Week",
+  "start_date": "2024-01-15",
+  "end_date": "2024-01-21",
+  "statistics": {
+    "total_hours": 40.0,
+    "total_hours_formatted": "40:00",
+    "working_days": 5,
+    "overtime": 0.0,
+    "overtime_formatted": "0:00",
+    "standard_hours": 40.0
+  },
+  "recent_entries": [...],
+  "has_entries": true
+}</code></pre>
+
+            <h3>4. list_entries</h3>
+            <p>List time entries for a specified period.</p>
+            <p><strong>Parameters:</strong></p>
+            <ul>
+                <li><code>period</code> (optional): "week", "month", or "all". Defaults to "week".</li>
+                <li><code>date</code> (optional): Reference date in YYYY-MM-DD format. Defaults to today.</li>
+                <li><code>limit</code> (optional): Maximum number of entries to return. If not specified, returns all.</li>
+            </ul>
+            <p><strong>Returns:</strong> JSON object with entries list and metadata.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>{
+  "period": "week",
+  "limit": 10
+}</code></pre>
+            <p><strong>Response:</strong></p>
+            <pre><code>{
+  "status": "success",
+  "period": "week",
+  "count": 5,
+  "start_date": "2024-01-15",
+  "end_date": "2024-01-21",
+  "entries": [
+    {
+      "id": 1,
+      "date": "2024-01-15",
+      "day_of_week": "Monday",
+      "start_time": "09:00",
+      "end_time": "17:00",
+      "duration": "8:00",
+      "duration_hours": 8.0,
+      "description": "Work session",
+      "is_open": false,
+      "created_at": "2024-01-15T09:00:00"
+    }
+  ]
+}</code></pre>
+
+            <h3>5. export_entries</h3>
+            <p>Export time entries to CSV format.</p>
+            <p><strong>Parameters:</strong></p>
+            <ul>
+                <li><code>period</code> (optional): "week", "month", or "all". Defaults to "all".</li>
+                <li><code>date</code> (optional): Reference date in YYYY-MM-DD format. Defaults to today.</li>
+                <li><code>format</code> (optional): Export format, currently only "csv" is supported. Defaults to "csv".</li>
+            </ul>
+            <p><strong>Returns:</strong> JSON object with CSV content as a string and metadata.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>{
+  "period": "month",
+  "date": "2024-01-15"
+}</code></pre>
+            <p><strong>Response:</strong></p>
+            <pre><code>{
+  "status": "success",
+  "message": "Export successful!",
+  "count": 20,
+  "total_hours": 160.0,
+  "total_hours_formatted": "160:00",
+  "period": "month_2024-01",
+  "format": "csv",
+  "start_date": "2024-01-01",
+  "end_date": "2024-01-31",
+  "csv_content": "Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM),Description,Overtime,Created At\n..."
+}</code></pre>
+
+            <h2 id="comparison-with-cli">Comparison with CLI</h2>
+            <p>The MCP server provides equivalent functionality to the CLI with these key differences:</p>
+
+            <h3>Feature Parity</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>CLI</th>
+                        <th>MCP Server</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Start tracking</td>
+                        <td>✅ <code>waqt start</code></td>
+                        <td>✅ <code>start</code> tool</td>
+                    </tr>
+                    <tr>
+                        <td>End tracking</td>
+                        <td>✅ <code>waqt end</code></td>
+                        <td>✅ <code>end</code> tool</td>
+                    </tr>
+                    <tr>
+                        <td>View summary</td>
+                        <td>✅ <code>waqt summary</code></td>
+                        <td>✅ <code>summary</code> tool</td>
+                    </tr>
+                    <tr>
+                        <td>Export data</td>
+                        <td>✅ <code>waqt export</code></td>
+                        <td>✅ <code>export_entries</code> tool</td>
+                    </tr>
+                    <tr>
+                        <td>List entries</td>
+                        <td>❌ (not in CLI)</td>
+                        <td>✅ <code>list_entries</code> tool</td>
+                    </tr>
+                    <tr>
+                        <td>Configuration</td>
+                        <td>✅ (via CLI)</td>
+                        <td>❌ (excluded per requirements)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Behavioral Differences</h3>
+            <ol>
+                <li><strong>Output Format:</strong>
+                    <ul>
+                        <li>CLI: Human-readable text output with colors and formatting</li>
+                        <li>MCP: Structured JSON responses for programmatic consumption</li>
+                    </ul>
+                </li>
+                <li><strong>File Output:</strong>
+                    <ul>
+                        <li>CLI: <code>export</code> command writes files to disk</li>
+                        <li>MCP: <code>export_entries</code> returns CSV content as a string (client can save it)</li>
+                    </ul>
+                </li>
+                <li><strong>Additional Features:</strong>
+                    <ul>
+                        <li>MCP: <code>list_entries</code> tool provides more flexible entry listing</li>
+                        <li>MCP: All responses include structured metadata</li>
+                    </ul>
+                </li>
+                <li><strong>Error Handling:</strong>
+                    <ul>
+                        <li>CLI: Exits with error codes and colored error messages</li>
+                        <li>MCP: Returns error status in JSON with descriptive messages</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h2 id="example-workflows">Example Workflows</h2>
+
+            <h3>Basic Time Tracking</h3>
+            <pre><code>1. Start tracking:
+   Tool: start
+   Input: {"time": "09:00", "description": "Feature development"}
+
+2. End tracking:
+   Tool: end
+   Input: {"time": "17:30"}
+
+3. View summary:
+   Tool: summary
+   Input: {"period": "week"}</code></pre>
+
+            <h3>Data Export</h3>
+            <pre><code>1. List entries for review:
+   Tool: list_entries
+   Input: {"period": "month", "limit": 10}
+
+2. Export to CSV:
+   Tool: export_entries
+   Input: {"period": "month"}
+   
+3. Save the csv_content from response to file</code></pre>
+
+            <h3>Overtime Tracking</h3>
+            <pre><code>1. Check weekly summary:
+   Tool: summary
+   Input: {"period": "week"}
+   
+2. Review entries with overtime:
+   Tool: list_entries
+   Input: {"period": "week"}
+   (Filter entries where duration_hours > 8)</code></pre>
+
+            <h2 id="integration-testing">Integration Testing</h2>
+            <p>The MCP server includes comprehensive integration tests in <code>tests/test_mcp_server.py</code>. Run them with:</p>
+            <pre><code>pytest tests/test_mcp_server.py -v</code></pre>
+
+            <h2 id="error-handling">Error Handling</h2>
+            <p>All MCP tools return responses with a <code>status</code> field:</p>
+            <ul>
+                <li><code>"success"</code>: Operation completed successfully</li>
+                <li><code>"error"</code>: Operation failed, check <code>message</code> field for details</li>
+            </ul>
+
+            <p>Example error response:</p>
+            <pre><code>{
+  "status": "error",
+  "message": "Invalid date format '2024-13-45'. Use YYYY-MM-DD."
+}</code></pre>
+
+            <h2 id="security-considerations">Security Considerations</h2>
+            <ol>
+                <li><strong>Database Access:</strong> The MCP server uses the same SQLite database as the CLI and web interface</li>
+                <li><strong>No Authentication:</strong> The MCP server doesn't implement authentication (relies on MCP client security)</li>
+                <li><strong>Local Only:</strong> Designed for local use, not exposed over network</li>
+                <li><strong>Configuration Excluded:</strong> No configuration management via MCP per security requirements</li>
+            </ol>
+
+            <h2 id="troubleshooting">Troubleshooting</h2>
+
+            <h3>Server Won't Start</h3>
+            <ul>
+                <li>Ensure waqt is properly installed: <code>uv pip install -e .</code></li>
+                <li>Check that database is initialized: <code>python init_db.py</code></li>
+                <li>Verify Python version: Requires Python 3.11+</li>
+            </ul>
+
+            <h3>Database Errors</h3>
+            <ul>
+                <li>The MCP server shares the database with CLI and web interface</li>
+                <li>Ensure the database file exists and has proper permissions</li>
+                <li>Check <code>SQLALCHEMY_DATABASE_URI</code> environment variable if customized</li>
+            </ul>
+
+            <h3>Tool Execution Fails</h3>
+            <ul>
+                <li>Check tool parameters match the expected format</li>
+                <li>Review error messages in the response</li>
+                <li>Ensure date/time formats are correct (YYYY-MM-DD, HH:MM)</li>
+            </ul>
+
+            <h2 id="development">Development</h2>
+
+            <h3>Adding New Tools</h3>
+            <p>To add new tools to the MCP server:</p>
+            <ol>
+                <li>Define the tool function with <code>@mcp.tool()</code> decorator</li>
+                <li>Add comprehensive docstring (used for tool description)</li>
+                <li>Return structured JSON response with status field</li>
+                <li>Add tests in <code>tests/test_mcp_server.py</code></li>
+            </ol>
+
+            <p>Example:</p>
+            <pre><code>@mcp.tool()
+def my_new_tool(param: str) -> Dict[str, Any]:
+    """Tool description for LLM. 
+    
+    Args:
+        param: Parameter description
+    
+    Returns:
+        Dictionary with status and data
+    """
+    with app.app_context():
+        # Implementation
+        return {"status": "success", "data": "..."}
+</code></pre>
+
+            <h3>Testing</h3>
+            <pre><code># Run all MCP tests
+pytest tests/test_mcp_server.py -v
+
+# Run specific test
+pytest tests/test_mcp_server.py::test_start_basic -v
+
+# Run with coverage
+pytest tests/test_mcp_server.py --cov=src.waqt.mcp_server</code></pre>
+
+            <h2 id="references">References</h2>
+            <ul>
+                <li><a href="https://modelcontextprotocol.io/" target="_blank">Model Context Protocol Documentation</a></li>
+                <li><a href="https://github.com/modelcontextprotocol/python-sdk" target="_blank">MCP Python SDK</a></li>
+                <li><a href="https://github.com/GMouaad/waqt/blob/main/README.md#cli-usage-waqt" target="_blank">Waqt CLI Documentation</a></li>
+                <li><a href="usage.html">Waqt Usage Guide</a></li>
+            </ul>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="copyright-year">2024</span> Waqt Contributors. Licensed under the MIT License.</p>
+            <p>Made with ❤️ by the Waqt Contributors</p>
+            <div class="footer-links">
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

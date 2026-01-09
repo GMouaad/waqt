@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage Guide - Waqt Documentation</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                    <i class="fas fa-clock"></i>
+                    <span>Waqt</span>
+                </a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../installation.html">Installation</a></li>
+                <li><a href="../usage.html">Usage</a></li>
+                <li><a href="../documentation.html" class="active">Documentation</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>Usage Guide</h1>
+            <a href="../documentation.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Documentation</a>
+        </div>
+    </div>
+
+    <section class="content-section">
+        <div class="container documentation-content">
+            <p>This guide explains how to use the Waqt application to manage your work hours, overtime, and leave days.</p>
+
+            <h2 id="table-of-contents">Table of Contents</h2>
+            <ol>
+                <li><a href="#running-the-application">Running the Application</a></li>
+                <li><a href="#dashboard-overview">Dashboard Overview</a></li>
+                <li><a href="#tracking-work-hours">Tracking Work Hours</a></li>
+                <li><a href="#managing-leave-days">Managing Leave Days</a></li>
+                <li><a href="#common-workflows">Common Workflows</a></li>
+                <li><a href="#tips-and-best-practices">Tips and Best Practices</a></li>
+                <li><a href="#advanced-usage">Advanced Usage</a></li>
+                <li><a href="#configuration">Configuration</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ol>
+
+            <hr>
+
+            <h2 id="running-the-application">Running the Application</h2>
+
+            <h3>Starting the Server</h3>
+            <p>If you haven't installed the application yet, see the <a href="installation.html">Installation Guide</a>.</p>
+
+            <p><strong>Using the quick start script:</strong></p>
+            <p>Linux/macOS:</p>
+            <pre><code>./start.sh</code></pre>
+
+            <p>Windows:</p>
+            <pre><code>.\start.ps1</code></pre>
+
+            <p><strong>Manual start:</strong></p>
+            <ol>
+                <li>Activate virtual environment:
+                    <ul>
+                        <li>Linux/macOS: <code>source venv/bin/activate</code></li>
+                        <li>Windows: <code>venv\Scripts\activate</code></li>
+                    </ul>
+                </li>
+                <li>Run the application:
+                    <pre><code>waqt ui</code></pre>
+                </li>
+            </ol>
+
+            <p><strong>Using uv (Recommended):</strong></p>
+            <p>You can run the application directly without manual activation:</p>
+            <pre><code>uv run waqt ui</code></pre>
+
+            <ol start="3">
+                <li>Open your browser to <code>http://localhost:5555</code></li>
+            </ol>
+
+            <h3>Stopping the Server</h3>
+            <p>Press <code>Ctrl+C</code> in the terminal where the application is running.</p>
+
+            <h2 id="dashboard-timer">Dashboard Timer</h2>
+            <p>The dashboard now features a one-click timer for seamless time tracking.</p>
+
+            <h3>Starting the Timer</h3>
+            <ol>
+                <li>On the Dashboard, click <strong>"▶ Start Timer"</strong>.</li>
+                <li>The timer will begin counting up immediately.</li>
+                <li>The status indicator will pulse green to show tracking is active.</li>
+                <li>By default, the entry description is set to "Work".</li>
+            </ol>
+
+            <h3>Pausing and Resuming</h3>
+            <ul>
+                <li><strong>Pause</strong>: Click <strong>"⏸ Pause"</strong> if you need to take a break. This stops the current entry in the database and updates the status indicator to orange.</li>
+                <li><strong>Resume</strong>: Click <strong>"▶ Resume"</strong> to start a new entry. The timer will continue from where it left off visually (by starting a new session).</li>
+            </ul>
+
+            <h3>Stopping the Timer</h3>
+            <ul>
+                <li>Click <strong>"■ Stop"</strong> when you are finished with your work session.</li>
+                <li>The entry will be saved to the database.</li>
+                <li>The dashboard will automatically refresh to show your new entry in the "Recent Time Entries" table.</li>
+            </ul>
+
+            <h2 id="dashboard-overview">Dashboard Overview</h2>
+            <p>The dashboard is your home page and shows:</p>
+            <ul>
+                <li><strong>Timer Control Panel</strong>: Quick-start and manage your current work session.</li>
+                <li><strong>Current Week Stats</strong>:
+                    <ul>
+                        <li>Total hours worked this week</li>
+                        <li>Overtime hours accumulated</li>
+                        <li>Standard hours target (40 hours/week)</li>
+                    </ul>
+                </li>
+                <li><strong>Recent Entries</strong>:
+                    <ul>
+                        <li>Last 10 time entries</li>
+                        <li>Quick view of recent work activities</li>
+                    </ul>
+                </li>
+                <li><strong>Quick Actions</strong>:
+                    <ul>
+                        <li>Add Time Entry</li>
+                        <li>View Reports</li>
+                        <li>Manage Leave</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Navigation Menu</h3>
+            <ul>
+                <li><strong>Dashboard</strong>: Overview and recent activity</li>
+                <li><strong>Time Entry</strong>: Log work hours manually</li>
+                <li><strong>Leave</strong>: Manage vacation and sick days</li>
+                <li><strong>Reports</strong>: View weekly and monthly summaries</li>
+            </ul>
+
+            <h2 id="tracking-work-hours">Tracking Work Hours</h2>
+
+            <h3>Using the Timer (Recommended)</h3>
+            <p>The easiest way to track time is using the <strong>Dashboard Timer</strong>. It automatically records your start and end times with a single click.</p>
+
+            <h3>Adding a Time Entry Manually</h3>
+            <ol>
+                <li>Click <strong>"Add Time Entry"</strong> from the dashboard or navigation menu</li>
+                <li>Fill in the required fields:
+                    <ul>
+                        <li><strong>Date</strong>: Select the date for this entry</li>
+                        <li><strong>Start Time</strong>: When you started working (e.g., 09:00 or 9:00 AM)</li>
+                        <li><strong>End Time</strong>: When you finished working (e.g., 17:00 or 5:00 PM)</li>
+                        <li><strong>Description</strong>: What you worked on</li>
+                    </ul>
+                    <em>Note: Time inputs automatically adapt to your configured <code>time_format</code> setting (12h or 24h).</em>
+                </li>
+                <li>Click <strong>"Save Entry"</strong></li>
+                <li>The entry will appear in your recent entries list</li>
+            </ol>
+            <p><strong>Note</strong>: The system enforces one entry per day. If you try to add another entry for a date that already has one, you'll receive an error message asking you to edit the existing entry instead.</p>
+
+            <h3>Editing a Time Entry</h3>
+            <p>You can edit any completed time entry to correct mistakes or update information.</p>
+
+            <p><strong>Via UI:</strong></p>
+            <ol>
+                <li>Go to the <strong>Dashboard</strong> or <strong>Reports</strong> page</li>
+                <li>Find the entry you want to edit in the table</li>
+                <li>Click the blue <strong>"Edit"</strong> button next to the entry</li>
+                <li>Update any of the following fields:
+                    <ul>
+                        <li><strong>Start Time</strong>: Adjust the start time (format depends on your settings)</li>
+                        <li><strong>End Time</strong>: Adjust the end time</li>
+                        <li><strong>Description</strong>: Update what you worked on</li>
+                    </ul>
+                </li>
+                <li>Click <strong>"Update Entry"</strong></li>
+                <li>The duration will be automatically recalculated</li>
+            </ol>
+
+            <p><strong>Via CLI:</strong></p>
+            <pre><code># Edit only the description
+waqt edit-entry --date 2026-01-08 --desc "Updated work description"
+
+# Edit times
+waqt edit-entry --date 2026-01-08 --start 08:30 --end 17:30
+
+# Edit all fields at once
+waqt edit-entry -d 2026-01-08 -s 08:00 -e 18:00 --desc "Full day development work"</code></pre>
+
+            <p><strong>Important Notes:</strong></p>
+            <ul>
+                <li>You cannot edit an active timer. Stop the timer first using the <strong>"Stop"</strong> button or <code>waqt end</code> command</li>
+                <li>The date field cannot be changed. If you need to move an entry to a different date, delete it and create a new one</li>
+                <li>Duration is automatically recalculated when you change start or end times</li>
+                <li>For legacy cases where multiple entries exist for one day, the CLI will prompt you to specify which entry to edit using the <code>--start</code> parameter for selection</li>
+            </ul>
+
+            <p><strong>Command Options:</strong></p>
+            <ul>
+                <li><code>--date</code> or <code>-d</code>: Date of the entry to edit (YYYY-MM-DD format, <strong>required</strong>)</li>
+                <li><code>--start</code> or <code>-s</code>: New start time (HH:MM format)</li>
+                <li><code>--end</code> or <code>-e</code>: New end time (HH:MM format)</li>
+                <li><code>--description</code> or <code>--desc</code>: New description text</li>
+                <li>At least one field (start, end, or description) must be provided</li>
+            </ul>
+
+            <h2 id="managing-leave-days">Managing Leave Days</h2>
+            <p>The Leave Management feature allows you to track vacation days and sick leave. You can request single-day or multi-day leave, and the system automatically excludes weekends when calculating working hours.</p>
+
+            <h3>Adding Single-Day Leave</h3>
+            <p><strong>Via UI:</strong></p>
+            <ol>
+                <li>Navigate to <strong>Leave</strong> in the menu</li>
+                <li>Select <strong>Leave Type</strong> (Vacation or Sick Leave)</li>
+                <li>Choose a <strong>Start Date</strong> and <strong>End Date</strong> (set both to the same day for single-day leave)</li>
+                <li>Add an optional <strong>Description</strong></li>
+                <li>Review the <strong>Leave Preview</strong> showing working hours</li>
+                <li>Click <strong>"Add Leave"</strong></li>
+            </ol>
+
+            <p><strong>Via CLI:</strong></p>
+            <pre><code># Add a single sick day
+waqt leave-request --from 2026-01-15 --to 2026-01-15 --type sick --desc "Doctor appointment"
+
+# Add a single vacation day
+waqt leave-request --from 2026-01-20 --to 2026-01-20 --type vacation</code></pre>
+
+            <h3>Adding Multi-Day Leave</h3>
+            <p>The system automatically handles multi-day leave requests by:</p>
+            <ul>
+                <li>Creating individual records for each working day (Monday-Friday)</li>
+                <li>Excluding weekends (Saturday and Sunday)</li>
+                <li>Calculating total working hours based on standard hours per day (default: 8 hours)</li>
+            </ul>
+
+            <p><strong>Via UI:</strong></p>
+            <ol>
+                <li>Navigate to <strong>Leave</strong> in the menu</li>
+                <li>Select <strong>Leave Type</strong> (Vacation or Sick Leave)</li>
+                <li>Choose a <strong>Start Date</strong> and <strong>End Date</strong> for your leave period</li>
+                <li>Add an optional <strong>Description</strong></li>
+                <li>Review the <strong>Leave Preview</strong> which shows:
+                    <ul>
+                        <li>Total calendar days in the range</li>
+                        <li>Number of working days (Mon-Fri only)</li>
+                        <li>Number of weekend days excluded</li>
+                        <li>Total working hours</li>
+                    </ul>
+                </li>
+                <li>Click <strong>"Add Leave"</strong></li>
+            </ol>
+
+            <p><strong>Example:</strong> Requesting leave from Monday, Jan 12 to Sunday, Jan 19:</p>
+            <ul>
+                <li>Total days: 8</li>
+                <li>Working days: 6 (excludes Saturday and Sunday)</li>
+                <li>Weekend days excluded: 2</li>
+                <li>Working hours: 48 (6 days × 8 hours)</li>
+            </ul>
+
+            <p><strong>Via CLI:</strong></p>
+            <pre><code># Request a week of vacation (excludes weekends automatically)
+waqt leave-request --from 2026-01-13 --to 2026-01-19 --type vacation --desc "Winter vacation"
+
+# Request medical leave spanning multiple days
+waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical leave"</code></pre>
+
+            <p>The CLI will show you a summary and ask for confirmation before creating the leave records.</p>
+
+            <h3>Weekend Exclusion</h3>
+            <p>Weekends are automatically detected and excluded from leave requests:</p>
+            <ul>
+                <li><strong>Saturday</strong> (weekday 5 in Python's <code>weekday()</code> method)</li>
+                <li><strong>Sunday</strong> (weekday 6 in Python's <code>weekday()</code> method)</li>
+            </ul>
+
+            <p>This ensures that:</p>
+            <ul>
+                <li>You only use leave days for actual working days</li>
+                <li>Working hours calculations are accurate</li>
+                <li>Leave balances reflect real working days taken</li>
+            </ul>
+
+            <h3>Viewing Leave History</h3>
+            <p><strong>Via UI:</strong></p>
+            <ol>
+                <li>Navigate to <strong>Leave</strong> in the menu</li>
+                <li>View the <strong>Leave History</strong> table showing:
+                    <ul>
+                        <li>Date and day of week</li>
+                        <li>Leave type (Vacation or Sick Leave)</li>
+                        <li>Description</li>
+                        <li>Delete button for each record</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <p><strong>Current Year Summary:</strong></p>
+            <p>The Leave page displays counters for the current year:</p>
+            <ul>
+                <li><strong>Vacation Days</strong>: Total vacation days taken</li>
+                <li><strong>Sick Days</strong>: Total sick days taken</li>
+                <li><strong>Total Leave</strong>: Combined total</li>
+            </ul>
+
+            <h3>Deleting Leave Records</h3>
+            <p><strong>Via UI:</strong></p>
+            <ol>
+                <li>Find the leave record in the <strong>Leave History</strong> table</li>
+                <li>Click the red <strong>"Delete"</strong> button</li>
+                <li>Confirm the deletion</li>
+            </ol>
+            <p><strong>Note:</strong> When you delete a leave day, the counters are automatically updated to reflect the change.</p>
+
+            <h3>Leave and Reports</h3>
+            <p>Leave days are included in monthly reports but not in weekly reports:</p>
+            <ul>
+                <li><strong>Monthly Reports</strong>: Show vacation days and sick days taken during the month</li>
+                <li><strong>Weekly Reports</strong>: Focus only on time entries and overtime</li>
+            </ul>
+
+            <h3>Tips for Managing Leave</h3>
+            <p><strong>Planning Ahead:</strong></p>
+            <ul>
+                <li>Add leave requests in advance to plan your schedule</li>
+                <li>Use descriptive notes to remember the reason for leave</li>
+                <li>Check your leave balance regularly</li>
+            </ul>
+
+            <p><strong>Multi-Day Requests:</strong></p>
+            <ul>
+                <li>The system automatically handles weekends - just select your desired date range</li>
+                <li>Review the preview before submitting to ensure the correct days are selected</li>
+                <li>Use the CLI for bulk leave requests when planning extended time off</li>
+            </ul>
+
+            <p><strong>Accuracy:</strong></p>
+            <ul>
+                <li>Only working days (Mon-Fri) consume your leave balance</li>
+                <li>Weekend days in your date range are ignored</li>
+                <li>Working hours are calculated based on your configured standard hours per day</li>
+            </ul>
+
+            <h2 id="common-workflows">Common Workflows</h2>
+
+            <h3>Daily Routine</h3>
+            <p><strong>Start of Workday:</strong></p>
+            <ol>
+                <li>Open Waqt dashboard.</li>
+                <li>Click <strong>"▶ Start Timer"</strong>.</li>
+            </ol>
+
+            <p><strong>During the Day:</strong></p>
+            <ol>
+                <li>Use <strong>"⏸ Pause"</strong> and <strong>"▶ Resume"</strong> for breaks.</li>
+            </ol>
+
+            <p><strong>End of Workday:</strong></p>
+            <ol>
+                <li>Click <strong>"■ Stop"</strong>.</li>
+                <li>Verify the entries in the "Recent Time Entries" table.</li>
+                <li>Check dashboard to see weekly progress.</li>
+            </ol>
+
+            <h3>Weekly Review</h3>
+            <p><strong>Friday Afternoon or Monday Morning:</strong></p>
+            <ol>
+                <li>Navigate to Reports → Weekly Overview</li>
+                <li>Review total hours and overtime</li>
+                <li>Verify all days are logged</li>
+                <li>Add any missing entries</li>
+            </ol>
+
+            <h3>Monthly Review</h3>
+            <p><strong>End of Month:</strong></p>
+            <ol>
+                <li>Go to Reports → Monthly Overview</li>
+                <li>Review total hours and overtime for the month</li>
+                <li>Check leave days taken</li>
+                <li>Compare with expected work hours</li>
+                <li>Plan upcoming vacation days</li>
+            </ol>
+
+            <h3>Leave Planning</h3>
+            <p><strong>Before Taking Time Off:</strong></p>
+            <ol>
+                <li>Go to Leave section</li>
+                <li>Record vacation days in advance</li>
+                <li>Check remaining vacation balance</li>
+                <li>Ensure no conflicts with work entries</li>
+            </ol>
+
+            <h3>Project Time Tracking</h3>
+            <p><strong>Tracking Multiple Projects:</strong></p>
+            <ol>
+                <li>Use clear project names in descriptions</li>
+                <li>Example: "[Project Alpha] Implemented user authentication"</li>
+                <li>Filter activity log by project name</li>
+                <li>Calculate project-specific hours manually or use reports</li>
+            </ol>
+
+            <h2 id="tips-and-best-practices">Tips and Best Practices</h2>
+
+            <h3>Consistency</h3>
+            <ul>
+                <li><strong>Log daily</strong>: Don't wait until the end of the week</li>
+                <li><strong>Use templates</strong>: Keep common descriptions in a note for copy-paste</li>
+                <li><strong>Set reminders</strong>: Add a daily reminder to log time</li>
+            </ul>
+
+            <h3>Description Guidelines</h3>
+            <p>Good descriptions include:</p>
+            <ul>
+                <li>Project or task name</li>
+                <li>Specific activity</li>
+                <li>Ticket/issue numbers if applicable</li>
+            </ul>
+
+            <p><strong>Good examples:</strong></p>
+            <ul>
+                <li>"Project X - Fixed login bug (#145)"</li>
+                <li>"Client meeting - Q1 planning"</li>
+                <li>"Code review for pull request #89"</li>
+            </ul>
+
+            <p><strong>Poor examples:</strong></p>
+            <ul>
+                <li>"Work"</li>
+                <li>"Coding"</li>
+                <li>"Meeting"</li>
+            </ul>
+
+            <h3>Accuracy</h3>
+            <ul>
+                <li><strong>Round appropriately</strong>: Round to nearest 15 or 30 minutes</li>
+                <li><strong>Include setup time</strong>: Count environment setup, meetings, etc.</li>
+                <li><strong>Track breaks</strong>: Note if your times include lunch breaks</li>
+                <li><strong>Be honest</strong>: Accurate tracking helps with planning</li>
+            </ul>
+
+            <h3>Data Management</h3>
+            <ul>
+                <li><strong>Backup regularly</strong>: Copy <code>time_tracker.db</code> to a safe location</li>
+                <li><strong>Version control</strong>: Keep backups when making changes</li>
+                <li><strong>Export data</strong>: Periodically export reports for records</li>
+            </ul>
+
+            <h3>Timezone Considerations</h3>
+            <ul>
+                <li>The application uses your local system time</li>
+                <li>Be consistent with timezone when traveling</li>
+                <li>Note timezone in descriptions if working across zones</li>
+            </ul>
+
+            <h3>Performance</h3>
+            <ul>
+                <li>Database stays fast even with thousands of entries</li>
+                <li>Archive old entries annually if needed (manual process)</li>
+                <li>Regular SQLite maintenance helps (vacuum command)</li>
+            </ul>
+
+            <h2 id="advanced-usage">Advanced Usage</h2>
+
+            <h3>Custom Reports</h3>
+            <p>While the application provides standard reports, you can:</p>
+            <ol>
+                <li>Access <code>time_tracker.db</code> with SQLite tools</li>
+                <li>Write custom SQL queries for specific insights</li>
+                <li>Export data to CSV for analysis in Excel/spreadsheets</li>
+            </ol>
+
+            <h3>Database Queries (Advanced)</h3>
+            <p>Example queries using <code>sqlite3</code> command-line tool:</p>
+            <pre><code># Open database
+sqlite3 time_tracker.db
+
+# Get all entries for a specific project
+SELECT date, duration_hours, description 
+FROM time_entries 
+WHERE description LIKE '%Project X%';
+
+# Calculate overtime by month
+SELECT strftime('%Y-%m', date) as month, 
+       SUM(duration_hours) as total_hours,
+       SUM(duration_hours) - (COUNT(DISTINCT date) * 8) as overtime
+FROM time_entries
+GROUP BY month;</code></pre>
+
+            <h3>Automation</h3>
+            <p>You can automate time entry creation with scripts:</p>
+            <pre><code>from waqt import create_app, db
+from waqt.models import TimeEntry
+from datetime import datetime, time</code></pre>
+
+            <h2 id="configuration">Configuration</h2>
+            <p>The application supports various configuration options to customize its behavior. All settings are stored in the database and can be managed using the CLI.</p>
+
+            <h3>Viewing Configuration</h3>
+            <p>To see all available configuration options:</p>
+            <pre><code>waqt config list</code></pre>
+
+            <p>To view a specific setting:</p>
+            <pre><code>waqt config get &lt;setting_name&gt;</code></pre>
+
+            <h3>Available Settings</h3>
+            <h4>Standard Work Hours</h4>
+            <ul>
+                <li><strong><code>standard_hours_per_day</code></strong>: Number of hours considered standard work per day (default: 8)</li>
+                <li><strong><code>weekly_hours</code></strong>: Expected weekly working hours (default: 40)</li>
+            </ul>
+
+            <h4>Display Settings</h4>
+            <ul>
+                <li><strong><code>time_format</code></strong>: Time display format. Options: <code>12</code> for 12-hour format (AM/PM) or <code>24</code> for 24-hour format (default: 24).</li>
+            </ul>
+
+            <h4>Timer Settings</h4>
+            <ul>
+                <li><strong><code>pause_duration_minutes</code></strong>: Default pause/break duration in minutes (default: 45)</li>
+                <li><strong><code>auto_end</code></strong>: Feature flag to auto-end work session after 8h 45m (default: false)</li>
+            </ul>
+
+            <h4>Session Alert Settings</h4>
+            <ul>
+                <li><strong><code>alert_on_max_work_session</code></strong>: Enable alerts when work sessions exceed 8 hours and approach the maximum limit (default: false)</li>
+                <li><strong><code>max_work_session_hours</code></strong>: Maximum work session hours threshold for alerts (default: 10)</li>
+            </ul>
+
+            <h3>Modifying Settings</h3>
+            <p>To change a setting:</p>
+            <pre><code>waqt config set &lt;setting_name&gt; &lt;value&gt;</code></pre>
+
+            <p>Examples:</p>
+            <pre><code># Enable session alerts
+waqt config set alert_on_max_work_session true
+
+# Set maximum session threshold to 12 hours
+waqt config set max_work_session_hours 12
+
+# Change weekly hours target
+waqt config set weekly_hours 35</code></pre>
+
+            <h3>Resetting Settings</h3>
+            <p>To reset a setting to its default value:</p>
+            <pre><code>waqt config reset &lt;setting_name&gt;</code></pre>
+
+            <h3>Session Alert Feature</h3>
+            <p>The session alert feature helps prevent excessive work sessions by showing a warning banner in the UI when:</p>
+            <ol>
+                <li>The feature is enabled (<code>alert_on_max_work_session</code> is <code>true</code>)</li>
+                <li>An active timer has been running for more than 8 hours</li>
+                <li>The session is approaching the configured maximum threshold</li>
+            </ol>
+
+            <p><strong>How it works:</strong></p>
+            <ul>
+                <li>The alert appears automatically in the dashboard when conditions are met</li>
+                <li>It shows current session hours and the maximum recommended threshold</li>
+                <li>Users can dismiss the alert, but it will reappear on the next check (every 60 seconds)</li>
+                <li>The alert only shows when the UI is open and a session is actively running</li>
+                <li>Pausing the timer hides the alert</li>
+            </ul>
+
+            <p><strong>Use case:</strong> In some countries, labor laws prohibit working more than 10 hours in a single session. This feature helps users stay compliant by providing timely reminders.</p>
+
+            <h2 id="troubleshooting">Troubleshooting</h2>
+
+            <h3>Time Entry Issues</h3>
+            <p><strong>Problem</strong>: Can't add time entry</p>
+            <p><strong>Solutions</strong>:</p>
+            <ul>
+                <li>Check date format is valid</li>
+                <li>Ensure end time is after start time</li>
+                <li>Verify description isn't too long</li>
+                <li>Check database isn't locked</li>
+            </ul>
+
+            <h3>Report Not Updating</h3>
+            <p><strong>Problem</strong>: Reports show old data</p>
+            <p><strong>Solutions</strong>:</p>
+            <ul>
+                <li>Refresh the page (Ctrl+F5)</li>
+                <li>Restart the application</li>
+                <li>Check entries are saved (view dashboard)</li>
+                <li>Clear browser cache</li>
+            </ul>
+
+            <h3>Data Recovery</h3>
+            <p><strong>Problem</strong>: Accidentally closed without saving</p>
+            <p><strong>Solution</strong>:</p>
+            <ul>
+                <li>Unfortunately, unsaved time entries are lost</li>
+                <li>Get in the habit of clicking Save immediately</li>
+                <li>Consider the autosave feature (future enhancement)</li>
+            </ul>
+
+            <h2 id="getting-help">Getting Help</h2>
+            <p>If you need assistance:</p>
+            <ol>
+                <li>Check this usage guide thoroughly</li>
+                <li>Review the <a href="installation.html">Installation Guide</a> for setup issues</li>
+                <li>See the project <a href="https://github.com/GMouaad/waqt/blob/main/README.md" target="_blank">README</a> for quick reference</li>
+                <li>Open an issue on GitHub: <a href="https://github.com/GMouaad/waqt/issues" target="_blank">https://github.com/GMouaad/waqt/issues</a></li>
+            </ol>
+
+            <h2 id="whats-next">What's Next?</h2>
+            <ul>
+                <li>Explore all features systematically</li>
+                <li>Develop a daily routine for time tracking</li>
+                <li>Review reports regularly for insights</li>
+                <li>Customize descriptions to match your workflow</li>
+                <li>Back up your data regularly</li>
+            </ul>
+
+            <p>Happy time tracking! 📊⏰</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="copyright-year">2024</span> Waqt Contributors. Licensed under the MIT License.</p>
+            <p>Made with ❤️ by the Waqt Contributors</p>
+            <div class="footer-links">
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

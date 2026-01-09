@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Container Setup - Waqt Documentation</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                    <i class="fas fa-clock"></i>
+                    <span>Waqt</span>
+                </a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../installation.html">Installation</a></li>
+                <li><a href="../usage.html">Usage</a></li>
+                <li><a href="../documentation.html" class="active">Documentation</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>Development Container Setup</h1>
+            <a href="../documentation.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Documentation</a>
+        </div>
+    </div>
+
+    <section class="content-section">
+        <div class="container documentation-content">
+            <p>This document explains how to use the development container (dev container) for the Waqtracker time tracking application.</p>
+
+            <h2 id="what-is-dev-container">What is a Dev Container?</h2>
+            <p>A development container is a Docker container specifically configured for development. It provides a consistent development environment across different machines and operating systems.</p>
+
+            <h2 id="prerequisites">Prerequisites</h2>
+
+            <h3>Option 1: VS Code (Recommended)</h3>
+            <ul>
+                <li><a href="https://code.visualstudio.com/" target="_blank">Visual Studio Code</a></li>
+                <li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers" target="_blank">Dev Containers extension</a></li>
+                <li><a href="https://www.docker.com/products/docker-desktop" target="_blank">Docker Desktop</a></li>
+            </ul>
+
+            <h3>Option 2: GitHub Codespaces</h3>
+            <ul>
+                <li>A GitHub account</li>
+                <li>No local installation required</li>
+            </ul>
+
+            <h2 id="getting-started-vscode">Getting Started with VS Code</h2>
+
+            <h3>First-Time Setup</h3>
+            <ol>
+                <li><strong>Install Prerequisites:</strong>
+                    <p>Install VS Code, Docker Desktop, and the Dev Containers extension</p>
+                </li>
+                <li><strong>Open the Project:</strong>
+                    <pre><code>git clone https://github.com/GMouaad/waqt.git
+cd waqt
+code .</code></pre>
+                </li>
+                <li><strong>Start the Dev Container:</strong>
+                    <ul>
+                        <li>VS Code will prompt you to "Reopen in Container"</li>
+                        <li>Click the prompt or use F1 → "Dev Containers: Reopen in Container"</li>
+                        <li>Wait for the container to build (first time takes 2-5 minutes)</li>
+                    </ul>
+                </li>
+                <li><strong>Automatic Setup:</strong>
+                    <p>The dev container will automatically:</p>
+                    <ul>
+                        <li>Install Python 3.11</li>
+                        <li>Install all Python dependencies from <code>pyproject.toml</code></li>
+                        <li>Initialize the SQLite database with <code>python -m waqt.scripts.init_db</code></li>
+                        <li>Configure VS Code with recommended extensions and settings</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Running the Application</h3>
+            <p>Once the dev container is ready:</p>
+            <ol>
+                <li><strong>Start the Flask server:</strong>
+                    <pre><code>waqt ui</code></pre>
+                    <p>Or use the provided startup script:</p>
+                    <pre><code>./start.sh</code></pre>
+                </li>
+                <li><strong>Access the application:</strong>
+                    <ul>
+                        <li>VS Code will automatically forward port 5555</li>
+                        <li>Click the notification or go to <code>http://localhost:5555</code> in your browser</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Running Tests</h3>
+            <pre><code># Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=app
+
+# Run specific test file
+pytest tests/test_models.py</code></pre>
+
+            <h3>Code Formatting and Linting</h3>
+            <p>The dev container is pre-configured with:</p>
+            <ul>
+                <li><strong>Black</strong>: Auto-formats code on save</li>
+                <li><strong>Flake8</strong>: Lints code for style issues</li>
+            </ul>
+
+            <p>Manual commands:</p>
+            <pre><code># Format code with Black
+black .
+
+# Check linting with Flake8
+flake8 src/waqt/ tests/</code></pre>
+
+            <h2 id="getting-started-codespaces">Getting Started with GitHub Codespaces</h2>
+            <ol>
+                <li><strong>Create a Codespace:</strong>
+                    <ul>
+                        <li>Go to the repository on GitHub</li>
+                        <li>Click the "Code" button → "Codespaces" tab</li>
+                        <li>Click "Create codespace on main"</li>
+                    </ul>
+                </li>
+                <li><strong>Wait for Setup:</strong>
+                    <ul>
+                        <li>The codespace will automatically build and configure the environment</li>
+                        <li>All dependencies will be installed automatically</li>
+                    </ul>
+                </li>
+                <li><strong>Start Development:</strong>
+                    <ul>
+                        <li>Run <code>waqt ui</code> to start the application</li>
+                        <li>Access the app through the forwarded port (VS Code will notify you)</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h2 id="features-included">Features Included</h2>
+
+            <h3>VS Code Extensions</h3>
+            <p>The dev container automatically installs:</p>
+            <ul>
+                <li><strong>Python</strong>: Core Python support</li>
+                <li><strong>Pylance</strong>: Advanced Python language server</li>
+                <li><strong>Black Formatter</strong>: Code formatting</li>
+                <li><strong>Flake8</strong>: Code linting</li>
+                <li><strong>Python Debugger</strong>: Debugging support</li>
+                <li><strong>Markdown Lint</strong>: Documentation linting</li>
+            </ul>
+
+            <h3>Environment Configuration</h3>
+            <ul>
+                <li><strong>Python 3.11</strong>: Latest stable Python version</li>
+                <li><strong>SQLite3</strong>: Pre-installed for database operations</li>
+                <li><strong>Git</strong>: Version control tools</li>
+                <li><strong>Port Forwarding</strong>: Port 5555 for Flask app</li>
+            </ul>
+
+            <h3>Automatic Setup</h3>
+            <p>On container creation:</p>
+            <ol>
+                <li>All Python dependencies are installed</li>
+                <li>Development dependencies are installed</li>
+                <li>Database is initialized with schema</li>
+                <li>VS Code settings are configured</li>
+            </ol>
+
+            <h2 id="customization">Customization</h2>
+
+            <h3>Adding Extensions</h3>
+            <p>Edit <code>.devcontainer/devcontainer.json</code> and add extensions to the <code>extensions</code> array:</p>
+            <pre><code>"extensions": [
+    "ms-python.python",
+    "your-extension-id"
+]</code></pre>
+
+            <h3>Modifying Python Version</h3>
+            <p>Edit <code>.devcontainer/Dockerfile</code> and change the base image:</p>
+            <pre><code>FROM mcr.microsoft.com/devcontainers/python:3.12</code></pre>
+
+            <h3>Adding System Packages</h3>
+            <p>Edit <code>.devcontainer/Dockerfile</code> and add packages to the <code>apt-get install</code> command:</p>
+            <pre><code>RUN apt-get update &amp;&amp; export DEBIAN_FRONTEND=noninteractive \
+    &amp;&amp; apt-get -y install --no-install-recommends \
+    your-package \
+    &amp;&amp; apt-get clean -y &amp;&amp; rm -rf /var/lib/apt/lists/*</code></pre>
+
+            <h2 id="troubleshooting">Troubleshooting</h2>
+
+            <h3>Container Won't Build</h3>
+            <ol>
+                <li><strong>Check Docker is running:</strong>
+                    <pre><code>docker ps</code></pre>
+                </li>
+                <li><strong>Rebuild the container:</strong>
+                    <ul>
+                        <li>Command Palette (F1) → "Dev Containers: Rebuild Container"</li>
+                    </ul>
+                </li>
+                <li><strong>Check logs:</strong>
+                    <ul>
+                        <li>Command Palette (F1) → "Dev Containers: Show Container Log"</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Dependencies Not Installing</h3>
+            <ol>
+                <li><strong>Rebuild without cache:</strong>
+                    <ul>
+                        <li>Command Palette (F1) → "Dev Containers: Rebuild Container Without Cache"</li>
+                    </ul>
+                </li>
+                <li><strong>Manually install dependencies:</strong>
+                    <pre><code>uv pip install -e ".[dev]"</code></pre>
+                </li>
+            </ol>
+
+            <h3>Database Issues</h3>
+            <ol>
+                <li><strong>Reinitialize the database:</strong>
+                    <pre><code>rm -f time_tracker.db
+python -m waqt.scripts.init_db</code></pre>
+                </li>
+            </ol>
+
+            <h3>Port Already in Use</h3>
+            <ol>
+                <li><strong>Stop other services using port 5555:</strong>
+                    <pre><code># On Linux/Mac
+lsof -ti:5555 | xargs kill -9
+
+# On Windows (PowerShell)
+Get-Process -Id (Get-NetTCPConnection -LocalPort 5555).OwningProcess | Stop-Process</code></pre>
+                </li>
+                <li><strong>Use a different port:</strong>
+                    <p>Set the <code>PORT</code> environment variable: <code>PORT=5556 waqt ui</code></p>
+                </li>
+            </ol>
+
+            <h2 id="best-practices">Best Practices</h2>
+            <ol>
+                <li><strong>Keep the container updated:</strong>
+                    <ul>
+                        <li>Rebuild periodically to get updates: "Dev Containers: Rebuild Container"</li>
+                    </ul>
+                </li>
+                <li><strong>Don't modify files outside the container:</strong>
+                    <ul>
+                        <li>Always edit files while connected to the dev container</li>
+                    </ul>
+                </li>
+                <li><strong>Commit your changes:</strong>
+                    <ul>
+                        <li>The dev container has Git pre-configured</li>
+                        <li>Use the integrated terminal for Git operations</li>
+                    </ul>
+                </li>
+                <li><strong>Use version control:</strong>
+                    <ul>
+                        <li>Don't modify <code>.devcontainer/</code> files without committing them</li>
+                        <li>Changes should work for all team members</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h2 id="additional-resources">Additional Resources</h2>
+            <ul>
+                <li><a href="https://code.visualstudio.com/docs/devcontainers/containers" target="_blank">VS Code Dev Containers Documentation</a></li>
+                <li><a href="https://containers.dev/" target="_blank">Dev Container Specification</a></li>
+                <li><a href="https://docs.docker.com/" target="_blank">Docker Documentation</a></li>
+                <li><a href="https://docs.github.com/en/codespaces" target="_blank">GitHub Codespaces Documentation</a></li>
+            </ul>
+
+            <h2 id="support">Support</h2>
+            <p>If you encounter issues with the dev container:</p>
+            <ol>
+                <li>Check the <a href="#troubleshooting">Troubleshooting</a> section</li>
+                <li>Review container logs</li>
+                <li>Open an issue on GitHub with:
+                    <ul>
+                        <li>Your operating system</li>
+                        <li>Docker version (<code>docker --version</code>)</li>
+                        <li>VS Code version</li>
+                        <li>Error messages or logs</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="copyright-year">2024</span> Waqt Contributors. Licensed under the MIT License.</p>
+            <p>Made with ❤️ by the Waqt Contributors</p>
+            <div class="footer-links">
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>
