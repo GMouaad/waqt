@@ -444,7 +444,7 @@ def time_entry():
 @bp.route("/time-entry/<int:entry_id>/edit", methods=["GET", "POST"])
 def edit_time_entry(entry_id):
     """Edit an existing time entry."""
-    entry = TimeEntry.query.get_or_404(entry_id)
+    entry = db.get_or_404(TimeEntry, entry_id)
     time_format = Settings.get_setting("time_format", "24")
 
     # Prevent editing of active timers to avoid data corruption and
@@ -509,7 +509,7 @@ def edit_time_entry(entry_id):
 def delete_time_entry(entry_id):
     """Delete a time entry."""
     try:
-        entry = TimeEntry.query.get_or_404(entry_id)
+        entry = db.get_or_404(TimeEntry, entry_id)
         db.session.delete(entry)
         db.session.commit()
         flash("Time entry deleted successfully.", "success")
@@ -705,7 +705,7 @@ def leave():
 def delete_leave(leave_id):
     """Delete a leave day."""
     try:
-        leave_day = LeaveDay.query.get_or_404(leave_id)
+        leave_day = db.get_or_404(LeaveDay, leave_id)
         db.session.delete(leave_day)
         db.session.commit()
         flash("Leave day deleted successfully.", "success")

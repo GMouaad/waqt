@@ -17,7 +17,7 @@
             <div class="form-group">
                 <label for="start_time">Start Time *</label>
                 {% if time_format == '12' %}
-                <input type="text" id="start_time" name="start_time" data-testid="input-start-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AP]M)" required>
+                <input type="text" id="start_time" name="start_time" data-testid="input-start-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
                 {% else %}
                 <input type="time" id="start_time" name="start_time" data-testid="input-start-time" required>
                 {% endif %}
@@ -26,7 +26,7 @@
             <div class="form-group">
                 <label for="end_time">End Time *</label>
                 {% if time_format == '12' %}
-                <input type="text" id="end_time" name="end_time" data-testid="input-end-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AP]M)" required>
+                <input type="text" id="end_time" name="end_time" data-testid="input-end-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
                 {% else %}
                 <input type="time" id="end_time" name="end_time" data-testid="input-end-time" required>
                 {% endif %}

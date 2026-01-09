@@ -209,7 +209,7 @@ def test_edit_time_entry_post(client, app):
 
     # Verify changes in database
     with app.app_context():
-        updated_entry = TimeEntry.query.get(entry_id)
+        updated_entry = db.session.get(TimeEntry, entry_id)
         assert updated_entry.start_time == time(8, 30)
         assert updated_entry.end_time == time(17, 30)
         assert updated_entry.duration_hours == 9.0
@@ -285,7 +285,7 @@ def test_edit_time_entry_invalid_time(client, app):
 
     # Verify entry was updated with 16 hour duration (crossing midnight)
     with app.app_context():
-        updated_entry = TimeEntry.query.get(entry_id)
+        updated_entry = db.session.get(TimeEntry, entry_id)
         assert updated_entry.start_time == time(17, 0)
         assert updated_entry.end_time == time(9, 0)
         assert updated_entry.duration_hours == 16.0  # 17:00 to 09:00 next day
@@ -318,6 +318,6 @@ def test_edit_active_timer_prevented(client, app):
 
     # Verify entry was not changed
     with app.app_context():
-        unchanged_entry = TimeEntry.query.get(entry_id)
+        unchanged_entry = db.session.get(TimeEntry, entry_id)
         assert unchanged_entry.is_active is True
         assert unchanged_entry.start_time == time(9, 0)
