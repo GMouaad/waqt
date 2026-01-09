@@ -22,6 +22,11 @@ from .utils import (
     format_time,
     get_working_days_in_range,
     calculate_leave_hours,
+)
+from .services import (
+    start_time_entry,
+    end_time_entry,
+    update_time_entry,
     create_leave_requests,
 )
 from .config import (
@@ -69,37 +74,6 @@ def get_app():
     if _app is None:
         _app = create_app()
     return _app
-
-
-def _get_open_entry_for_date(entry_date):
-    """Get the most recent open time entry for a specific date.
-    
-    Open entries are identified by:
-    - is_active == True
-    
-    Args:
-        entry_date: Date to check for open entries
-    
-    Returns:
-        TimeEntry object if found, None otherwise
-    """
-    return (
-        TimeEntry.query.filter_by(date=entry_date, is_active=True)
-        .order_by(TimeEntry.created_at.desc())
-        .first()
-    )
-
-
-def _has_open_entry_for_date(entry_date):
-    """Check if there's an open time entry for a specific date.
-    
-    Args:
-        entry_date: Date to check
-    
-    Returns:
-        Boolean indicating if an open entry exists
-    """
-    return _get_open_entry_for_date(entry_date) is not None
 
 
 @mcp.tool()
@@ -157,26 +131,16 @@ def start(
         if not description:
             description = "Work session"
 
-        # Check if there's already an open entry for this date
-        if _has_open_entry_for_date(entry_date):
+        # Use shared service
+        result = start_time_entry(entry_date, start_time, description)
+        
+        if not result["success"]:
             return {
                 "status": "error",
-                "message": f"There's already an open time entry for {entry_date}. "
-                "Please call 'end' first to close it.",
+                "message": result["message"]
             }
-
-        # Create a new entry
-        entry = TimeEntry(
-            date=entry_date,
-            start_time=start_time,
-            end_time=start_time,  # Marker: same as start_time for open entries
-            duration_hours=0.0,  # Marker: 0.0 for open entries
-            is_active=True,
-            description=description,
-        )
-
-        db.session.add(entry)
-        db.session.commit()
+            
+        entry = result["entry"]
 
         return {
             "status": "success",
@@ -234,35 +198,28 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
         else:
             end_time = datetime.now().time()
 
-        # Find the most recent open entry for this date
-        open_entry = _get_open_entry_for_date(entry_date)
-
-        if not open_entry:
+        # Use shared service
+        result = end_time_entry(end_time, entry_date)
+        
+        if not result["success"]:
             return {
                 "status": "error",
-                "message": f"No open time entry found for {entry_date}. "
-                "Call 'start' first to begin tracking time.",
+                "message": result["message"]
             }
-
-        # Calculate duration
-        duration = calculate_duration(open_entry.start_time, end_time)
-
-        # Update the entry
-        open_entry.end_time = end_time
-        open_entry.duration_hours = duration
-        open_entry.is_active = False
-        db.session.commit()
+            
+        entry = result["entry"]
+        duration = result["duration"]
 
         return {
             "status": "success",
             "message": "Time tracking ended!",
             "entry": {
                 "date": entry_date.isoformat(),
-                "start_time": format_time(open_entry.start_time),
+                "start_time": format_time(entry.start_time),
                 "end_time": format_time(end_time),
                 "duration": format_hours(duration),
                 "duration_hours": duration,
-                "description": open_entry.description,
+                "description": entry.description,
             },
         }
 
@@ -312,87 +269,48 @@ def edit_entry(
                 "message": "At least one field (start, end, or description) must be provided to update.",
             }
 
-        if entry_id:
-             entry = db.session.get(TimeEntry, entry_id)
-             if not entry:
-                 return {
-                     "status": "error",
-                     "message": f"No entry found with ID {entry_id}.",
-                 }
-             if entry.date != entry_date:
-                 return {
-                     "status": "error",
-                     "message": f"Entry with ID {entry_id} does not match the provided date {date}.",
-                 }
-             if entry.is_active:
-                 return {
-                    "status": "error",
-                    "message": "Cannot edit active entries. Please end the session first.",
-                 }
-        else:
-            # Find entries for this date (excluding active/open entries)
+        # Prepare updates
+        start_t = None
+        if start:
+            try:
+                start_t = datetime.strptime(start, "%H:%M").time()
+            except ValueError:
+                return {"status": "error", "message": f"Invalid start time '{start}'."}
+                
+        end_t = None
+        if end:
+            try:
+                end_t = datetime.strptime(end, "%H:%M").time()
+            except ValueError:
+                return {"status": "error", "message": f"Invalid end time '{end}'."}
+
+        # If ID not provided, resolve it
+        target_id = entry_id
+        if not target_id:
             entries = (
                 TimeEntry.query.filter_by(date=entry_date, is_active=False)
                 .order_by(TimeEntry.created_at.desc())
                 .all()
             )
-
             if not entries:
-                return {
-                    "status": "error",
-                    "message": f"No completed time entry found for {entry_date}. Note: Cannot edit active entries.",
-                }
-            
+                return {"status": "error", "message": f"No completed entry found for {date}."}
             if len(entries) > 1:
-                return {
-                    "status": "error",
-                    "message": f"Multiple entries found for {date}. Please provide 'entry_id' from list_entries to identify which one to edit.",
-                }
-            
-            entry = entries[0]
+                return {"status": "error", "message": f"Multiple entries found for {date}, please specify entry_id."}
+            target_id = entries[0].id
 
-        # Store original values for potential reporting (optional, can skip for now)
+        # Use shared service
+        result = update_time_entry(
+            target_id, 
+            start_time=start_t, 
+            end_time=end_t, 
+            description=description,
+            date_check=entry_date
+        )
         
-        # Parse and update start time if provided
-        if start:
-            try:
-                entry.start_time = datetime.strptime(start, "%H:%M").time()
-            except ValueError:
-                return {
-                    "status": "error",
-                    "message": f"Invalid start time format '{start}'. Use HH:MM.",
-                }
-
-        # Parse and update end time if provided
-        if end:
-            try:
-                entry.end_time = datetime.strptime(end, "%H:%M").time()
-            except ValueError:
-                return {
-                    "status": "error",
-                    "message": f"Invalid end time format '{end}'. Use HH:MM.",
-                }
-
-        # Update description if provided
-        if description:
-            entry.description = description.strip()
-            if not entry.description:
-                return {
-                    "status": "error",
-                    "message": "Description cannot be empty.",
-                }
-
-        # Recalculate duration if times were changed
-        if start or end:
-            duration = calculate_duration(entry.start_time, entry.end_time)
-            if duration <= 0:
-                return {
-                    "status": "error",
-                    "message": "End time must be after start time.",
-                }
-            entry.duration_hours = duration
-
-        db.session.commit()
+        if not result["success"]:
+            return {"status": "error", "message": result["message"]}
+            
+        entry = result["entry"]
 
         return {
             "status": "success",

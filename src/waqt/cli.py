@@ -17,6 +17,11 @@ from .utils import (
     format_time,
     get_working_days_in_range,
     calculate_leave_hours,
+)
+from .services import (
+    start_time_entry,
+    end_time_entry,
+    update_time_entry,
     create_leave_requests,
 )
 from ._version import VERSION, GIT_SHA
@@ -114,35 +119,14 @@ def start(time: Optional[str], date: Optional[str], description: str):
         if not description:
             description = "Work session"
 
-        # Check if there's already an open entry for this date
-        # Open entries are identified by is_active=True
-        open_entries = TimeEntry.query.filter_by(date=entry_date, is_active=True).all()
-
-        if open_entries:
-            click.echo(
-                click.style(
-                    f"Error: There's already an open time entry for {entry_date}.",
-                    fg="red",
-                )
-            )
-            click.echo("Please run 'waqt end' first to close it.")
+        # Use shared service
+        result = start_time_entry(entry_date, start_time, description)
+        
+        if not result["success"]:
+            click.echo(click.style(f"Error: {result['message']}", fg="red"))
+            if result.get("error_type") == "duplicate_active":
+                click.echo("Please run 'waqt end' first to close it.")
             raise click.exceptions.Exit(1)
-
-        # Create a new entry with start time
-        # end_time is set to start_time as a temporary marker for open entries
-        # duration_hours is 0.0 to indicate this entry is not yet complete
-        # The 'waqt end' command will update these values
-        entry = TimeEntry(
-            date=entry_date,
-            start_time=start_time,
-            end_time=start_time,  # Marker: same as start_time for open entries
-            duration_hours=0.0,  # Marker: 0.0 for open entries
-            is_active=True,
-            description=description,
-        )
-
-        db.session.add(entry)
-        db.session.commit()
 
         click.echo(click.style("✓ Time tracking started!", fg="green", bold=True))
         click.echo(f"Date: {entry_date}")
@@ -208,38 +192,24 @@ def end(time: Optional[str], date: Optional[str]):
         else:
             end_time = datetime.now().time()
 
-        # Find the most recent entry for this date that is still open
-        # Open entries have is_active=True
-        open_entry = (
-            TimeEntry.query.filter_by(date=entry_date, is_active=True)
-            .order_by(TimeEntry.created_at.desc())
-            .first()
-        )
-
-        if not open_entry:
-            click.echo(
-                click.style(
-                    f"Error: No open time entry found for {entry_date}.", fg="red"
-                )
-            )
-            click.echo("Run 'waqt start' first to begin tracking time.")
+        # Use shared service
+        result = end_time_entry(end_time, entry_date)
+        
+        if not result["success"]:
+            click.echo(click.style(f"Error: {result['message']}", fg="red"))
+            if result.get("error_type") == "no_active_timer":
+                click.echo("Run 'waqt start' first to begin tracking time.")
             raise click.exceptions.Exit(1)
-
-        # Calculate duration
-        duration = calculate_duration(open_entry.start_time, end_time)
-
-        # Update the entry
-        open_entry.end_time = end_time
-        open_entry.duration_hours = duration
-        open_entry.is_active = False
-        db.session.commit()
+            
+        entry = result["entry"]
+        duration = result["duration"]
 
         click.echo(click.style("✓ Time tracking ended!", fg="green", bold=True))
         click.echo(f"Date: {entry_date}")
-        click.echo(f"Start time: {format_time(open_entry.start_time)}")
+        click.echo(f"Start time: {format_time(entry.start_time)}")
         click.echo(f"End time: {format_time(end_time)}")
         click.echo(f"Duration: {format_hours(duration)}")
-        click.echo(f"Description: {open_entry.description}")
+        click.echo(f"Description: {entry.description}")
 
 
 @cli.command()
@@ -345,107 +315,72 @@ def edit_entry(
                 )
             )
             click.echo()
-            for idx, entry in enumerate(entries, 1):
+            for idx, entry_item in enumerate(entries, 1):
                 click.echo(
-                    f"  {idx}. {format_time(entry.start_time)}-"
-                    f"{format_time(entry.end_time)} "
-                    f"({format_hours(entry.duration_hours)}) - {entry.description[:50]}"
+                    f"  {idx}. {format_time(entry_item.start_time)}-"
+                    f"{format_time(entry_item.end_time)} "
+                    f"({format_hours(entry_item.duration_hours)}) - {entry_item.description[:50]}"
                 )
             click.echo()
-            click.echo(
-                "Note: The system now enforces one entry per day. "
-                "Please delete the extra entries manually."
-            )
-            click.echo(
-                "You can use the UI to delete entries, or specify --start to select."
-            )
-
-            # If start time provided, try to match it for selection
+            click.echo("Please resolve multiple entries in UI or use ID-based editing (not available in CLI yet).")
+            # For now, default to most recent like before, but maybe we should abort?
+            # Existing logic tried to filter by start time.
+            
             if start:
                 try:
-                    start_time = datetime.strptime(start, "%H:%M").time()
-                    matching = [e for e in entries if e.start_time == start_time]
+                    start_filter = datetime.strptime(start, "%H:%M").time()
+                    matching = [e for e in entries if e.start_time == start_filter]
                     if len(matching) == 1:
                         entry = matching[0]
-                        click.echo(
-                            f"\nMatching entry by start time: "
-                            f"{format_time(entry.start_time)}"
-                        )
-                        # Mark that this entry was selected by start time
-                        # We won't update start_time again since it was used for selection
-                        selected_by_start = True
                     else:
-                        click.echo(
-                            click.style(
-                                f"Error: Could not uniquely identify entry by start time.",
-                                fg="red",
-                            )
-                        )
+                        click.echo(click.style("Error: Could not uniquely identify entry by start time.", fg="red"))
                         raise click.exceptions.Exit(1)
                 except ValueError:
-                    click.echo(
-                        click.style(
-                            f"Error: Invalid time format '{start}'. Use HH:MM.",
-                            fg="red",
-                        )
-                    )
+                    click.echo(click.style(f"Error: Invalid time format '{start}'.", fg="red"))
                     raise click.exceptions.Exit(1)
             else:
+                click.echo(click.style("Error: Multiple entries. Provide --start to select one.", fg="red"))
                 raise click.exceptions.Exit(1)
         else:
             entry = entries[0]
-            selected_by_start = False
 
         # Store original values for display
         original_start = entry.start_time
         original_end = entry.end_time
         original_description = entry.description
-
-        # Parse and update start time if provided and not used for selection
-        # When multiple entries exist, --start is used for selection, not update
-        if start and not selected_by_start:
+        
+        # Prepare updates
+        start_t = None
+        if start:
             try:
-                entry.start_time = datetime.strptime(start, "%H:%M").time()
+                parsed_start = datetime.strptime(start, "%H:%M").time()
+                if entry.start_time != parsed_start:
+                    start_t = parsed_start
             except ValueError:
-                click.echo(
-                    click.style(
-                        f"Error: Invalid time format '{start}'. Use HH:MM.",
-                        fg="red",
-                    )
-                )
+                click.echo(click.style(f"Error: Invalid time format '{start}'.", fg="red"))
                 raise click.exceptions.Exit(1)
-
-        # Parse and update end time if provided
+                
+        end_t = None
         if end:
             try:
-                entry.end_time = datetime.strptime(end, "%H:%M").time()
+                end_t = datetime.strptime(end, "%H:%M").time()
             except ValueError:
-                click.echo(
-                    click.style(
-                        f"Error: Invalid time format '{end}'. Use HH:MM.", fg="red"
-                    )
-                )
+                click.echo(click.style(f"Error: Invalid time format '{end}'.", fg="red"))
                 raise click.exceptions.Exit(1)
 
-        # Update description if provided
-        if description:
-            entry.description = description.strip()
-            if not entry.description:
-                click.echo(click.style("Error: Description cannot be empty.", fg="red"))
-                raise click.exceptions.Exit(1)
-
-        # Recalculate duration if times were changed
-        if start or end:
-            duration = calculate_duration(entry.start_time, entry.end_time)
-            if duration <= 0:
-                click.echo(
-                    click.style("Error: End time must be after start time.", fg="red")
-                )
-                raise click.exceptions.Exit(1)
-            entry.duration_hours = duration
-
-        # Commit changes
-        db.session.commit()
+        # Use shared service
+        result = update_time_entry(
+            entry.id, 
+            start_time=start_t, 
+            end_time=end_t, 
+            description=description
+        )
+        
+        if not result["success"]:
+            click.echo(click.style(f"Error: {result['message']}", fg="red"))
+            raise click.exceptions.Exit(1)
+            
+        entry = result["entry"]
 
         # Display success message
         click.echo(

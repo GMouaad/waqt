@@ -169,7 +169,8 @@ def test_edit_active_entry_error(app):
         result = edit_entry(date="2024-01-15", description="Try edit")
         
         assert result["status"] == "error"
-        assert "Cannot edit active entries" in result["message"]
+        # Since we filter by is_active=False to find the ID, we won't find it if it's active
+        assert "No completed entry found" in result["message"]
 
 # --- leave_request Tests ---
 
