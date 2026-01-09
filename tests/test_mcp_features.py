@@ -117,11 +117,11 @@ def test_edit_entry_by_id(app):
         assert result["entry"]["description"] == "Updated Afternoon"
         
         # Verify DB
-        updated_entry = TimeEntry.query.get(target_id)
+        updated_entry = db.session.get(TimeEntry, target_id)
         assert updated_entry.description == "Updated Afternoon"
         
         # Verify other entry untouched
-        other_entry = TimeEntry.query.get(entry1.id)
+        other_entry = db.session.get(TimeEntry, entry1.id)
         assert other_entry.description == "Morning"
 
 def test_edit_entry_multiple_error(app):

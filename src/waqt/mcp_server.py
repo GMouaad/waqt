@@ -1,4 +1,4 @@
-"""MCP server for waqtracker time tracking application.
+"""MCP server for waqt time tracking application.
 
 This module implements a Model Context Protocol (MCP) server that exposes
 time tracking functionality to LLM applications, mirroring the CLI capabilities.
@@ -34,7 +34,7 @@ from .config import (
 
 # Initialize FastMCP server
 mcp = FastMCP(
-    name="waqtracker",
+    name="waqt",
     instructions="""Waqt MCP Server
 
 A Model Context Protocol server for time tracking functionality.
@@ -312,7 +312,7 @@ def edit_entry(
             }
 
         if entry_id:
-             entry = TimeEntry.query.get(entry_id)
+             entry = db.session.get(TimeEntry, entry_id)
              if not entry:
                  return {
                      "status": "error",
