@@ -22,6 +22,7 @@ from .utils import (
     export_time_entries_to_csv,
     get_time_entries_for_period,
     generate_calendar_data,
+    parse_time_input,
 )
 from .config import (
     CONFIG_DEFAULTS,
@@ -369,6 +370,8 @@ def index():
 @bp.route("/time-entry", methods=["GET", "POST"])
 def time_entry():
     """Add or view time entries."""
+    time_format = Settings.get_setting("time_format", "24")
+
     if request.method == "POST":
         try:
             # Parse form data
@@ -384,8 +387,9 @@ def time_entry():
 
             # Parse date and times
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
-            start_time = datetime.strptime(start_time_str, "%H:%M").time()
-            end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            
+            start_time = parse_time_input(start_time_str, time_format)
+            end_time = parse_time_input(end_time_str, time_format)
 
             # Calculate duration
             duration = calculate_duration(start_time, end_time)
@@ -434,13 +438,14 @@ def time_entry():
             return redirect(url_for("main.time_entry"))
 
     # GET request - show form
-    return render_template("time_entry.html", today=datetime.now().date())
+    return render_template("time_entry.html", today=datetime.now().date(), time_format=time_format)
 
 
 @bp.route("/time-entry/<int:entry_id>/edit", methods=["GET", "POST"])
 def edit_time_entry(entry_id):
     """Edit an existing time entry."""
-    entry = TimeEntry.query.get_or_404(entry_id)
+    entry = db.get_or_404(TimeEntry, entry_id)
+    time_format = Settings.get_setting("time_format", "24")
 
     # Prevent editing of active timers to avoid data corruption and
     # keep behavior consistent with the CLI.
@@ -464,8 +469,8 @@ def edit_time_entry(entry_id):
                 return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
 
             # Parse times
-            start_time = datetime.strptime(start_time_str, "%H:%M").time()
-            end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            start_time = parse_time_input(start_time_str, time_format)
+            end_time = parse_time_input(end_time_str, time_format)
 
             # Calculate duration
             duration = calculate_duration(start_time, end_time)
@@ -497,14 +502,14 @@ def edit_time_entry(entry_id):
             return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
 
     # GET request - show form with existing data
-    return render_template("edit_time_entry.html", entry=entry)
+    return render_template("edit_time_entry.html", entry=entry, time_format=time_format)
 
 
 @bp.route("/time-entry/<int:entry_id>/delete", methods=["POST"])
 def delete_time_entry(entry_id):
     """Delete a time entry."""
     try:
-        entry = TimeEntry.query.get_or_404(entry_id)
+        entry = db.get_or_404(TimeEntry, entry_id)
         db.session.delete(entry)
         db.session.commit()
         flash("Time entry deleted successfully.", "success")
@@ -700,7 +705,7 @@ def leave():
 def delete_leave(leave_id):
     """Delete a leave day."""
     try:
-        leave_day = LeaveDay.query.get_or_404(leave_id)
+        leave_day = db.get_or_404(LeaveDay, leave_id)
         db.session.delete(leave_day)
         db.session.commit()
         flash("Leave day deleted successfully.", "success")

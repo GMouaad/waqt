@@ -54,6 +54,8 @@ curl -fsSL https://raw.githubusercontent.com/GMouaad/waqt/main/install.sh | bash
 irm https://raw.githubusercontent.com/GMouaad/waqt/main/install.ps1 | iex
 ```
 
+*Note: If you encounter an execution policy error, you may need to run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` first.*
+
 These installers will:
 - Download the latest stable release for your platform
 - Install to `~/.waqt/bin` (Unix) or `%LOCALAPPDATA%\waqt` (Windows)
@@ -224,11 +226,24 @@ waqt ui
 
 **Alternative:** Use the quick start scripts:
 - Linux/macOS: `./start.sh`
-- Windows: `start.bat`
+- Windows: `.\start.ps1`
 
 ## CLI Usage (`waqt`)
 
 The `waqt` command-line tool provides a quick and convenient way to track time from your terminal.
+
+**Using uv (Recommended):**
+You can run commands directly without activating a virtual environment:
+```bash
+uv run waqt start
+uv run waqt summary
+```
+
+**Using activated environment:**
+```bash
+waqt start
+waqt summary
+```
 
 ### Available Commands
 
@@ -319,6 +334,7 @@ waqt config reset weekly_hours
 - `standard_hours_per_day`: Standard working hours per day (default: 8)
 - `pause_duration_minutes`: Default pause/break duration in minutes (default: 45)
 - `auto_end`: Feature flag for auto-ending work sessions (default: false)
+- `time_format`: Time display format (12 or 24) (default: 24)
 
 **Configuration Features:**
 - All settings persist in the database

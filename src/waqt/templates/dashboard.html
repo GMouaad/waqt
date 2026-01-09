@@ -48,97 +48,7 @@
             <p class="stat-label">Per Week</p>
         </div>
     </div>
-    
-    <!-- Calendar Overview Section -->
-    <div class="section calendar-section" data-testid="calendar-section">
-        <div class="section-header">
-            <h3>Monthly Overview - {{ calendar_data.month_name }} {{ calendar_data.year }}</h3>
-        </div>
-        
-        <div class="calendar-container">
-            <div class="calendar-grid">
-                <!-- Weekday headers -->
-                <div class="calendar-weekdays">
-                    <div class="calendar-weekday">Mon</div>
-                    <div class="calendar-weekday">Tue</div>
-                    <div class="calendar-weekday">Wed</div>
-                    <div class="calendar-weekday">Thu</div>
-                    <div class="calendar-weekday">Fri</div>
-                    <div class="calendar-weekday">Sat</div>
-                    <div class="calendar-weekday">Sun</div>
-                </div>
-                
-                <!-- Calendar days -->
-                <div class="calendar-days">
-                    {% for week in calendar_data.weeks %}
-                        {% for day in week %}
-                            {% if day.is_current_month %}
-                                <div class="calendar-day 
-                                    {% if day.is_today %}today{% endif %}
-                                    {% if day.has_entry %}has-entry{% endif %}
-                                    {% if day.has_leave %}has-leave leave-{{ day.leave_type }}{% endif %}
-                                    {% if not day.has_entry and not day.has_leave %}no-entry{% endif %}"
-                                    data-date="{{ day.date }}"
-                                    data-testid="calendar-day-{{ day.date }}">
-                                    <div class="calendar-day-number">{{ day.day }}</div>
-                                    {% if day.has_entry %}
-                                        <div class="calendar-day-info">
-                                            <span class="calendar-hours">{{ day.total_hours }}h</span>
-                                        </div>
-                                    {% endif %}
-                                    {% if day.has_leave %}
-                                        <div class="calendar-day-badge">
-                                            {% if day.leave_type == 'vacation' %}
-                                                <span role="img" aria-label="Vacation day">🏖️</span>
-                                            {% else %}
-                                                <span role="img" aria-label="Sick leave">🤒</span>
-                                            {% endif %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <div class="calendar-day empty"></div>
-                            {% endif %}
-                        {% endfor %}
-                    {% endfor %}
-                </div>
-            </div>
-            
-            <!-- Calendar legend -->
-            <div class="calendar-legend">
-                <div class="legend-item">
-                    <span class="legend-color has-entry-color"></span>
-                    <span>Has Work Entry</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color has-leave-vacation"></span>
-                    <span>Vacation Day</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color has-leave-sick"></span>
-                    <span>Sick Leave</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color no-entry-color"></span>
-                    <span>No Entry</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Tooltip for calendar day details -->
-    <div id="calendar-tooltip" class="calendar-tooltip" style="display: none;">
-        <div class="tooltip-content">
-            <div class="tooltip-header">
-                <strong id="tooltip-date"></strong>
-            </div>
-            <div id="tooltip-body" class="tooltip-body"></div>
-            <div class="tooltip-actions">
-                <a href="#" id="tooltip-add-entry" class="btn btn-primary btn-small">Add Entry</a>
-            </div>
-        </div>
-    </div>
-    
+
     <div class="section">
         <div class="section-header">
             <h3>Recent Time Entries</h3>
@@ -181,26 +91,119 @@
         {% endif %}
     </div>
     
-    <div class="section">
-        <div class="section-header">
-            <h3>Quick Actions</h3>
+    <!-- Bottom Section: Quick Actions (Left) & Calendar (Right) -->
+    <div class="dashboard-columns">
+        <div class="section quick-actions-section">
+            <div class="section-header">
+                <h3>Quick Actions</h3>
+            </div>
+            <div class="action-grid">
+                <a href="{{ url_for('main.time_entry') }}" class="action-card" data-testid="action-add-time">
+                    <span class="action-icon">⏱️</span>
+                    <h4>Add Time Entry</h4>
+                    <p>Log your work hours</p>
+                </a>
+                <a href="{{ url_for('main.reports') }}" class="action-card" data-testid="action-view-reports">
+                    <span class="action-icon">📊</span>
+                    <h4>View Reports</h4>
+                    <p>Weekly & monthly summaries</p>
+                </a>
+                <a href="{{ url_for('main.leave') }}" class="action-card" data-testid="action-manage-leave">
+                    <span class="action-icon">🏖️</span>
+                    <h4>Manage Leave</h4>
+                    <p>Vacation & sick days</p>
+                </a>
+            </div>
         </div>
-        <div class="action-grid">
-            <a href="{{ url_for('main.time_entry') }}" class="action-card" data-testid="action-add-time">
-                <span class="action-icon">⏱️</span>
-                <h4>Add Time Entry</h4>
-                <p>Log your work hours</p>
-            </a>
-            <a href="{{ url_for('main.reports') }}" class="action-card" data-testid="action-view-reports">
-                <span class="action-icon">📊</span>
-                <h4>View Reports</h4>
-                <p>Weekly & monthly summaries</p>
-            </a>
-            <a href="{{ url_for('main.leave') }}" class="action-card" data-testid="action-manage-leave">
-                <span class="action-icon">🏖️</span>
-                <h4>Manage Leave</h4>
-                <p>Vacation & sick days</p>
-            </a>
+
+        <!-- Calendar Overview Section -->
+        <div class="section calendar-section" data-testid="calendar-section">
+            <div class="section-header">
+                <h3>Monthly Overview - {{ calendar_data.month_name }} {{ calendar_data.year }}</h3>
+            </div>
+            
+            <div class="calendar-container">
+                <div class="calendar-grid">
+                    <!-- Weekday headers -->
+                    <div class="calendar-weekdays">
+                        <div class="calendar-weekday">Mon</div>
+                        <div class="calendar-weekday">Tue</div>
+                        <div class="calendar-weekday">Wed</div>
+                        <div class="calendar-weekday">Thu</div>
+                        <div class="calendar-weekday">Fri</div>
+                        <div class="calendar-weekday">Sat</div>
+                        <div class="calendar-weekday">Sun</div>
+                    </div>
+                    
+                    <!-- Calendar days -->
+                    <div class="calendar-days">
+                        {% for week in calendar_data.weeks %}
+                            {% for day in week %}
+                                {% if day.is_current_month %}
+                                    <div class="calendar-day 
+                                        {% if day.is_today %}today{% endif %}
+                                        {% if day.has_entry %}has-entry{% endif %}
+                                        {% if day.has_leave %}has-leave leave-{{ day.leave_type }}{% endif %}
+                                        {% if not day.has_entry and not day.has_leave %}no-entry{% endif %}"
+                                        data-date="{{ day.date }}"
+                                        data-testid="calendar-day-{{ day.date }}">
+                                        <div class="calendar-day-number">{{ day.day }}</div>
+                                        {% if day.has_entry %}
+                                            <div class="calendar-day-info">
+                                                <span class="calendar-hours">{{ day.total_hours }}h</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if day.has_leave %}
+                                            <div class="calendar-day-badge">
+                                                {% if day.leave_type == 'vacation' %}
+                                                    <span role="img" aria-label="Vacation day">🏖️</span>
+                                                {% else %}
+                                                    <span role="img" aria-label="Sick leave">🤒</span>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="calendar-day empty"></div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Calendar legend -->
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <span class="legend-color has-entry-color"></span>
+                        <span>Has Work Entry</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color has-leave-vacation"></span>
+                        <span>Vacation Day</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color has-leave-sick"></span>
+                        <span>Sick Leave</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color no-entry-color"></span>
+                        <span>No Entry</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tooltip for calendar day details -->
+    <div id="calendar-tooltip" class="calendar-tooltip" style="display: none;">
+        <div class="tooltip-content">
+            <div class="tooltip-header">
+                <strong id="tooltip-date"></strong>
+            </div>
+            <div id="tooltip-body" class="tooltip-body"></div>
+            <div class="tooltip-actions">
+                <a href="#" id="tooltip-add-entry" class="btn btn-primary btn-small">Add Entry</a>
+            </div>
         </div>
     </div>
 </div>

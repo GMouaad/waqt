@@ -203,6 +203,12 @@ This creates a `time_tracker.db` file in your project directory with all default
 
 Start the Flask development server:
 
+**Using uv (Recommended):**
+```bash
+uv run waqt ui
+```
+
+**Using activated environment:**
 ```bash
 waqt ui
 ```
@@ -285,7 +291,7 @@ chmod +x start.sh
 ### On Windows:
 
 ```bash
-start.bat
+.\start.ps1
 ```
 
 These scripts will:
