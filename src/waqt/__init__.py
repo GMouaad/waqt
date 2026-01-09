@@ -52,8 +52,10 @@ def create_app():
         data_dir = app.instance_path
         try:
             os.makedirs(data_dir, exist_ok=True)
-        except Exception:
-            pass
+        except Exception as e:
+            print(
+                f"Warning: Could not create fallback data directory {data_dir}: {e}"
+            )
 
     # Configuration - Database URI
     if not os.environ.get("SQLALCHEMY_DATABASE_URI"):
