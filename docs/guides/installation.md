@@ -420,7 +420,18 @@ To remove the Waqt application:
 
 1. Deactivate virtual environment: `deactivate`
 2. Delete the project folder
-3. Your time tracking data is stored in `time_tracker.db` - back it up if needed!
+
+### Data Backup
+
+Your time tracking data is stored in a platform-specific data directory. If you want to back it up or delete it:
+
+- **Linux**: `~/.local/share/waqt/time_tracker.db`
+- **macOS**: `~/Library/Application Support/waqt/time_tracker.db`
+- **Windows**: `%LOCALAPPDATA%\GMouaad\waqt\time_tracker.db`
+
+You can override this location by setting the `WAQT_DATA_DIR` environment variable.
+
+*Note: Older versions stored data in `time_tracker.db` within the installation directory. The application automatically migrates this data to the new location on first run.*
 
 ## Next Steps
 

@@ -28,6 +28,7 @@ Additional reference guides:
 - **Sick Leaves**: Record sick leave days
 - **Work Activities**: Log detailed work activities and tasks
 - **Reports**: View weekly and monthly overtime summaries
+- **Data Persistence**: Automatic data migration and secure storage in user data directories, preventing data loss during updates
 - **Configuration**: Customizable settings via CLI for work hours, alerts, and more
 - **CLI Tool**: Command-line interface (`waqt`) for quick time tracking from the terminal
 - **MCP Server**: Model Context Protocol server for AI assistant integration
@@ -341,6 +342,7 @@ waqt config reset weekly_hours
 - Configuration changes immediately affect calculations
 - Values are validated before being saved
 - Non-default values are marked with an asterisk (*) in list output
+- **Custom Data Directory**: Set `WAQT_DATA_DIR` environment variable to override storage location
 
 #### Check for Updates
 Check if a newer version of waqt is available:

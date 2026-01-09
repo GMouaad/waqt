@@ -30,6 +30,7 @@ dependencies = [
     "Werkzeug==3.0.1",
     "click>=8.0.0",
     "mcp>=1.0.0",
+    "platformdirs>=4.0.0",
 ]
 
 [project.optional-dependencies]
