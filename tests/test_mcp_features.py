@@ -224,6 +224,37 @@ def test_leave_request_invalid_dates(app):
         assert result["status"] == "error"
         assert "End date must be on or after" in result["message"]
 
+def test_leave_request_prevents_duplicates(app):
+    """Test that duplicate leave records are skipped."""
+    with app.app_context():
+        # First request: Mon-Wed
+        result1 = leave_request(
+            start_date="2024-01-15",
+            end_date="2024-01-17",
+            leave_type="vacation"
+        )
+        assert result1["status"] == "success"
+        assert result1["summary"]["created_days"] == 3
+
+        # Second request overlapping: Tue-Thu
+        # Tue (16) and Wed (17) are duplicates, Thu (18) is new
+        result2 = leave_request(
+            start_date="2024-01-16",
+            end_date="2024-01-18",
+            leave_type="sick"
+        )
+        assert result2["status"] == "success"
+        assert result2["summary"]["created_days"] == 1
+        assert result2["summary"]["skipped_days"] == 2
+        
+        # Verify total records: 3 from first + 1 from second = 4
+        leaves = LeaveDay.query.all()
+        assert len(leaves) == 4
+        
+        # Verify types preserved (skipped ones shouldn't change type)
+        tue_leave = LeaveDay.query.filter_by(date=date(2024, 1, 16)).first()
+        assert tue_leave.leave_type == "vacation" # Should remain vacation
+
 # --- Config Tests ---
 
 def test_get_set_config(app):

@@ -578,8 +578,21 @@ def leave_request(
 
         # Create leave records
         try:
+            # Query existing leave days in the range to avoid duplicates
+            existing_leaves = LeaveDay.query.filter(
+                LeaveDay.date >= start,
+                LeaveDay.date <= end
+            ).all()
+            existing_dates = {leave.date for leave in existing_leaves}
+
             created_count = 0
+            skipped_count = 0
+
             for leave_date in working_days:
+                if leave_date in existing_dates:
+                    skipped_count += 1
+                    continue
+
                 leave_day = LeaveDay(
                     date=leave_date,
                     leave_type=leave_type.lower(),
@@ -590,15 +603,23 @@ def leave_request(
 
             db.session.commit()
             
+            message = f"Leave request created successfully! ({created_count} days created"
+            if skipped_count > 0:
+                message += f", {skipped_count} skipped as duplicates)"
+            else:
+                message += ")"
+
             return {
                 "status": "success",
-                "message": f"Leave request created successfully! ({created_count} days)",
+                "message": message,
                 "summary": {
                     "start_date": start.isoformat(),
                     "end_date": end.isoformat(),
                     "total_days": leave_stats['total_days'],
                     "working_days": leave_stats['working_days'],
                     "weekend_days": leave_stats['weekend_days'],
+                    "created_days": created_count,
+                    "skipped_days": skipped_count,
                     "working_hours": format_hours(leave_stats['working_hours']),
                 }
             }
