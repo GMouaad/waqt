@@ -14,7 +14,6 @@ Additional reference guides:
 - **[Installation Guide](docs/guides/installation.html)** - Detailed installation instructions, prerequisites, and troubleshooting
 - **[Usage Guide](docs/guides/usage.html)** - Complete guide on how to use the application, workflows, and best practices
 - **[MCP Guide](docs/guides/MCP_GUIDE.html)** - Model Context Protocol server documentation for AI assistant integration
-- **[E2E Testing Guide](docs/guides/E2E_TESTING.html)** - Playwright end-to-end testing documentation and best practices
 
 ## Features
 
@@ -183,8 +182,6 @@ The easiest way to get started is using the pre-configured development container
    waqt ui
    ```
    Access at `http://localhost:5555`
-
-📚 **For detailed dev container documentation, see [docs/guides/DEV_CONTAINER.html](docs/guides/DEV_CONTAINER.html)**
 
 ### Option 4: Manual Installation with pip (Legacy - Deprecated)
 
@@ -400,6 +397,57 @@ waqt end --time 17:30
 waqt summary
 ```
 
+## Development
+
+### Running Tests
+
+This project uses `pytest` for unit tests and `playwright` for end-to-end (E2E) tests.
+
+**Prerequisites:**
+1. Install dependencies:
+   ```bash
+   uv pip install -e ".[dev]"
+   ```
+2. Install Playwright browsers (required for E2E tests):
+   ```bash
+   playwright install chromium --with-deps
+   ```
+
+**Running Tests:**
+```bash
+# Run all tests (unit + E2E)
+pytest tests/ -v
+
+# Run only E2E tests
+pytest tests/ -v -m e2e
+
+# Run excluding E2E tests
+pytest tests/ -v -m "not e2e"
+```
+
+*Note: E2E tests verify major user flows like navigation, time entries, leave management, and reports. If Playwright browsers are not installed, these tests will automatically skip.*
+
+### Building Standalone Executables
+
+You can build single-file executables for Linux, macOS, and Windows using PyInstaller.
+
+**Requirements:**
+- Python 3.11+
+- `uv` package manager (recommended) or `pip`
+
+**Build Steps:**
+1. Install build dependencies:
+   ```bash
+   uv pip install -e ".[build]"
+   ```
+2. Run PyInstaller:
+   ```bash
+   pyinstaller --name waqt --onefile --add-data "src/waqt/templates:waqt/templates" --add-data "src/waqt/static:waqt/static" --hidden-import flask --hidden-import werkzeug --hidden-import click src/waqt/__main__.py
+   ```
+   *Note: On Windows, use `;` instead of `:` for the `--add-data` separator.*
+
+3. The executable will be created in the `dist/` directory.
+
 ## MCP Server Usage
 
 The `waqt-mcp` server provides Model Context Protocol (MCP) support for AI assistant integration. This allows AI tools like Claude to interact with your time tracking data.
@@ -479,8 +527,7 @@ waqt/
 │   ├── usage.html          # Usage page
 │   └── guides/             # Markdown documentation
 │       ├── installation.html  # Installation guide
-│       ├── usage.html        # Usage guide
-│       └── DEV_CONTAINER.html # Dev container guide
+│       └── usage.html        # Usage guide
 ├── tests/                   # Unit tests
 ├── pyproject.toml           # Project dependencies
 └── README.md               # This file
