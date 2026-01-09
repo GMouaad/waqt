@@ -587,7 +587,7 @@ def leave():
     if request.method == "POST":
         try:
             # Import here to avoid circular imports
-            from .utils import get_working_days_in_range, calculate_leave_hours
+            from .utils import get_working_days_in_range, calculate_leave_hours, create_leave_requests
 
             # Parse form data - support both single day and multi-day formats
             single_date_str = request.form.get("date")
@@ -637,35 +637,34 @@ def leave():
             # Calculate leave statistics
             leave_stats = calculate_leave_hours(start_date, end_date)
 
-            # Create leave day records for each working day
-            created_count = 0
-            for leave_date in working_days:
-                leave_day = LeaveDay(
-                    date=leave_date, leave_type=leave_type, description=description
-                )
-                db.session.add(leave_day)
-                created_count += 1
-
+            # Create leave day records using shared utility
+            result = create_leave_requests(start_date, end_date, leave_type, description)
             db.session.commit()
+            
+            created_count = result["created"]
+            skipped_count = result["skipped"]
 
             # Provide detailed feedback
-            if created_count == 1:
+            if created_count == 1 and skipped_count == 0:
                 flash(
                     f"{leave_type.capitalize()} leave added successfully!",
                     "success",
                 )
             else:
                 # Multi-day feedback
-                weekend_msg = (
-                    f" (excluded {leave_stats['weekend_days']} weekend days)"
-                    if leave_stats["weekend_days"] > 0
-                    else ""
-                )
+                msg_parts = []
+                if created_count > 0:
+                    msg_parts.append(f"{created_count} working days added")
+                if skipped_count > 0:
+                    msg_parts.append(f"{skipped_count} days skipped (duplicates)")
+                if leave_stats['weekend_days'] > 0:
+                    msg_parts.append(f"excluded {leave_stats['weekend_days']} weekend days")
+                
+                details = ", ".join(msg_parts)
                 flash(
-                    f"{leave_type.capitalize()} leave added successfully! "
-                    f"{created_count} working days added{weekend_msg}. "
+                    f"{leave_type.capitalize()} leave processed! {details}. "
                     f"Total working hours: {leave_stats['working_hours']:.1f}h",
-                    "success",
+                    "success" if created_count > 0 else "warning",
                 )
 
             return redirect(url_for("main.leave"))

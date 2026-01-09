@@ -560,3 +560,73 @@ def generate_calendar_data(year: int, month: int) -> Dict:
         'prev_month': prev_month,
         'next_month': next_month
     }
+
+
+def create_leave_requests(
+    start_date: date,
+    end_date: date,
+    leave_type: str,
+    description: str = "",
+) -> Dict[str, int]:
+    """
+    Create leave records for a date range, skipping duplicates and weekends.
+    
+    Args:
+        start_date: Start date of leave
+        end_date: End date of leave
+        leave_type: Type of leave ('vacation' or 'sick')
+        description: Description/notes
+        
+    Returns:
+        Dictionary with:
+        - created: Number of records created
+        - skipped: Number of records skipped (already existed)
+        - weekend_days: Number of weekend days excluded
+        - working_days: Total working days in range
+    """
+    from . import db
+    
+    # Get working days (excludes weekends)
+    working_days = get_working_days_in_range(start_date, end_date)
+    
+    # Calculate stats for return
+    all_days_count = (end_date - start_date).days + 1
+    weekend_days = all_days_count - len(working_days)
+    
+    if not working_days:
+        return {
+            "created": 0,
+            "skipped": 0,
+            "weekend_days": weekend_days,
+            "working_days": 0
+        }
+
+    # Query existing leave days in the range to avoid duplicates
+    existing_leaves = LeaveDay.query.filter(
+        LeaveDay.date >= start_date,
+        LeaveDay.date <= end_date
+    ).all()
+    existing_dates = {leave.date for leave in existing_leaves}
+
+    created_count = 0
+    skipped_count = 0
+
+    for leave_date in working_days:
+        if leave_date in existing_dates:
+            skipped_count += 1
+            continue
+
+        leave_day = LeaveDay(
+            date=leave_date,
+            leave_type=leave_type,
+            description=description,
+        )
+        db.session.add(leave_day)
+        created_count += 1
+
+    return {
+        "created": created_count,
+        "skipped": skipped_count,
+        "weekend_days": weekend_days,
+        "working_days": len(working_days)
+    }

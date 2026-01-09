@@ -22,6 +22,7 @@ from .utils import (
     format_time,
     get_working_days_in_range,
     calculate_leave_hours,
+    create_leave_requests,
 )
 from .config import (
     CONFIG_DEFAULTS,
@@ -578,30 +579,11 @@ def leave_request(
 
         # Create leave records
         try:
-            # Query existing leave days in the range to avoid duplicates
-            existing_leaves = LeaveDay.query.filter(
-                LeaveDay.date >= start,
-                LeaveDay.date <= end
-            ).all()
-            existing_dates = {leave.date for leave in existing_leaves}
-
-            created_count = 0
-            skipped_count = 0
-
-            for leave_date in working_days:
-                if leave_date in existing_dates:
-                    skipped_count += 1
-                    continue
-
-                leave_day = LeaveDay(
-                    date=leave_date,
-                    leave_type=leave_type.lower(),
-                    description=description.strip() if description else "",
-                )
-                db.session.add(leave_day)
-                created_count += 1
-
+            result = create_leave_requests(start, end, leave_type.lower(), description.strip() if description else "")
             db.session.commit()
+            
+            created_count = result["created"]
+            skipped_count = result["skipped"]
             
             message = f"Leave request created successfully! ({created_count} days created"
             if skipped_count > 0:

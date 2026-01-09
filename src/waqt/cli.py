@@ -17,6 +17,7 @@ from .utils import (
     format_time,
     get_working_days_in_range,
     calculate_leave_hours,
+    create_leave_requests,
 )
 from ._version import VERSION, GIT_SHA
 from .config import (
@@ -1037,17 +1038,11 @@ def leave_request(start_date: str, end_date: str, leave_type: str, description: 
 
         # Create leave records
         try:
-            created_count = 0
-            for leave_date in working_days:
-                leave_day = LeaveDay(
-                    date=leave_date,
-                    leave_type=leave_type.lower(),
-                    description=description.strip() if description else "",
-                )
-                db.session.add(leave_day)
-                created_count += 1
-
+            result = create_leave_requests(start, end, leave_type.lower(), description.strip() if description else "")
             db.session.commit()
+            
+            created_count = result["created"]
+            skipped_count = result["skipped"]
 
             click.echo(
                 click.style(
@@ -1057,6 +1052,9 @@ def leave_request(start_date: str, end_date: str, leave_type: str, description: 
                 )
             )
             click.echo(f"Created {created_count} leave record(s)")
+            if skipped_count > 0:
+                click.echo(f"Skipped {skipped_count} duplicate record(s)")
+                
             if leave_stats["weekend_days"] > 0:
                 click.echo(
                     f"Excluded {leave_stats['weekend_days']} weekend day(s)"
