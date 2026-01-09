@@ -1,4 +1,4 @@
-"""MCP server for waqtracker time tracking application.
+"""MCP server for waqt time tracking application.
 
 This module implements a Model Context Protocol (MCP) server that exposes
 time tracking functionality to LLM applications, mirroring the CLI capabilities.
@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from mcp.server.fastmcp import FastMCP
 
 from . import create_app, db
-from .models import TimeEntry, LeaveDay
+from .models import TimeEntry, LeaveDay, Settings
 from .utils import (
     get_week_bounds,
     get_month_bounds,
@@ -20,12 +20,27 @@ from .utils import (
     export_time_entries_to_csv,
     get_time_entries_for_period,
     format_time,
+    get_working_days_in_range,
+    calculate_leave_hours,
+)
+from .services import (
+    start_time_entry,
+    end_time_entry,
+    update_time_entry,
+    create_leave_requests,
+)
+from .config import (
+    CONFIG_DEFAULTS,
+    CONFIG_TYPES,
+    CONFIG_DESCRIPTIONS,
+    validate_config_value,
+    normalize_bool_value,
 )
 
 
 # Initialize FastMCP server
 mcp = FastMCP(
-    name="waqtracker",
+    name="waqt",
     instructions="""Waqt MCP Server
 
 A Model Context Protocol server for time tracking functionality.
@@ -35,9 +50,14 @@ and generating reports.
 Available tools:
 - start: Start time tracking for a day
 - end: End time tracking for a day
+- edit_entry: Edit an existing time entry
 - summary: Get time summary for week or month
-- export_entries: Export time entries to CSV format
+- leave_request: Request multi-day leave (vacation/sick)
 - list_entries: List time entries for a period
+- export_entries: Export time entries to CSV format
+- list_config: List all configuration settings
+- get_config: Get a specific configuration setting
+- set_config: Set a configuration setting
 
 Standard work schedule: 8 hours/day, 40 hours/week
 Overtime is automatically calculated for hours beyond the standard.
@@ -54,37 +74,6 @@ def get_app():
     if _app is None:
         _app = create_app()
     return _app
-
-
-def _get_open_entry_for_date(entry_date):
-    """Get the most recent open time entry for a specific date.
-    
-    Open entries are identified by:
-    - is_active == True
-    
-    Args:
-        entry_date: Date to check for open entries
-    
-    Returns:
-        TimeEntry object if found, None otherwise
-    """
-    return (
-        TimeEntry.query.filter_by(date=entry_date, is_active=True)
-        .order_by(TimeEntry.created_at.desc())
-        .first()
-    )
-
-
-def _has_open_entry_for_date(entry_date):
-    """Check if there's an open time entry for a specific date.
-    
-    Args:
-        entry_date: Date to check
-    
-    Returns:
-        Boolean indicating if an open entry exists
-    """
-    return _get_open_entry_for_date(entry_date) is not None
 
 
 @mcp.tool()
@@ -142,26 +131,16 @@ def start(
         if not description:
             description = "Work session"
 
-        # Check if there's already an open entry for this date
-        if _has_open_entry_for_date(entry_date):
+        # Use shared service
+        result = start_time_entry(entry_date, start_time, description)
+        
+        if not result["success"]:
             return {
                 "status": "error",
-                "message": f"There's already an open time entry for {entry_date}. "
-                "Please call 'end' first to close it.",
+                "message": result["message"]
             }
-
-        # Create a new entry
-        entry = TimeEntry(
-            date=entry_date,
-            start_time=start_time,
-            end_time=start_time,  # Marker: same as start_time for open entries
-            duration_hours=0.0,  # Marker: 0.0 for open entries
-            is_active=True,
-            description=description,
-        )
-
-        db.session.add(entry)
-        db.session.commit()
+            
+        entry = result["entry"]
 
         return {
             "status": "success",
@@ -219,36 +198,131 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
         else:
             end_time = datetime.now().time()
 
-        # Find the most recent open entry for this date
-        open_entry = _get_open_entry_for_date(entry_date)
-
-        if not open_entry:
+        # Use shared service
+        result = end_time_entry(end_time, entry_date)
+        
+        if not result["success"]:
             return {
                 "status": "error",
-                "message": f"No open time entry found for {entry_date}. "
-                "Call 'start' first to begin tracking time.",
+                "message": result["message"]
             }
-
-        # Calculate duration
-        duration = calculate_duration(open_entry.start_time, end_time)
-
-        # Update the entry
-        open_entry.end_time = end_time
-        open_entry.duration_hours = duration
-        open_entry.is_active = False
-        db.session.commit()
+            
+        entry = result["entry"]
+        duration = result["duration"]
 
         return {
             "status": "success",
             "message": "Time tracking ended!",
             "entry": {
                 "date": entry_date.isoformat(),
-                "start_time": format_time(open_entry.start_time),
+                "start_time": format_time(entry.start_time),
                 "end_time": format_time(end_time),
                 "duration": format_hours(duration),
                 "duration_hours": duration,
-                "description": open_entry.description,
+                "description": entry.description,
             },
+        }
+
+
+@mcp.tool()
+def edit_entry(
+    date: str,
+    entry_id: Optional[int] = None,
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    description: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Edit an existing time entry.
+
+    Modify the details of a time entry for a specific date. You can update
+    the start time, end time, and/or description. At least one field must
+    be provided to update.
+    
+    If multiple entries exist for a date, use 'entry_id' (available from list_entries)
+    to target a specific one.
+
+    Args:
+        date: Date of the entry in YYYY-MM-DD format (required).
+        entry_id: ID of the entry to edit (optional, useful if multiple entries exist for the date).
+        start: New start time in HH:MM format (optional).
+        end: New end time in HH:MM format (optional).
+        description: New description (optional).
+    
+    Returns:
+        Dictionary with status and updated entry details.
+    """
+    app = get_app()
+    with app.app_context():
+        # Parse date
+        try:
+            entry_date = datetime.strptime(date, "%Y-%m-%d").date()
+        except ValueError:
+            return {
+                "status": "error",
+                "message": f"Invalid date format '{date}'. Use YYYY-MM-DD.",
+            }
+
+        # Check if at least one field to update is provided
+        if not any([start, end, description]):
+            return {
+                "status": "error",
+                "message": "At least one field (start, end, or description) must be provided to update.",
+            }
+
+        # Prepare updates
+        start_t = None
+        if start:
+            try:
+                start_t = datetime.strptime(start, "%H:%M").time()
+            except ValueError:
+                return {"status": "error", "message": f"Invalid start time '{start}'."}
+                
+        end_t = None
+        if end:
+            try:
+                end_t = datetime.strptime(end, "%H:%M").time()
+            except ValueError:
+                return {"status": "error", "message": f"Invalid end time '{end}'."}
+
+        # If ID not provided, resolve it
+        target_id = entry_id
+        if not target_id:
+            entries = (
+                TimeEntry.query.filter_by(date=entry_date, is_active=False)
+                .order_by(TimeEntry.created_at.desc())
+                .all()
+            )
+            if not entries:
+                return {"status": "error", "message": f"No completed entry found for {date}."}
+            if len(entries) > 1:
+                return {"status": "error", "message": f"Multiple entries found for {date}, please specify entry_id."}
+            target_id = entries[0].id
+
+        # Use shared service
+        result = update_time_entry(
+            target_id, 
+            start_time=start_t, 
+            end_time=end_t, 
+            description=description,
+            date_check=entry_date
+        )
+        
+        if not result["success"]:
+            return {"status": "error", "message": result["message"]}
+            
+        entry = result["entry"]
+
+        return {
+            "status": "success",
+            "message": "Time entry updated successfully!",
+            "entry": {
+                "id": entry.id,
+                "date": entry.date.isoformat(),
+                "start_time": format_time(entry.start_time),
+                "end_time": format_time(entry.end_time),
+                "duration": format_hours(entry.duration_hours),
+                "description": entry.description,
+            }
         }
 
 
@@ -357,6 +431,105 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
             result["statistics"]["sick_days"] = stats.get("sick_days", 0)
 
         return result
+
+
+@mcp.tool()
+def leave_request(
+    start_date: str,
+    end_date: str,
+    leave_type: str = "vacation",
+    description: str = "",
+) -> Dict[str, Any]:
+    """Request multi-day leave with automatic working hours calculation.
+
+    Creates leave records for all working days (Monday-Friday) in the specified
+    date range, automatically excluding weekends.
+    
+    Args:
+        start_date: Start date in YYYY-MM-DD format.
+        end_date: End date in YYYY-MM-DD format.
+        leave_type: Type of leave ('vacation' or 'sick'). Defaults to 'vacation'.
+        description: Description or notes for the leave.
+    
+    Returns:
+        Dictionary with status and summary of created leave.
+    """
+    app = get_app()
+    with app.app_context():
+        # Parse dates
+        try:
+            start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        except ValueError:
+            return {
+                "status": "error",
+                "message": f"Invalid start date format '{start_date}'. Use YYYY-MM-DD.",
+            }
+
+        try:
+            end = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            return {
+                "status": "error",
+                "message": f"Invalid end date format '{end_date}'. Use YYYY-MM-DD.",
+            }
+
+        if end < start:
+            return {
+                "status": "error",
+                "message": "End date must be on or after start date.",
+            }
+
+        if leave_type.lower() not in ["vacation", "sick"]:
+            return {
+                "status": "error",
+                "message": f"Invalid leave type '{leave_type}'. Use 'vacation' or 'sick'.",
+            }
+            
+        # Calculate leave statistics
+        leave_stats = calculate_leave_hours(start, end)
+        working_days = get_working_days_in_range(start, end)
+
+        if not working_days:
+            return {
+                "status": "error",
+                "message": "No working days in the selected range (only weekends).",
+            }
+
+        # Create leave records
+        try:
+            result = create_leave_requests(start, end, leave_type.lower(), description.strip() if description else "")
+            db.session.commit()
+            
+            created_count = result["created"]
+            skipped_count = result["skipped"]
+            
+            message = f"Leave request created successfully! ({created_count} days created"
+            if skipped_count > 0:
+                message += f", {skipped_count} skipped as duplicates)"
+            else:
+                message += ")"
+
+            return {
+                "status": "success",
+                "message": message,
+                "summary": {
+                    "start_date": start.isoformat(),
+                    "end_date": end.isoformat(),
+                    "total_days": leave_stats['total_days'],
+                    "working_days": leave_stats['working_days'],
+                    "weekend_days": leave_stats['weekend_days'],
+                    "created_days": created_count,
+                    "skipped_days": skipped_count,
+                    "working_hours": format_hours(leave_stats['working_hours']),
+                }
+            }
+
+        except Exception as e:
+            db.session.rollback()
+            return {
+                "status": "error",
+                "message": f"Error creating leave records: {str(e)}",
+            }
 
 
 @mcp.tool()
@@ -546,6 +719,121 @@ def export_entries(
             result["end_date"] = end_date.isoformat()
 
         return result
+
+
+@mcp.tool()
+def list_config() -> Dict[str, Any]:
+    """Display all configuration options and their current values.
+
+    Returns a dictionary of all configuration settings with their 
+    current values, descriptions, and default values.
+    
+    Returns:
+        Dictionary with status and settings.
+    """
+    app = get_app()
+    with app.app_context():
+        all_settings = Settings.get_all_settings()
+        
+        settings_list = []
+        for key in sorted(CONFIG_DEFAULTS.keys()):
+            current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
+            default_value = CONFIG_DEFAULTS[key]
+            description = CONFIG_DESCRIPTIONS.get(key, "No description available")
+            
+            settings_list.append({
+                "key": key,
+                "value": current_value,
+                "default": default_value,
+                "description": description,
+                "is_default": current_value == default_value
+            })
+            
+        return {
+            "status": "success",
+            "count": len(settings_list),
+            "settings": settings_list
+        }
+
+
+@mcp.tool()
+def get_config(key: str) -> Dict[str, Any]:
+    """Get the value of a specific configuration option.
+
+    Args:
+        key: Configuration key (e.g., 'weekly_hours', 'auto_end')
+    
+    Returns:
+        Dictionary with status and setting details.
+    """
+    app = get_app()
+    with app.app_context():
+        if key not in CONFIG_DEFAULTS:
+            return {
+                "status": "error",
+                "message": f"Unknown configuration key '{key}'.",
+                "available_keys": list(CONFIG_DEFAULTS.keys())
+            }
+
+        value = Settings.get_setting(key, CONFIG_DEFAULTS[key])
+        description = CONFIG_DESCRIPTIONS.get(key, "No description available")
+
+        return {
+            "status": "success",
+            "key": key,
+            "value": value,
+            "description": description
+        }
+
+
+@mcp.tool()
+def set_config(key: str, value: str) -> Dict[str, Any]:
+    """Set a configuration option to a new value.
+
+    Updates the specified configuration key with the provided value.
+    The value will be validated before being saved.
+
+    Args:
+        key: Configuration key (e.g., 'weekly_hours')
+        value: New value to set
+    
+    Returns:
+        Dictionary with status, message, and updated setting details.
+    """
+    app = get_app()
+    with app.app_context():
+        if key not in CONFIG_DEFAULTS:
+            return {
+                "status": "error",
+                "message": f"Unknown configuration key '{key}'.",
+                "available_keys": list(CONFIG_DEFAULTS.keys())
+            }
+
+        # Validate the value
+        is_valid, error_message = validate_config_value(key, value)
+        if not is_valid:
+            return {
+                "status": "error",
+                "message": f"Invalid value for '{key}': {error_message}",
+            }
+
+        # Normalize boolean values
+        if CONFIG_TYPES.get(key) == "bool":
+            value = normalize_bool_value(value)
+
+        # Get old value for reporting
+        old_value = Settings.get_setting(key, CONFIG_DEFAULTS[key])
+
+        # Set the new value
+        Settings.set_setting(key, value)
+
+        return {
+            "status": "success",
+            "message": f"Configuration '{key}' updated successfully.",
+            "key": key,
+            "old_value": old_value,
+            "new_value": value
+        }
 
 
 def main():

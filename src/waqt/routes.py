@@ -24,6 +24,12 @@ from .utils import (
     generate_calendar_data,
     parse_time_input,
 )
+from .services import (
+    start_time_entry,
+    end_time_entry,
+    update_time_entry,
+    create_leave_requests,
+)
 from .config import (
     CONFIG_DEFAULTS,
     CONFIG_TYPES,
@@ -152,18 +158,15 @@ def start_timer():
             description = "Work"
 
         now = datetime.now()
-
-        entry = TimeEntry(
-            date=now.date(),
-            start_time=now.time(),
-            end_time=now.time(),  # Marker for open entry
-            duration_hours=0.0,  # Marker for open entry
-            is_active=True,
-            description=description,
-        )
-
-        db.session.add(entry)
-        db.session.commit()
+        
+        # Use shared service
+        result = start_time_entry(now.date(), now.time(), description)
+        
+        if not result["success"]:
+            # If it's a duplicate active timer error, we return 400.
+            # (Though shared service logic is slightly different, checking date vs any active)
+            # The service returns specific error types we can use.
+            return jsonify({"success": False, "message": result["message"]}), 400
 
         return jsonify(
             {
@@ -239,40 +242,16 @@ def stop_timer():
             return jsonify({"success": False, "message": "No active timer"}), 400
 
         now = datetime.now()
-
-        # If stopped while paused, effective end time is when it was paused
-        if entry.last_pause_start_time:
-            # We don't add the current incomplete pause to accumulated_pause_seconds
-            # because the work effectively stopped at the beginning of the pause.
-            effective_end_dt = entry.last_pause_start_time
-            # Reset pause state to clean up (though not strictly necessary if we are closing)
-            entry.last_pause_start_time = None
-        else:
-            effective_end_dt = now
-
-        end_time = effective_end_dt.time()
-
-        # Calculate duration: (End - Start) - Pauses
-        # Note: calculate_duration returns hours. We need to handle the pause subtraction.
-        # Let's calculate raw duration in seconds first
-        start_dt = datetime.combine(entry.date, entry.start_time)
-
-        # Handle midnight crossing for end time if needed (though effective_end_dt has date)
-        # But TimeEntry stores date and time separately. `entry.date` is the start date.
-        # effective_end_dt might be on the next day.
-
-        total_elapsed_seconds = (effective_end_dt - start_dt).total_seconds()
-        actual_work_seconds = total_elapsed_seconds - (
-            entry.accumulated_pause_seconds or 0
-        )
-
-        duration_hours = actual_work_seconds / 3600.0
-
-        entry.end_time = end_time
-        entry.duration_hours = duration_hours
-        entry.is_active = False
-
-        db.session.commit()
+        
+        # Use shared service
+        # Note: shared service calculates effective end time based on pauses logic
+        # which was originally taken from this route.
+        result = end_time_entry(now.time(), entry.date)
+        
+        if not result["success"]:
+            return jsonify({"success": False, "message": result["message"]}), 500
+            
+        duration_hours = result["duration"]
 
         return jsonify(
             {"success": True, "message": "Timer stopped", "duration": duration_hours}
@@ -472,23 +451,22 @@ def edit_time_entry(entry_id):
             start_time = parse_time_input(start_time_str, time_format)
             end_time = parse_time_input(end_time_str, time_format)
 
-            # Calculate duration
-            duration = calculate_duration(start_time, end_time)
-
-            if duration <= 0:
-                flash("End time must be after start time.", "error")
+            # Use shared service
+            result = update_time_entry(
+                entry_id,
+                start_time=start_time,
+                end_time=end_time,
+                description=description
+            )
+            
+            if not result["success"]:
+                flash(result["message"], "error")
                 return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
-
-            # Update entry
-            entry.start_time = start_time
-            entry.end_time = end_time
-            entry.duration_hours = duration
-            entry.description = description
-
-            db.session.commit()
+                
+            entry = result["entry"] # Get updated entry object
 
             flash(
-                f"Time entry updated successfully! Duration: {duration:.2f} hours",
+                f"Time entry updated successfully! Duration: {entry.duration_hours:.2f} hours",
                 "success",
             )
             return redirect(url_for("main.index"))
@@ -637,35 +615,34 @@ def leave():
             # Calculate leave statistics
             leave_stats = calculate_leave_hours(start_date, end_date)
 
-            # Create leave day records for each working day
-            created_count = 0
-            for leave_date in working_days:
-                leave_day = LeaveDay(
-                    date=leave_date, leave_type=leave_type, description=description
-                )
-                db.session.add(leave_day)
-                created_count += 1
-
+            # Create leave day records using shared utility
+            result = create_leave_requests(start_date, end_date, leave_type, description, db_session=db.session)
             db.session.commit()
+            
+            created_count = result["created"]
+            skipped_count = result["skipped"]
 
             # Provide detailed feedback
-            if created_count == 1:
+            if created_count == 1 and skipped_count == 0:
                 flash(
                     f"{leave_type.capitalize()} leave added successfully!",
                     "success",
                 )
             else:
                 # Multi-day feedback
-                weekend_msg = (
-                    f" (excluded {leave_stats['weekend_days']} weekend days)"
-                    if leave_stats["weekend_days"] > 0
-                    else ""
-                )
+                msg_parts = []
+                if created_count > 0:
+                    msg_parts.append(f"{created_count} working days added")
+                if skipped_count > 0:
+                    msg_parts.append(f"{skipped_count} days skipped (duplicates)")
+                if leave_stats['weekend_days'] > 0:
+                    msg_parts.append(f"excluded {leave_stats['weekend_days']} weekend days")
+                
+                details = ", ".join(msg_parts)
                 flash(
-                    f"{leave_type.capitalize()} leave added successfully! "
-                    f"{created_count} working days added{weekend_msg}. "
+                    f"{leave_type.capitalize()} leave processed! {details}. "
                     f"Total working hours: {leave_stats['working_hours']:.1f}h",
-                    "success",
+                    "success" if created_count > 0 else "warning",
                 )
 
             return redirect(url_for("main.leave"))

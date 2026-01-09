@@ -1,7 +1,7 @@
-"""Update checking and self-update functionality for waqtracker.
+"""Update checking and self-update functionality for waqt.
 
 This module provides functionality to check for updates and self-update
-the waqtracker executable when running as a frozen PyInstaller binary.
+the waqt executable when running as a frozen PyInstaller binary.
 """
 
 import sys

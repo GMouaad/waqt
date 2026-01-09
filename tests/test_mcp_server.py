@@ -84,7 +84,7 @@ def test_start_duplicate_entry(app):
         result = start(time="10:00")
         
         assert result["status"] == "error"
-        assert "already an open time entry" in result["message"]
+        assert "There is already an active timer" in result["message"]
 
 
 def test_end_basic(app):
@@ -115,7 +115,7 @@ def test_end_without_start(app):
         result = end(time="17:00")
         
         assert result["status"] == "error"
-        assert "No open time entry found" in result["message"]
+        assert "No active timer found" in result["message"]
 
 
 def test_end_with_date(app):

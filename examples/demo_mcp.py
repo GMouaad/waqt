@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Demonstration script for the Waqtracker MCP Server.
+Demonstration script for the Waqt MCP Server.
 
 This script shows how to interact with the MCP server programmatically
 by calling the tools directly. In production, these would be called
@@ -31,9 +31,9 @@ def print_result(title, result):
 
 def main():
     """Demonstrate MCP server functionality."""
-    print("\n" + "=" * 60)
-    print("  Waqtracker MCP Server Demonstration")
-    print("=" * 60)
+    print("\n" + "="*50)
+    print("  Waqt MCP Server Demonstration")
+    print("="*50 + "\n")
     
     # Use a temporary database for the demo
     temp_db = tempfile.NamedTemporaryFile(suffix='.db', delete=False)

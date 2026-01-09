@@ -116,7 +116,7 @@ def test_start_command_duplicate(runner, app):
         # Try to create another one
         result = runner.invoke(cli, ["start", "--time", "10:00"])
         assert result.exit_code != 0
-        assert "already an open time entry" in result.output
+        assert "There is already an active timer" in result.output
 
 
 def test_end_command_basic(runner, app):
@@ -143,7 +143,7 @@ def test_end_command_without_start(runner, app):
     with app.app_context():
         result = runner.invoke(cli, ["end", "--time", "17:00"])
         assert result.exit_code != 0
-        assert "No open time entry found" in result.output
+        assert "No active timer found" in result.output
 
 
 def test_end_command_with_date(runner, app):
@@ -435,7 +435,7 @@ def test_edit_entry_command_invalid_time_format(runner, app):
             cli, ["edit-entry", "--date", "2024-01-15", "--start", "invalid"]
         )
         assert result.exit_code != 0
-        assert "Invalid time format" in result.output
+        assert "Error: Invalid time format" in result.output
 
 
 def test_edit_entry_command_active_entry(runner, app):
@@ -498,7 +498,7 @@ def test_edit_entry_command_multiple_entries(runner, app):
         )
         assert result.exit_code != 0
         assert "Multiple entries found" in result.output
-        assert "one entry per day" in result.output
+        assert "Please resolve multiple entries in UI" in result.output
 
         # Try to edit by specifying start time
         result2 = runner.invoke(

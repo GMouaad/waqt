@@ -560,3 +560,4 @@ def generate_calendar_data(year: int, month: int) -> Dict:
         'prev_month': prev_month,
         'next_month': next_month
     }
+
