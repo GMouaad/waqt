@@ -1476,6 +1476,7 @@ dependencies = [
     { name = "flask" },
     { name = "flask-sqlalchemy" },
     { name = "mcp" },
+    { name = "platformdirs" },
     { name = "python-dateutil" },
     { name = "werkzeug" },
 ]
@@ -1500,6 +1501,7 @@ requires-dist = [
     { name = "flask", specifier = "==3.0.0" },
     { name = "flask-sqlalchemy", specifier = "==3.1.1" },
     { name = "mcp", specifier = ">=1.0.0" },
+    { name = "platformdirs", specifier = ">=4.0.0" },
     { name = "pyinstaller", marker = "extra == 'build'", specifier = ">=6.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.3.5" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==6.0.0" },
