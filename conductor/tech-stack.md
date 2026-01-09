@@ -9,7 +9,7 @@
 ## Frontend Stack
 - **Modern HTML5 & CSS3:** Utilizing semantic structures and advanced CSS features like `backdrop-filter` and Flexbox/Grid for a modern, responsive interface.
 - **JavaScript (Vanilla):** Leveraging modern ES6+ features for interactive elements and dynamic updates without the overhead of heavy frontend frameworks.
-- **Glassmorphism Design:** A specialized CSS-driven aesthetic emphasizing transparency, blur, and depth to deliver a professional and contemporary user experience.
+- **Clean, Minimal Design:** Prioritizing clarity, readability, and accessibility with simple, low-friction UI components, moving away from heavy glassmorphism effects toward a more timeless aesthetic.
 
 ## Tooling & Infrastructure
 - **uv:** An extremely fast Python package and project manager, used for dependency management and environment isolation.
