@@ -1,13 +1,14 @@
 """Unit tests for the settings UI."""
 
 import pytest
-from src.waqt import create_app, db
-from src.waqt.models import Settings
 
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    from src.waqt.models import Settings
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -74,6 +75,8 @@ def test_settings_page_displays_current_values(client, app):
 
 def test_settings_update_numeric_value(client, app):
     """Test updating a numeric configuration value."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         response = client.post("/settings", data={
             "standard_hours_per_day": "7.5",
@@ -95,6 +98,8 @@ def test_settings_update_numeric_value(client, app):
 
 def test_settings_update_boolean_value(client, app):
     """Test updating a boolean configuration value."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         response = client.post("/settings", data={
             "standard_hours_per_day": "8",
@@ -186,6 +191,8 @@ def test_settings_empty_values_for_all_numeric_fields(client, app):
 
 def test_settings_update_multiple_values(client, app):
     """Test updating multiple configuration values at once."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         response = client.post("/settings", data={
             "standard_hours_per_day": "7",
@@ -299,6 +306,8 @@ def test_settings_validates_max_work_session_hours_range(client, app):
 
 def test_settings_page_shows_modified_indicator(client, app):
     """Test that modified settings show an indicator."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # Change a value
         Settings.set_setting("weekly_hours", "35")
@@ -342,6 +351,8 @@ def test_settings_page_displays_time_format_dropdown(client, app):
 
 def test_settings_time_format_update(client, app):
     """Test updating the time_format value via the settings page POST request."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # Initially, time_format should be default (24)
         assert Settings.get_setting("time_format", "24") == "24"
@@ -381,6 +392,8 @@ def test_settings_time_format_update(client, app):
 
 def test_settings_time_format_shows_selected_value(client, app):
     """Test that the dropdown shows the currently selected time format value correctly."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # Set to 12-hour format
         Settings.set_setting("time_format", "12")
@@ -403,6 +416,8 @@ def test_settings_time_format_shows_selected_value(client, app):
 
 def test_settings_time_format_validation(client, app):
     """Test that time_format only accepts valid values (12 or 24)."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # Test invalid value
         response = client.post("/settings", data={

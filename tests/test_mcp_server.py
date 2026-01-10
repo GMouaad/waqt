@@ -2,20 +2,13 @@
 
 import pytest
 from datetime import date, time
-from src.waqt import create_app, db
-from src.waqt.models import TimeEntry, LeaveDay
-from src.waqt.mcp_server import (
-    start,
-    end,
-    summary,
-    list_entries,
-    export_entries,
-)
 
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -29,6 +22,9 @@ def app():
 
 def test_start_basic(app):
     """Test basic start functionality via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.mcp_server import start
+    
     with app.app_context():
         result = start(time="09:00", description="Test work")
         
@@ -46,6 +42,9 @@ def test_start_basic(app):
 
 def test_start_with_date(app):
     """Test start with specific date via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.mcp_server import start
+    
     with app.app_context():
         result = start(date="2024-01-15", time="09:00")
         
@@ -58,6 +57,8 @@ def test_start_with_date(app):
 
 def test_start_invalid_time_format(app):
     """Test start with invalid time format."""
+    from src.waqt.mcp_server import start
+    
     with app.app_context():
         result = start(time="invalid")
         
@@ -67,6 +68,8 @@ def test_start_invalid_time_format(app):
 
 def test_start_invalid_date_format(app):
     """Test start with invalid date format."""
+    from src.waqt.mcp_server import start
+    
     with app.app_context():
         result = start(date="invalid")
         
@@ -76,6 +79,8 @@ def test_start_invalid_date_format(app):
 
 def test_start_duplicate_entry(app):
     """Test start when entry already open."""
+    from src.waqt.mcp_server import start
+    
     with app.app_context():
         # Create first entry
         start(time="09:00")
@@ -89,6 +94,9 @@ def test_start_duplicate_entry(app):
 
 def test_end_basic(app):
     """Test basic end functionality via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.mcp_server import start, end
+    
     with app.app_context():
         # Start tracking
         start(time="09:00")
@@ -111,6 +119,8 @@ def test_end_basic(app):
 
 def test_end_without_start(app):
     """Test end when no open entry exists."""
+    from src.waqt.mcp_server import end
+    
     with app.app_context():
         result = end(time="17:00")
         
@@ -120,6 +130,8 @@ def test_end_without_start(app):
 
 def test_end_with_date(app):
     """Test end with specific date."""
+    from src.waqt.mcp_server import start, end
+    
     with app.app_context():
         # Start tracking
         start(date="2024-01-15", time="09:00")
@@ -133,6 +145,8 @@ def test_end_with_date(app):
 
 def test_end_invalid_time_format(app):
     """Test end with invalid time format."""
+    from src.waqt.mcp_server import end
+    
     with app.app_context():
         result = end(time="invalid")
         
@@ -142,6 +156,10 @@ def test_end_invalid_time_format(app):
 
 def test_summary_week(app):
     """Test weekly summary via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import summary
+    
     with app.app_context():
         # Create test entries for the current date
         today = date.today()
@@ -177,6 +195,10 @@ def test_summary_week(app):
 
 def test_summary_month(app):
     """Test monthly summary via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import summary
+    
     with app.app_context():
         # Create test entry
         today = date.today()
@@ -202,6 +224,8 @@ def test_summary_month(app):
 
 def test_summary_invalid_period(app):
     """Test summary with invalid period."""
+    from src.waqt.mcp_server import summary
+    
     with app.app_context():
         result = summary(period="invalid")
         
@@ -211,6 +235,8 @@ def test_summary_invalid_period(app):
 
 def test_summary_no_entries(app):
     """Test summary when no entries exist."""
+    from src.waqt.mcp_server import summary
+    
     with app.app_context():
         result = summary(period="week")
         
@@ -221,6 +247,10 @@ def test_summary_no_entries(app):
 
 def test_summary_with_date(app):
     """Test summary with specific date."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import summary
+    
     with app.app_context():
         # Create test entry
         entry = TimeEntry(
@@ -241,6 +271,10 @@ def test_summary_with_date(app):
 
 def test_list_entries_week(app):
     """Test list entries for a week via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import list_entries
+    
     with app.app_context():
         # Create test entries
         today = date.today()
@@ -267,6 +301,10 @@ def test_list_entries_week(app):
 
 def test_list_entries_month(app):
     """Test list entries for a month via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import list_entries
+    
     with app.app_context():
         # Create test entry
         today = date.today()
@@ -289,6 +327,10 @@ def test_list_entries_month(app):
 
 def test_list_entries_all(app):
     """Test list all entries via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import list_entries
+    
     with app.app_context():
         # Create test entries
         today = date.today()
@@ -312,6 +354,10 @@ def test_list_entries_all(app):
 
 def test_list_entries_with_limit(app):
     """Test list entries with limit via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import list_entries
+    
     with app.app_context():
         # Create test entries
         today = date.today()
@@ -335,6 +381,8 @@ def test_list_entries_with_limit(app):
 
 def test_list_entries_invalid_period(app):
     """Test list entries with invalid period."""
+    from src.waqt.mcp_server import list_entries
+    
     with app.app_context():
         result = list_entries(period="invalid")
         
@@ -344,6 +392,10 @@ def test_list_entries_invalid_period(app):
 
 def test_list_entries_details(app):
     """Test that list entries includes all details."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import list_entries
+    
     with app.app_context():
         # Create test entry
         entry = TimeEntry(
@@ -372,6 +424,10 @@ def test_list_entries_details(app):
 
 def test_export_entries_basic(app):
     """Test basic export via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import export_entries
+    
     with app.app_context():
         # Create test entries
         today = date.today()
@@ -400,6 +456,10 @@ def test_export_entries_basic(app):
 
 def test_export_entries_week(app):
     """Test export for a week via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import export_entries
+    
     with app.app_context():
         # Create test entry
         today = date.today()
@@ -423,6 +483,10 @@ def test_export_entries_week(app):
 
 def test_export_entries_month(app):
     """Test export for a month via MCP."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import export_entries
+    
     with app.app_context():
         # Create test entry
         entry = TimeEntry(
@@ -443,6 +507,8 @@ def test_export_entries_month(app):
 
 def test_export_entries_no_entries(app):
     """Test export when no entries exist."""
+    from src.waqt.mcp_server import export_entries
+    
     with app.app_context():
         result = export_entries(period="all")
         
@@ -454,6 +520,8 @@ def test_export_entries_no_entries(app):
 
 def test_export_entries_invalid_format(app):
     """Test export with invalid format."""
+    from src.waqt.mcp_server import export_entries
+    
     with app.app_context():
         result = export_entries(export_format="json")
         
@@ -463,6 +531,8 @@ def test_export_entries_invalid_format(app):
 
 def test_export_entries_invalid_period(app):
     """Test export with invalid period."""
+    from src.waqt.mcp_server import export_entries
+    
     with app.app_context():
         result = export_entries(period="invalid")
         
@@ -472,6 +542,10 @@ def test_export_entries_invalid_period(app):
 
 def test_export_entries_csv_content(app):
     """Test that export CSV content is properly formatted."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import export_entries
+    
     with app.app_context():
         # Create test entry
         entry = TimeEntry(
@@ -497,6 +571,8 @@ def test_export_entries_csv_content(app):
 
 def test_full_workflow(app):
     """Test complete workflow via MCP: start -> end -> summary -> list -> export."""
+    from src.waqt.mcp_server import start, end, summary, list_entries, export_entries
+    
     with app.app_context():
         # Start tracking
         result1 = start(time="09:00", description="Morning work")
@@ -530,6 +606,9 @@ def test_overtime_detection(app):
         # Create multiple entries in the same week to exceed 40 hours
         from datetime import timedelta
         from src.waqt.utils import get_week_bounds
+        from src.waqt.models import TimeEntry
+        from src.waqt import db
+        from src.waqt.mcp_server import summary
         
         today = date.today()
         week_start, week_end = get_week_bounds(today)
@@ -559,6 +638,10 @@ def test_overtime_detection(app):
 
 def test_monthly_summary_with_leave_days(app):
     """Test monthly summary with leave days."""
+    from src.waqt.models import TimeEntry, LeaveDay
+    from src.waqt import db
+    from src.waqt.mcp_server import summary
+    
     with app.app_context():
         # Create test entry
         entry = TimeEntry(

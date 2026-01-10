@@ -5,15 +5,13 @@ import csv
 import io
 from datetime import date, time
 from click.testing import CliRunner
-from src.waqt import create_app, db
-from src.waqt.models import TimeEntry
-from src.waqt.utils import export_time_entries_to_csv
-from src.waqt.cli import cli
 
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -32,6 +30,13 @@ def client(app):
 
 
 @pytest.fixture
+def cli():
+    """Return the CLI entry point."""
+    from src.waqt.cli import cli as cli_obj
+    return cli_obj
+
+
+@pytest.fixture
 def runner():
     """Create a CLI test runner."""
     return CliRunner()
@@ -40,6 +45,9 @@ def runner():
 @pytest.fixture
 def sample_entries(app):
     """Create sample time entries for testing."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         entries = [
             TimeEntry(
@@ -72,6 +80,9 @@ def sample_entries(app):
 
 def test_export_time_entries_to_csv_basic(app, sample_entries):
     """Test basic CSV export functionality."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -88,6 +99,9 @@ def test_export_time_entries_to_csv_basic(app, sample_entries):
 
 def test_export_csv_contains_data(app, sample_entries):
     """Test that CSV export contains actual data."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -113,6 +127,9 @@ def test_export_csv_contains_data(app, sample_entries):
 
 def test_export_csv_summary_statistics(app, sample_entries):
     """Test that CSV export includes summary statistics."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(
@@ -129,6 +146,10 @@ def test_export_csv_summary_statistics(app, sample_entries):
 
 def test_export_csv_multiple_entries_same_day(app):
     """Test CSV export with multiple entries for the same day."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         # Create multiple entries for the same day
         entries = [
@@ -183,6 +204,9 @@ def test_export_csv_multiple_entries_same_day(app):
 
 def test_export_csv_all_entries_period(app, sample_entries):
     """Test that CSV export shows 'All time entries' when no date range given."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -250,7 +274,7 @@ def test_export_csv_route_invalid_date(client, app, sample_entries):
         assert response.status_code in [200, 302]
 
 
-def test_cli_export_command_basic(runner, app, sample_entries, tmp_path):
+def test_cli_export_command_basic(runner, app, cli, sample_entries, tmp_path):
     """Test basic CLI export command."""
     with app.app_context():
         output_file = tmp_path / "test_export.csv"
@@ -268,7 +292,7 @@ def test_cli_export_command_basic(runner, app, sample_entries, tmp_path):
             assert "2024-01-15" in content
 
 
-def test_cli_export_command_week(runner, app, sample_entries, tmp_path):
+def test_cli_export_command_week(runner, app, cli, sample_entries, tmp_path):
     """Test CLI export for a specific week."""
     with app.app_context():
         output_file = tmp_path / "weekly_export.csv"
@@ -291,7 +315,7 @@ def test_cli_export_command_week(runner, app, sample_entries, tmp_path):
         assert output_file.exists()
 
 
-def test_cli_export_command_month(runner, app, sample_entries, tmp_path):
+def test_cli_export_command_month(runner, app, cli, sample_entries, tmp_path):
     """Test CLI export for a specific month."""
     with app.app_context():
         output_file = tmp_path / "monthly_export.csv"
@@ -314,7 +338,7 @@ def test_cli_export_command_month(runner, app, sample_entries, tmp_path):
         assert output_file.exists()
 
 
-def test_cli_export_command_default_filename(runner, app, sample_entries):
+def test_cli_export_command_default_filename(runner, app, cli, sample_entries):
     """Test CLI export with default filename generation."""
     with app.app_context():
         with runner.isolated_filesystem():
@@ -325,7 +349,7 @@ def test_cli_export_command_default_filename(runner, app, sample_entries):
             assert "time_entries" in result.output
 
 
-def test_cli_export_command_no_entries(runner, app):
+def test_cli_export_command_no_entries(runner, app, cli):
     """Test CLI export when no entries exist."""
     with app.app_context():
         result = runner.invoke(cli, ["export"])
@@ -334,7 +358,7 @@ def test_cli_export_command_no_entries(runner, app):
         assert "No time entries found" in result.output
 
 
-def test_cli_export_command_invalid_date(runner, app):
+def test_cli_export_command_invalid_date(runner, app, cli):
     """Test CLI export with invalid date format."""
     with app.app_context():
         result = runner.invoke(cli, ["export", "--date", "invalid-date"])
@@ -343,7 +367,7 @@ def test_cli_export_command_invalid_date(runner, app):
         assert "Invalid date format" in result.output
 
 
-def test_cli_export_command_format_option(runner, app, sample_entries, tmp_path):
+def test_cli_export_command_format_option(runner, app, cli, sample_entries, tmp_path):
     """Test CLI export with format option."""
     with app.app_context():
         output_file = tmp_path / "formatted_export.csv"
@@ -358,6 +382,10 @@ def test_cli_export_command_format_option(runner, app, sample_entries, tmp_path)
 
 def test_export_csv_special_characters(app):
     """Test CSV export with special characters in descriptions."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         entry = TimeEntry(
             date=date(2024, 1, 15),
@@ -383,6 +411,8 @@ def test_export_csv_special_characters(app):
 
 def test_export_csv_empty_entries_list(app):
     """Test CSV export with empty entries list."""
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         csv_content = export_time_entries_to_csv([])
 
@@ -400,6 +430,9 @@ def test_export_csv_empty_entries_list(app):
 
 def test_export_includes_all_fields(app, sample_entries):
     """Test that export includes all required fields."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -426,6 +459,9 @@ def test_export_includes_all_fields(app, sample_entries):
 
 def test_export_day_of_week_format(app, sample_entries):
     """Test that day of week is properly formatted."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -439,6 +475,9 @@ def test_export_day_of_week_format(app, sample_entries):
 
 def test_export_duration_formats(app, sample_entries):
     """Test that both duration formats are included."""
+    from src.waqt.models import TimeEntry
+    from src.waqt.utils import export_time_entries_to_csv
+    
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)

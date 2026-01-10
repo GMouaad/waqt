@@ -2,14 +2,13 @@
 
 import pytest
 from datetime import date
-from src.waqt import create_app, db
-from src.waqt.models import TimeEntry, LeaveDay
-from src.waqt.utils import generate_calendar_data
 
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -29,6 +28,8 @@ def client(app):
 
 def test_generate_calendar_data(app):
     """Test calendar data generation."""
+    from src.waqt.utils import generate_calendar_data
+    
     with app.app_context():
         # Generate calendar for January 2026
         calendar_data = generate_calendar_data(2026, 1)
@@ -62,6 +63,10 @@ def test_generate_calendar_data(app):
 
 def test_calendar_with_entries(app):
     """Test calendar with time entries."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.utils import generate_calendar_data
+    
     with app.app_context():
         # Add a time entry for January 15, 2026
         from datetime import time as datetime_time
@@ -96,6 +101,10 @@ def test_calendar_with_entries(app):
 
 def test_calendar_with_leave(app):
     """Test calendar with leave days."""
+    from src.waqt.models import LeaveDay
+    from src.waqt import db
+    from src.waqt.utils import generate_calendar_data
+    
     with app.app_context():
         # Add a vacation day for January 20, 2026
         leave = LeaveDay(
@@ -126,6 +135,9 @@ def test_calendar_with_leave(app):
 
 def test_calendar_api_endpoint(client, app):
     """Test the calendar day details API endpoint."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         from datetime import time as datetime_time
         

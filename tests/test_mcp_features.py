@@ -2,21 +2,15 @@
 
 import pytest
 from datetime import date, time, timedelta
-from src.waqt import create_app, db
-from src.waqt.models import TimeEntry, LeaveDay, Settings
-from src.waqt.mcp_server import (
-    edit_entry,
-    leave_request,
-    list_config,
-    get_config,
-    set_config,
-)
 
-import src.waqt.mcp_server
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    from src.waqt.models import Settings
+    import src.waqt.mcp_server
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -44,6 +38,10 @@ def app():
 
 def test_edit_entry_basic(app):
     """Test editing a single entry."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import edit_entry
+    
     with app.app_context():
         # Create an entry
         entry = TimeEntry(
@@ -79,6 +77,10 @@ def test_edit_entry_basic(app):
 
 def test_edit_entry_by_id(app):
     """Test editing an entry by ID (useful when multiple exist)."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import edit_entry
+    
     with app.app_context():
         # Create two entries for the same day
         entry1 = TimeEntry(
@@ -126,6 +128,10 @@ def test_edit_entry_by_id(app):
 
 def test_edit_entry_multiple_error(app):
     """Test error when editing date with multiple entries without ID."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import edit_entry
+    
     with app.app_context():
         entry1 = TimeEntry(
             date=date(2024, 1, 15),
@@ -154,6 +160,10 @@ def test_edit_entry_multiple_error(app):
 
 def test_edit_active_entry_error(app):
     """Test error when trying to edit an active entry."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import edit_entry
+    
     with app.app_context():
         entry = TimeEntry(
             date=date(2024, 1, 15),
@@ -176,6 +186,9 @@ def test_edit_active_entry_error(app):
 
 def test_leave_request_basic(app):
     """Test creating a leave request."""
+    from src.waqt.models import LeaveDay
+    from src.waqt.mcp_server import leave_request
+    
     with app.app_context():
         # Request leave for Mon-Fri
         result = leave_request(
@@ -196,6 +209,9 @@ def test_leave_request_basic(app):
 
 def test_leave_request_weekend_exclusion(app):
     """Test that weekends are excluded."""
+    from src.waqt.models import LeaveDay
+    from src.waqt.mcp_server import leave_request
+    
     with app.app_context():
         # Request leave Fri-Mon (Fri, Sat, Sun, Mon)
         result = leave_request(
@@ -217,6 +233,8 @@ def test_leave_request_weekend_exclusion(app):
 
 def test_leave_request_invalid_dates(app):
     """Test error with invalid dates."""
+    from src.waqt.mcp_server import leave_request
+    
     with app.app_context():
         result = leave_request(
             start_date="2024-01-20", 
@@ -227,6 +245,9 @@ def test_leave_request_invalid_dates(app):
 
 def test_leave_request_prevents_duplicates(app):
     """Test that duplicate leave records are skipped."""
+    from src.waqt.models import LeaveDay
+    from src.waqt.mcp_server import leave_request
+    
     with app.app_context():
         # First request: Mon-Wed
         result1 = leave_request(
@@ -260,6 +281,8 @@ def test_leave_request_prevents_duplicates(app):
 
 def test_get_set_config(app):
     """Test getting and setting configuration."""
+    from src.waqt.mcp_server import get_config, set_config
+    
     with app.app_context():
         # Initial check
         res = get_config("weekly_hours")
@@ -277,6 +300,8 @@ def test_get_set_config(app):
 
 def test_set_config_validation(app):
     """Test validation when setting config."""
+    from src.waqt.mcp_server import set_config
+    
     with app.app_context():
         # Invalid boolean
         res = set_config("auto_end", "maybe")
@@ -290,6 +315,8 @@ def test_set_config_validation(app):
 
 def test_list_config(app):
     """Test listing all configuration."""
+    from src.waqt.mcp_server import list_config
+    
     with app.app_context():
         res = list_config()
         assert res["status"] == "success"

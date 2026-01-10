@@ -1,7 +1,7 @@
 """End-to-end browser tests using Playwright."""
 
 import pytest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 @pytest.mark.e2e
@@ -126,9 +126,19 @@ def test_add_leave_day(page, live_server):
     page.goto(f"{live_server}/leave")
     
     # Fill out the leave form (using new multi-day fields)
-    today = datetime.now().date().isoformat()
-    page.get_by_test_id("input-start-date").fill(today)
-    page.get_by_test_id("input-end-date").fill(today)
+    today = datetime.now().date()
+    
+    # Ensure we pick a weekday (if today is weekend, move to next Monday)
+    if today.weekday() >= 5:  # 5=Saturday, 6=Sunday
+        days_ahead = 7 - today.weekday()
+        target_date = today + timedelta(days=days_ahead)
+    else:
+        target_date = today
+        
+    target_date_str = target_date.isoformat()
+    
+    page.get_by_test_id("input-start-date").fill(target_date_str)
+    page.get_by_test_id("input-end-date").fill(target_date_str)
     page.get_by_test_id("select-leave-type").select_option("vacation")
     page.get_by_test_id("input-leave-description").fill("Summer vacation")
     

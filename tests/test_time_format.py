@@ -2,14 +2,13 @@
 
 import pytest
 from datetime import time
-from src.waqt import create_app, db
-from src.waqt.models import Settings
-from src.waqt.utils import format_time
 
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -29,6 +28,9 @@ def client(app):
 
 def test_format_time_24_hour(app):
     """Test time formatting with 24-hour format."""
+    from src.waqt.models import Settings
+    from src.waqt.utils import format_time
+    
     with app.app_context():
         # Set time format to 24-hour
         Settings.set_setting("time_format", "24")
@@ -56,6 +58,9 @@ def test_format_time_24_hour(app):
 
 def test_format_time_12_hour(app):
     """Test time formatting with 12-hour format."""
+    from src.waqt.models import Settings
+    from src.waqt.utils import format_time
+    
     with app.app_context():
         # Set time format to 12-hour
         Settings.set_setting("time_format", "12")
@@ -93,6 +98,8 @@ def test_format_time_12_hour(app):
 
 def test_format_time_default_24_hour(app):
     """Test that default format is 24-hour when no setting exists."""
+    from src.waqt.utils import format_time
+    
     with app.app_context():
         # Don't set any time_format setting
         time_obj = time(14, 30)
@@ -102,6 +109,8 @@ def test_format_time_default_24_hour(app):
 
 def test_format_time_with_explicit_format(app):
     """Test format_time with explicit format parameter."""
+    from src.waqt.utils import format_time
+    
     with app.app_context():
         # Test with explicit 24-hour format
         time_obj = time(15, 30)
@@ -115,6 +124,8 @@ def test_format_time_with_explicit_format(app):
 
 def test_format_time_with_none(app):
     """Test format_time with None input for defensive programming."""
+    from src.waqt.utils import format_time
+    
     with app.app_context():
         # Test with None time_obj
         formatted = format_time(None)
@@ -161,10 +172,11 @@ def test_format_time_jinja_filter_registered(app):
 
 def test_format_time_jinja_filter_in_template(app, client):
     """Test that format_time filter works in template rendering."""
+    from src.waqt.models import Settings, TimeEntry
+    from src.waqt import db
+    from datetime import date
+    
     with app.app_context():
-        from datetime import time, date
-        from src.waqt.models import TimeEntry
-        
         # Set time format to 12-hour
         Settings.set_setting("time_format", "12")
         
@@ -201,10 +213,11 @@ def test_format_time_jinja_filter_in_template(app, client):
 
 def test_format_time_in_reports_page(app, client):
     """Test that format_time filter works correctly in reports page."""
+    from src.waqt.models import Settings, TimeEntry
+    from src.waqt import db
+    from datetime import date
+    
     with app.app_context():
-        from datetime import time, date
-        from src.waqt.models import TimeEntry
-        
         # Set time format to 12-hour
         Settings.set_setting("time_format", "12")
         

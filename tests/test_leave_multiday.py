@@ -10,7 +10,6 @@ from src.waqt.utils import (
     get_working_days_in_range,
     calculate_leave_hours,
 )
-from src.waqt.cli import cli
 from click.testing import CliRunner
 
 
@@ -281,6 +280,8 @@ class TestLeaveRequestCLI:
 
     def test_leave_request_cli_basic(self, runner, app):
         """Test CLI leave request basic functionality."""
+        from src.waqt.cli import cli
+        
         with app.app_context():
             result = runner.invoke(cli, [
                 "leave-request",
@@ -298,6 +299,8 @@ class TestLeaveRequestCLI:
 
     def test_leave_request_cli_excludes_weekends(self, runner, app):
         """Test CLI excludes weekends."""
+        from src.waqt.cli import cli
+        
         with app.app_context():
             # Fri-Mon
             result = runner.invoke(cli, [
@@ -316,6 +319,8 @@ class TestLeaveRequestCLI:
 
     def test_leave_request_cli_weekend_only(self, runner, app):
         """Test CLI error on weekend-only request."""
+        from src.waqt.cli import cli
+        
         with app.app_context():
             result = runner.invoke(cli, [
                 "leave-request",
@@ -328,6 +333,8 @@ class TestLeaveRequestCLI:
 
     def test_leave_request_cli_invalid_date_range(self, runner, app):
         """Test CLI error on invalid date range."""
+        from src.waqt.cli import cli
+        
         with app.app_context():
             result = runner.invoke(cli, [
                 "leave-request",
@@ -340,6 +347,8 @@ class TestLeaveRequestCLI:
 
     def test_leave_request_cli_cancel(self, runner, app):
         """Test cancelling request."""
+        from src.waqt.cli import cli
+        
         with app.app_context():
             result = runner.invoke(cli, [
                 "leave-request",

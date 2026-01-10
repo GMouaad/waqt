@@ -1,12 +1,6 @@
 """Unit tests for the updater module."""
 
 import pytest
-from src.waqt.updater import (
-    parse_version,
-    compare_versions,
-    get_platform_info,
-    get_asset_name,
-)
 
 
 class TestVersionParsing:
@@ -14,31 +8,37 @@ class TestVersionParsing:
 
     def test_parse_simple_version(self):
         """Test parsing a simple version string."""
+        from src.waqt.updater import parse_version
         result = parse_version("0.1.0")
         assert result == (0, 1, 0, False, "")
 
     def test_parse_version_with_dev_suffix(self):
         """Test parsing a version with -dev suffix."""
+        from src.waqt.updater import parse_version
         result = parse_version("0.1.93-dev")
         assert result == (0, 1, 93, True, "dev")
 
     def test_parse_version_with_v_prefix(self):
         """Test parsing a version with v prefix."""
+        from src.waqt.updater import parse_version
         result = parse_version("v1.2.3")
         assert result == (1, 2, 3, False, "")
 
     def test_parse_version_with_rc_suffix(self):
         """Test parsing a version with -rc suffix."""
+        from src.waqt.updater import parse_version
         result = parse_version("2.0.0-rc1")
         assert result == (2, 0, 0, True, "rc1")
 
     def test_parse_version_major_only(self):
         """Test parsing a version with only major number."""
+        from src.waqt.updater import parse_version
         result = parse_version("1")
         assert result == (1, 0, 0, False, "")
 
     def test_parse_version_major_minor_only(self):
         """Test parsing a version with major and minor only."""
+        from src.waqt.updater import parse_version
         result = parse_version("1.5")
         assert result == (1, 5, 0, False, "")
 
@@ -48,41 +48,49 @@ class TestVersionComparison:
 
     def test_compare_equal_versions(self):
         """Test comparing equal versions."""
+        from src.waqt.updater import compare_versions
         assert compare_versions("0.1.0", "0.1.0") == 0
         assert compare_versions("1.2.3", "1.2.3") == 0
 
     def test_compare_different_major(self):
         """Test comparing versions with different major numbers."""
+        from src.waqt.updater import compare_versions
         assert compare_versions("1.0.0", "2.0.0") == -1
         assert compare_versions("2.0.0", "1.0.0") == 1
 
     def test_compare_different_minor(self):
         """Test comparing versions with different minor numbers."""
+        from src.waqt.updater import compare_versions
         assert compare_versions("0.1.0", "0.2.0") == -1
         assert compare_versions("0.2.0", "0.1.0") == 1
 
     def test_compare_different_patch(self):
         """Test comparing versions with different patch numbers."""
+        from src.waqt.updater import compare_versions
         assert compare_versions("0.1.1", "0.1.2") == -1
         assert compare_versions("0.1.2", "0.1.1") == 1
 
     def test_compare_prerelease_vs_release(self):
         """Test that prerelease versions are less than release versions."""
+        from src.waqt.updater import compare_versions
         assert compare_versions("0.1.93-dev", "0.1.93") == -1
         assert compare_versions("0.1.93", "0.1.93-dev") == 1
 
     def test_compare_two_prereleases(self):
         """Test comparing two prerelease versions."""
+        from src.waqt.updater import compare_versions
         assert compare_versions("0.1.92-dev", "0.1.93-dev") == -1
         assert compare_versions("0.1.93-dev", "0.1.92-dev") == 1
 
     def test_compare_with_v_prefix(self):
         """Test that v prefix is handled correctly."""
+        from src.waqt.updater import compare_versions
         assert compare_versions("v0.1.0", "0.1.1") == -1
         assert compare_versions("v1.0.0", "v1.0.0") == 0
 
     def test_compare_complex_scenario(self):
         """Test a complex version comparison scenario."""
+        from src.waqt.updater import compare_versions
         # 0.1.92-dev < 0.1.93-dev < 0.1.93 < 0.1.94
         assert compare_versions("0.1.92-dev", "0.1.93-dev") == -1
         assert compare_versions("0.1.93-dev", "0.1.93") == -1
@@ -90,6 +98,7 @@ class TestVersionComparison:
 
     def test_compare_different_prerelease_suffixes(self):
         """Test that different prerelease suffixes are compared lexicographically."""
+        from src.waqt.updater import compare_versions
         # alpha < beta < dev < rc (lexicographically)
         assert compare_versions("0.1.93-alpha", "0.1.93-beta") == -1
         assert compare_versions("0.1.93-beta", "0.1.93-dev") == -1
@@ -102,6 +111,7 @@ class TestPlatformDetection:
 
     def test_get_platform_info(self):
         """Test that platform info is returned in expected format."""
+        from src.waqt.updater import get_platform_info
         os_name, arch = get_platform_info()
 
         # Check that values are strings
@@ -116,6 +126,7 @@ class TestPlatformDetection:
 
     def test_get_asset_name(self):
         """Test asset name generation."""
+        from src.waqt.updater import get_asset_name
         assert get_asset_name("linux", "amd64") == "waqtracker-linux-amd64.zip"
         assert get_asset_name("macos", "arm64") == "waqtracker-macos-arm64.zip"
         assert get_asset_name("windows", "amd64") == "waqtracker-windows-amd64.zip"

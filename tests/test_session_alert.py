@@ -3,13 +3,14 @@
 import pytest
 import json
 from datetime import datetime, timedelta
-from src.waqt import create_app, db
-from src.waqt.models import TimeEntry, Settings
 
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    from src.waqt.models import Settings
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -42,6 +43,8 @@ def test_session_alert_disabled_by_default(client, app):
 
 def test_session_alert_no_active_timer(client, app):
     """Test that no alert is shown when there's no active timer."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
     
@@ -56,6 +59,9 @@ def test_session_alert_no_active_timer(client, app):
 
 def test_session_alert_paused_timer(client, app):
     """Test that no alert is shown when timer is paused."""
+    from src.waqt.models import TimeEntry, Settings
+    from src.waqt import db
+    
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
         
@@ -84,6 +90,9 @@ def test_session_alert_paused_timer(client, app):
 
 def test_session_alert_under_8_hours(client, app):
     """Test that no alert is shown when session is under 8 hours."""
+    from src.waqt.models import TimeEntry, Settings
+    from src.waqt import db
+    
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
         
@@ -113,6 +122,9 @@ def test_session_alert_under_8_hours(client, app):
 
 def test_session_alert_over_8_hours(client, app):
     """Test that alert is shown when session exceeds 8 hours."""
+    from src.waqt.models import TimeEntry, Settings
+    from src.waqt import db
+    
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
         Settings.set_setting("max_work_session_hours", "10")
@@ -145,6 +157,9 @@ def test_session_alert_over_8_hours(client, app):
 
 def test_session_alert_with_pauses(client, app):
     """Test that alert calculation accounts for pauses."""
+    from src.waqt.models import TimeEntry, Settings
+    from src.waqt import db
+    
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
         
@@ -177,6 +192,9 @@ def test_session_alert_with_pauses(client, app):
 
 def test_session_alert_custom_threshold(client, app):
     """Test that custom threshold is respected."""
+    from src.waqt.models import TimeEntry, Settings
+    from src.waqt import db
+    
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
         Settings.set_setting("max_work_session_hours", "12")
