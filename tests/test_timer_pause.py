@@ -1,11 +1,11 @@
 import pytest
 from datetime import datetime, time, timedelta
 import time as time_module
-from src.waqt.models import TimeEntry
-from src.waqt import create_app, db
 
 @pytest.fixture
 def app():
+    from src.waqt import create_app, db
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -21,6 +21,8 @@ def client(app):
     return app.test_client()
 
 def test_pause_resume_flow(client, app):
+    from src.waqt.models import TimeEntry
+    
     # Start timer
     resp = client.post("/api/timer/start", json={"description": "Test Task"})
     assert resp.status_code == 200
@@ -68,6 +70,8 @@ def test_pause_resume_flow(client, app):
         assert entry.accumulated_pause_seconds >= 0.0
 
 def test_stop_while_paused(client, app):
+    from src.waqt.models import TimeEntry
+    
     client.post("/api/timer/start", json={})
     client.post("/api/timer/pause", json={})
     
@@ -84,6 +88,9 @@ def test_stop_while_paused(client, app):
         assert entry.duration_hours >= 0.0
 
 def test_accumulated_pause_calculation(client, app):
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Manually create an entry that started 1 hour ago, paused 30 mins ago
         now = datetime.now()

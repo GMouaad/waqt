@@ -3,14 +3,13 @@
 import pytest
 from click.testing import CliRunner
 from datetime import date, time
-from src.waqt import create_app, db
-from src.waqt.models import TimeEntry, LeaveDay
-from src.waqt.cli import cli
 
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -23,12 +22,19 @@ def app():
 
 
 @pytest.fixture
+def cli():
+    """Return the CLI entry point."""
+    from src.waqt.cli import cli as cli_obj
+    return cli_obj
+
+
+@pytest.fixture
 def runner():
     """Create a CLI test runner."""
     return CliRunner()
 
 
-def test_cli_help(runner):
+def test_cli_help(runner, cli):
     """Test that the CLI help message displays correctly."""
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
@@ -39,7 +45,7 @@ def test_cli_help(runner):
     assert "reference" in result.output
 
 
-def test_cli_version(runner):
+def test_cli_version(runner, cli):
     """Test that the version command works."""
     result = runner.invoke(cli, ["--version"])
     assert result.exit_code == 0
@@ -47,8 +53,10 @@ def test_cli_version(runner):
     assert "0.1.0" in result.output
 
 
-def test_start_command_basic(runner, app):
+def test_start_command_basic(runner, app, cli):
     """Test basic start command functionality."""
+    from src.waqt.models import TimeEntry
+    
     with app.app_context():
         result = runner.invoke(cli, ["start", "--time", "09:00"])
         assert result.exit_code == 0
@@ -62,8 +70,10 @@ def test_start_command_basic(runner, app):
         assert entry.duration_hours == 0.0  # Open entry marker
 
 
-def test_start_command_with_description(runner, app):
+def test_start_command_with_description(runner, app, cli):
     """Test start command with custom description."""
+    from src.waqt.models import TimeEntry
+    
     with app.app_context():
         result = runner.invoke(
             cli,
@@ -77,8 +87,10 @@ def test_start_command_with_description(runner, app):
         assert entry.description == "Morning work session"
 
 
-def test_start_command_with_date(runner, app):
+def test_start_command_with_date(runner, app, cli):
     """Test start command with specific date."""
+    from src.waqt.models import TimeEntry
+    
     with app.app_context():
         result = runner.invoke(
             cli, ["start", "--date", "2024-01-15", "--time", "09:00"]
@@ -91,7 +103,7 @@ def test_start_command_with_date(runner, app):
         assert entry.date == date(2024, 1, 15)
 
 
-def test_start_command_invalid_time_format(runner, app):
+def test_start_command_invalid_time_format(runner, app, cli):
     """Test start command with invalid time format."""
     with app.app_context():
         result = runner.invoke(cli, ["start", "--time", "invalid"])
@@ -99,7 +111,7 @@ def test_start_command_invalid_time_format(runner, app):
         assert "Invalid time format" in result.output
 
 
-def test_start_command_invalid_date_format(runner, app):
+def test_start_command_invalid_date_format(runner, app, cli):
     """Test start command with invalid date format."""
     with app.app_context():
         result = runner.invoke(cli, ["start", "--date", "invalid"])
@@ -107,7 +119,7 @@ def test_start_command_invalid_date_format(runner, app):
         assert "Invalid date format" in result.output
 
 
-def test_start_command_duplicate(runner, app):
+def test_start_command_duplicate(runner, app, cli):
     """Test start command when entry already open."""
     with app.app_context():
         # Create first entry
@@ -119,8 +131,10 @@ def test_start_command_duplicate(runner, app):
         assert "There is already an active timer" in result.output
 
 
-def test_end_command_basic(runner, app):
+def test_end_command_basic(runner, app, cli):
     """Test basic end command functionality."""
+    from src.waqt.models import TimeEntry
+    
     with app.app_context():
         # Start tracking
         runner.invoke(cli, ["start", "--time", "09:00"])
@@ -138,7 +152,7 @@ def test_end_command_basic(runner, app):
         assert entry.duration_hours == 8.0
 
 
-def test_end_command_without_start(runner, app):
+def test_end_command_without_start(runner, app, cli):
     """Test end command when no entry exists."""
     with app.app_context():
         result = runner.invoke(cli, ["end", "--time", "17:00"])
@@ -146,7 +160,7 @@ def test_end_command_without_start(runner, app):
         assert "No active timer found" in result.output
 
 
-def test_end_command_with_date(runner, app):
+def test_end_command_with_date(runner, app, cli):
     """Test end command with specific date."""
     with app.app_context():
         # Start tracking
@@ -158,8 +172,11 @@ def test_end_command_with_date(runner, app):
         assert "Time tracking ended!" in result.output
 
 
-def test_summary_command_week(runner, app):
+def test_summary_command_week(runner, app, cli):
     """Test weekly summary command."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Create some test entries for the current date
         today = date.today()
@@ -188,8 +205,11 @@ def test_summary_command_week(runner, app):
         assert "Working Days" in result.output
 
 
-def test_summary_command_month(runner, app):
+def test_summary_command_month(runner, app, cli):
     """Test monthly summary command."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Create some test entries for the current month
         today = date.today()
@@ -209,7 +229,7 @@ def test_summary_command_month(runner, app):
         assert "Total Hours" in result.output
 
 
-def test_summary_command_no_entries(runner, app):
+def test_summary_command_no_entries(runner, app, cli):
     """Test summary command when no entries exist."""
     with app.app_context():
         result = runner.invoke(cli, ["summary"])
@@ -217,7 +237,7 @@ def test_summary_command_no_entries(runner, app):
         assert "No time entries found" in result.output
 
 
-def test_sum_command_alias(runner, app):
+def test_sum_command_alias(runner, app, cli):
     """Test that 'sum' is an alias for 'summary'."""
     with app.app_context():
         result = runner.invoke(cli, ["sum", "--period", "week"])
@@ -225,7 +245,7 @@ def test_sum_command_alias(runner, app):
         assert "Week Summary" in result.output
 
 
-def test_reference_command(runner, app):
+def test_reference_command(runner, app, cli):
     """Test reference command (placeholder)."""
     with app.app_context():
         result = runner.invoke(cli, ["reference"])
@@ -234,8 +254,11 @@ def test_reference_command(runner, app):
         assert "placeholder" in result.output
 
 
-def test_summary_with_leave_days(runner, app):
+def test_summary_with_leave_days(runner, app, cli):
     """Test monthly summary with leave days."""
+    from src.waqt.models import TimeEntry, LeaveDay
+    from src.waqt import db
+    
     with app.app_context():
         # Create test entry
         entry = TimeEntry(
@@ -263,7 +286,7 @@ def test_summary_with_leave_days(runner, app):
         assert "Leave Days" in result.output
 
 
-def test_full_workflow(runner, app):
+def test_full_workflow(runner, app, cli):
     """Test complete workflow: start -> end -> summary."""
     with app.app_context():
         # Start tracking
@@ -284,8 +307,11 @@ def test_full_workflow(runner, app):
         assert "Total Hours" in result3.output
 
 
-def test_edit_entry_command_basic(runner, app):
+def test_edit_entry_command_basic(runner, app, cli):
     """Test basic edit-entry command functionality."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Create a test entry first
         test_date = date(2024, 1, 15)
@@ -313,8 +339,11 @@ def test_edit_entry_command_basic(runner, app):
         assert updated_entry.description == "Updated description"
 
 
-def test_edit_entry_command_times(runner, app):
+def test_edit_entry_command_times(runner, app, cli):
     """Test edit-entry command with time changes."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Create a test entry first
         test_date = date(2024, 1, 15)
@@ -344,8 +373,11 @@ def test_edit_entry_command_times(runner, app):
         assert updated_entry.duration_hours == 9.0
 
 
-def test_edit_entry_command_all_fields(runner, app):
+def test_edit_entry_command_all_fields(runner, app, cli):
     """Test edit-entry command updating all fields at once."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Create a test entry first
         test_date = date(2024, 1, 15)
@@ -386,7 +418,7 @@ def test_edit_entry_command_all_fields(runner, app):
         assert updated_entry.description == "Complete update"
 
 
-def test_edit_entry_command_no_entry(runner, app):
+def test_edit_entry_command_no_entry(runner, app, cli):
     """Test edit-entry command when no entry exists."""
     with app.app_context():
         result = runner.invoke(
@@ -396,8 +428,11 @@ def test_edit_entry_command_no_entry(runner, app):
         assert "No completed time entry found" in result.output
 
 
-def test_edit_entry_command_no_fields(runner, app):
+def test_edit_entry_command_no_fields(runner, app, cli):
     """Test edit-entry command without any fields to update."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Create a test entry
         entry = TimeEntry(
@@ -416,8 +451,11 @@ def test_edit_entry_command_no_fields(runner, app):
         assert "At least one field must be provided" in result.output
 
 
-def test_edit_entry_command_invalid_time_format(runner, app):
+def test_edit_entry_command_invalid_time_format(runner, app, cli):
     """Test edit-entry command with invalid time format."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Create a test entry
         entry = TimeEntry(
@@ -438,8 +476,11 @@ def test_edit_entry_command_invalid_time_format(runner, app):
         assert "Error: Invalid time format" in result.output
 
 
-def test_edit_entry_command_active_entry(runner, app):
+def test_edit_entry_command_active_entry(runner, app, cli):
     """Test edit-entry command on active entry (should fail)."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Create an active entry
         entry = TimeEntry(
@@ -467,8 +508,11 @@ def test_edit_entry_command_active_entry(runner, app):
         assert "No completed time entry found" in result.output
 
 
-def test_edit_entry_command_multiple_entries(runner, app):
+def test_edit_entry_command_multiple_entries(runner, app, cli):
     """Test edit-entry command when multiple entries exist for a date."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    
     with app.app_context():
         # Create multiple entries for the same date (legacy case)
         test_date = date(2024, 1, 15)

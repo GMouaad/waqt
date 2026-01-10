@@ -3,12 +3,12 @@
 import pytest
 import json
 from datetime import datetime, time, date
-from src.waqt import create_app, db
-from src.waqt.models import TimeEntry
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -26,6 +26,7 @@ def client(app):
 
 def test_timer_lifecycle(client, app):
     """Test start, status, and stop timer lifecycle."""
+    from src.waqt.models import TimeEntry
     
     # 1. Check initial status (inactive)
     response = client.get("/api/timer/status")

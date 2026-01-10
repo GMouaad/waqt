@@ -2,14 +2,14 @@
 
 import pytest
 from click.testing import CliRunner
-from src.waqt import create_app, db
-from src.waqt.models import Settings
-from src.waqt.cli import cli
 
 
 @pytest.fixture
 def app():
     """Create and configure a test app instance."""
+    from src.waqt import create_app, db
+    from src.waqt.models import Settings
+    
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -33,12 +33,19 @@ def app():
 
 
 @pytest.fixture
+def cli():
+    """Return the CLI entry point."""
+    from src.waqt.cli import cli as cli_obj
+    return cli_obj
+
+
+@pytest.fixture
 def runner():
     """Create a CLI test runner."""
     return CliRunner()
 
 
-def test_config_help(runner):
+def test_config_help(runner, cli):
     """Test that the config help message displays correctly."""
     result = runner.invoke(cli, ["config", "--help"])
     assert result.exit_code == 0
@@ -49,7 +56,7 @@ def test_config_help(runner):
     assert "reset" in result.output
 
 
-def test_config_list_displays_all_settings(runner, app):
+def test_config_list_displays_all_settings(runner, app, cli):
     """Test that config list displays all configuration settings."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "list"])
@@ -61,7 +68,7 @@ def test_config_list_displays_all_settings(runner, app):
         assert "auto_end" in result.output
 
 
-def test_config_list_shows_default_values(runner, app):
+def test_config_list_shows_default_values(runner, app, cli):
     """Test that config list shows default values correctly."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "list"])
@@ -72,7 +79,7 @@ def test_config_list_shows_default_values(runner, app):
         assert "Value: false" in result.output
 
 
-def test_config_get_existing_key(runner, app):
+def test_config_get_existing_key(runner, app, cli):
     """Test getting value of an existing configuration key."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "get", "weekly_hours"])
@@ -81,7 +88,7 @@ def test_config_get_existing_key(runner, app):
         assert "Value: 40" in result.output
 
 
-def test_config_get_nonexistent_key(runner, app):
+def test_config_get_nonexistent_key(runner, app, cli):
     """Test getting value of a non-existent configuration key."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "get", "nonexistent_key"])
@@ -90,8 +97,10 @@ def test_config_get_nonexistent_key(runner, app):
         assert "Available configuration keys:" in result.output
 
 
-def test_config_set_valid_value(runner, app):
+def test_config_set_valid_value(runner, app, cli):
     """Test setting a configuration value with valid input."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         result = runner.invoke(cli, ["config", "set", "weekly_hours", "35"])
         assert result.exit_code == 0
@@ -104,8 +113,10 @@ def test_config_set_valid_value(runner, app):
         assert value == "35"
 
 
-def test_config_set_pause_duration(runner, app):
+def test_config_set_pause_duration(runner, app, cli):
     """Test setting pause duration."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         result = runner.invoke(cli, ["config", "set", "pause_duration_minutes", "60"])
         assert result.exit_code == 0
@@ -117,8 +128,10 @@ def test_config_set_pause_duration(runner, app):
         assert value == 60
 
 
-def test_config_set_feature_flag_true(runner, app):
+def test_config_set_feature_flag_true(runner, app, cli):
     """Test setting a feature flag to true."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         result = runner.invoke(cli, ["config", "set", "auto_end", "true"])
         assert result.exit_code == 0
@@ -130,8 +143,10 @@ def test_config_set_feature_flag_true(runner, app):
         assert value is True
 
 
-def test_config_set_feature_flag_various_true_values(runner, app):
+def test_config_set_feature_flag_various_true_values(runner, app, cli):
     """Test setting a feature flag with various true representations."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         for true_value in ["true", "1", "yes", "on", "True", "YES", "ON"]:
             result = runner.invoke(cli, ["config", "set", "auto_end", true_value])
@@ -144,8 +159,10 @@ def test_config_set_feature_flag_various_true_values(runner, app):
             assert value is True
 
 
-def test_config_set_feature_flag_false(runner, app):
+def test_config_set_feature_flag_false(runner, app, cli):
     """Test setting a feature flag to false."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # First set it to true
         runner.invoke(cli, ["config", "set", "auto_end", "true"])
@@ -161,7 +178,7 @@ def test_config_set_feature_flag_false(runner, app):
         assert value is False
 
 
-def test_config_set_nonexistent_key(runner, app):
+def test_config_set_nonexistent_key(runner, app, cli):
     """Test setting a non-existent configuration key."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "set", "nonexistent_key", "value"])
@@ -169,7 +186,7 @@ def test_config_set_nonexistent_key(runner, app):
         assert "Unknown configuration key" in result.output
 
 
-def test_config_set_invalid_weekly_hours_too_high(runner, app):
+def test_config_set_invalid_weekly_hours_too_high(runner, app, cli):
     """Test setting weekly hours to an invalid value (too high)."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "set", "weekly_hours", "200"])
@@ -177,7 +194,7 @@ def test_config_set_invalid_weekly_hours_too_high(runner, app):
         assert "Invalid value" in result.output or "Must be between" in result.output
 
 
-def test_config_set_invalid_weekly_hours_negative(runner, app):
+def test_config_set_invalid_weekly_hours_negative(runner, app, cli):
     """Test setting weekly hours to a negative value."""
     with app.app_context():
         # Note: Click interprets negative numbers as options, so we use 0 instead
@@ -186,7 +203,7 @@ def test_config_set_invalid_weekly_hours_negative(runner, app):
         assert "Invalid value" in result.output or "Must be between" in result.output
 
 
-def test_config_set_invalid_pause_duration(runner, app):
+def test_config_set_invalid_pause_duration(runner, app, cli):
     """Test setting pause duration to an invalid value."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "set", "pause_duration_minutes", "500"])
@@ -194,7 +211,7 @@ def test_config_set_invalid_pause_duration(runner, app):
         assert "Invalid value" in result.output or "Must be between" in result.output
 
 
-def test_config_set_invalid_pause_duration_negative(runner, app):
+def test_config_set_invalid_pause_duration_negative(runner, app, cli):
     """Test setting pause duration to an invalid value (below minimum)."""
     with app.app_context():
         # Note: Click interprets negative numbers as options, so we test -1 using quotes
@@ -205,7 +222,7 @@ def test_config_set_invalid_pause_duration_negative(runner, app):
         assert result.exit_code != 0
 
 
-def test_config_set_invalid_feature_flag(runner, app):
+def test_config_set_invalid_feature_flag(runner, app, cli):
     """Test setting a feature flag to an invalid value."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "set", "auto_end", "invalid"])
@@ -213,8 +230,10 @@ def test_config_set_invalid_feature_flag(runner, app):
         assert "Invalid value" in result.output or "boolean" in result.output
 
 
-def test_config_reset_to_default(runner, app):
+def test_config_reset_to_default(runner, app, cli):
     """Test resetting a configuration value to default."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # First change the value
         runner.invoke(cli, ["config", "set", "weekly_hours", "35"])
@@ -231,8 +250,10 @@ def test_config_reset_to_default(runner, app):
         assert value == "40"
 
 
-def test_config_reset_feature_flag(runner, app):
+def test_config_reset_feature_flag(runner, app, cli):
     """Test resetting a feature flag to default."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # First change the value
         runner.invoke(cli, ["config", "set", "auto_end", "true"])
@@ -248,7 +269,7 @@ def test_config_reset_feature_flag(runner, app):
         assert value is False
 
 
-def test_config_reset_nonexistent_key(runner, app):
+def test_config_reset_nonexistent_key(runner, app, cli):
     """Test resetting a non-existent configuration key."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "reset", "nonexistent_key"])
@@ -258,6 +279,8 @@ def test_config_reset_nonexistent_key(runner, app):
 
 def test_settings_get_int_method(app):
     """Test the Settings.get_int() helper method."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         Settings.set_setting("test_int", "42")
         value = Settings.get_int("test_int")
@@ -267,6 +290,8 @@ def test_settings_get_int_method(app):
 
 def test_settings_get_float_method(app):
     """Test the Settings.get_float() helper method."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         Settings.set_setting("test_float", "3.14")
         value = Settings.get_float("test_float")
@@ -276,6 +301,8 @@ def test_settings_get_float_method(app):
 
 def test_settings_get_bool_method(app):
     """Test the Settings.get_bool() helper method."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # Test various true values
         for true_val in ["true", "True", "1", "yes", "on"]:
@@ -290,6 +317,8 @@ def test_settings_get_bool_method(app):
 
 def test_settings_get_all_settings(app):
     """Test the Settings.get_all_settings() method."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         all_settings = Settings.get_all_settings()
         assert isinstance(all_settings, dict)
@@ -301,6 +330,8 @@ def test_settings_get_all_settings(app):
 
 def test_settings_get_int_with_invalid_value(app):
     """Test that get_int returns default when value cannot be converted."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # Store a non-numeric value
         Settings.set_setting("test_invalid_int", "not_a_number")
@@ -310,6 +341,8 @@ def test_settings_get_int_with_invalid_value(app):
 
 def test_settings_get_float_with_invalid_value(app):
     """Test that get_float returns default when value cannot be converted."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # Store a non-numeric value
         Settings.set_setting("test_invalid_float", "not_a_float")
@@ -319,6 +352,8 @@ def test_settings_get_float_with_invalid_value(app):
 
 def test_settings_get_bool_with_invalid_value(app):
     """Test that get_bool returns default for invalid boolean values."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # Store various values and check they return false (not in the true list)
         for invalid_val in ["invalid", "maybe", "2", ""]:
@@ -326,7 +361,7 @@ def test_settings_get_bool_with_invalid_value(app):
             assert Settings.get_bool("test_bool", default=False) is False
 
 
-def test_config_list_marks_non_default_values(runner, app):
+def test_config_list_marks_non_default_values(runner, app, cli):
     """Test that config list marks non-default values with asterisk."""
     with app.app_context():
         # Change a value from default
@@ -338,7 +373,7 @@ def test_config_list_marks_non_default_values(runner, app):
         assert "Indicates non-default value" in result.output
 
 
-def test_config_workflow_set_get_reset(runner, app):
+def test_config_workflow_set_get_reset(runner, app, cli):
     """Test complete workflow: set -> get -> reset."""
     with app.app_context():
         # Set a value
@@ -362,8 +397,10 @@ def test_config_workflow_set_get_reset(runner, app):
         assert "Value: 45" in result4.output
 
 
-def test_config_set_alert_on_max_work_session(runner, app):
+def test_config_set_alert_on_max_work_session(runner, app, cli):
     """Test setting alert_on_max_work_session feature flag."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         result = runner.invoke(cli, ["config", "set", "alert_on_max_work_session", "true"])
         assert result.exit_code == 0
@@ -375,8 +412,10 @@ def test_config_set_alert_on_max_work_session(runner, app):
         assert value is True
 
 
-def test_config_set_max_work_session_hours(runner, app):
+def test_config_set_max_work_session_hours(runner, app, cli):
     """Test setting max_work_session_hours threshold."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         result = runner.invoke(cli, ["config", "set", "max_work_session_hours", "12"])
         assert result.exit_code == 0
@@ -388,7 +427,7 @@ def test_config_set_max_work_session_hours(runner, app):
         assert value == 12.0
 
 
-def test_config_set_max_work_session_hours_invalid(runner, app):
+def test_config_set_max_work_session_hours_invalid(runner, app, cli):
     """Test setting max_work_session_hours to invalid value."""
     with app.app_context():
         # Too high
@@ -402,8 +441,10 @@ def test_config_set_max_work_session_hours_invalid(runner, app):
         assert "Invalid value" in result.output or "Must be between" in result.output
 
 
-def test_config_reset_alert_on_max_work_session(runner, app):
+def test_config_reset_alert_on_max_work_session(runner, app, cli):
     """Test resetting alert_on_max_work_session to default."""
+    from src.waqt.models import Settings
+    
     with app.app_context():
         # First change the value
         runner.invoke(cli, ["config", "set", "alert_on_max_work_session", "true"])
@@ -419,7 +460,7 @@ def test_config_reset_alert_on_max_work_session(runner, app):
         assert value is False
 
 
-def test_config_list_includes_new_settings(runner, app):
+def test_config_list_includes_new_settings(runner, app, cli):
     """Test that config list includes the new session alert settings."""
     with app.app_context():
         result = runner.invoke(cli, ["config", "list"])
