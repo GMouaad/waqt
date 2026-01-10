@@ -7,42 +7,44 @@
     <h2>Add Time Entry</h2>
     <p class="subtitle">Log your work hours and activities</p>
     
-    <form method="POST" action="{{ url_for('main.time_entry') }}" class="form-card" data-testid="time-entry-form">
-        <div class="form-group">
-            <label for="date">Date *</label>
-            <input type="date" id="date" name="date" data-testid="input-date" value="{{ today.isoformat() }}" required>
-        </div>
-        
-        <div class="form-row">
+    <div class="section">
+        <form method="POST" action="{{ url_for('main.time_entry') }}" data-testid="time-entry-form">
             <div class="form-group">
-                <label for="start_time">Start Time *</label>
-                {% if time_format == '12' %}
-                <input type="text" id="start_time" name="start_time" data-testid="input-start-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
-                {% else %}
-                <input type="time" id="start_time" name="start_time" data-testid="input-start-time" required>
-                {% endif %}
+                <label for="date">Date *</label>
+                <input type="date" id="date" name="date" data-testid="input-date" value="{{ today.isoformat() }}" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_time">Start Time *</label>
+                    {% if time_format == '12' %}
+                    <input type="text" id="start_time" name="start_time" data-testid="input-start-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
+                    {% else %}
+                    <input type="time" id="start_time" name="start_time" data-testid="input-start-time" required>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="end_time">End Time *</label>
+                    {% if time_format == '12' %}
+                    <input type="text" id="end_time" name="end_time" data-testid="input-end-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
+                    {% else %}
+                    <input type="time" id="end_time" name="end_time" data-testid="input-end-time" required>
+                    {% endif %}
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="end_time">End Time *</label>
-                {% if time_format == '12' %}
-                <input type="text" id="end_time" name="end_time" data-testid="input-end-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
-                {% else %}
-                <input type="time" id="end_time" name="end_time" data-testid="input-end-time" required>
-                {% endif %}
+                <label for="description">Description *</label>
+                <textarea id="description" name="description" data-testid="input-description" rows="4" required placeholder="What did you work on?"></textarea>
             </div>
-        </div>
-        
-        <div class="form-group">
-            <label for="description">Description *</label>
-            <textarea id="description" name="description" data-testid="input-description" rows="4" required placeholder="What did you work on?"></textarea>
-        </div>
-        
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary" data-testid="btn-submit">Save Entry</button>
-            <a href="{{ url_for('main.index') }}" class="btn btn-secondary" data-testid="btn-cancel">Cancel</a>
-        </div>
-    </form>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-testid="btn-submit">Save Entry</button>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary" data-testid="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
     
     <div class="info-box">
         <h3>💡 Tips</h3>
