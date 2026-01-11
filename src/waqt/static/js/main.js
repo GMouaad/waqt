@@ -87,40 +87,115 @@ document.addEventListener('DOMContentLoaded', function() {
     const endTimeInput = document.getElementById('end_time');
     
     if (startTimeInput && endTimeInput) {
-        function updateDurationPreview() {
-            const startTime = startTimeInput.value;
-            const endTime = endTimeInput.value;
+        function parseTimeInput(input) {
+            const val = input.value;
+            if (!val) return null;
             
-            if (startTime && endTime) {
-                const start = new Date('2000-01-01 ' + startTime);
-                const end = new Date('2000-01-01 ' + endTime);
-                
-                let duration = (end - start) / (1000 * 60 * 60); // hours
-                
-                if (duration < 0) {
-                    duration += 24; // Handle midnight crossing
-                }
-                
-                if (duration > 0) {
-                    const hours = Math.floor(duration);
-                    const minutes = Math.round((duration - hours) * 60);
-                    const durationText = `${hours}h ${minutes}m`;
+            if (input.type === 'time') {
+                // "HH:MM" format
+                const [h, m] = val.split(':').map(Number);
+                if (isNaN(h) || isNaN(m)) return null;
+                return h * 60 + m;
+            } else {
+                // Text input, likely 12h format "HH:MM AM/PM"
+                // Try robust parsing
+                const match = val.match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$/i);
+                if (match) {
+                    let h = parseInt(match[1]);
+                    const m = parseInt(match[2]);
+                    const period = match[3] ? match[3].toUpperCase() : null;
                     
-                    // Create or update preview element
-                    let preview = document.getElementById('duration-preview');
-                    if (!preview) {
-                        preview = document.createElement('div');
-                        preview.id = 'duration-preview';
-                        preview.className = 'duration-preview';
-                        endTimeInput.parentElement.appendChild(preview);
+                    if (period) {
+                        if (period === 'PM' && h < 12) h += 12;
+                        if (period === 'AM' && h === 12) h = 0;
                     }
-                    preview.textContent = `Duration: ${durationText}`;
+                    return h * 60 + m;
                 }
+                // Fallback basic parse
+                const [h, m] = val.split(':').map(Number);
+                if (!isNaN(h) && !isNaN(m)) return h * 60 + m;
+                return null;
+            }
+        }
+
+        function updateDurationPreview() {
+            const startMinutes = parseTimeInput(startTimeInput);
+            const endMinutes = parseTimeInput(endTimeInput);
+            
+            if (startMinutes !== null && endMinutes !== null) {
+                let diff = endMinutes - startMinutes;
+                
+                if (diff < 0) {
+                    diff += 24 * 60; // Handle midnight crossing
+                }
+                
+                // Calculate pause deduction
+                let pauseMinutes = 0;
+                const pauseModeInput = document.querySelector('input[name="pause_mode"]:checked');
+                if (pauseModeInput) {
+                    const mode = pauseModeInput.value;
+                    if (mode === 'default') {
+                        // Get default pause from data attribute
+                        const defaultPauseAttr = pauseModeInput.getAttribute('data-default-pause');
+                        if (defaultPauseAttr) {
+                            pauseMinutes = parseInt(defaultPauseAttr);
+                        }
+                    } else if (mode === 'custom') {
+                        const customInput = document.getElementById('custom_pause_minutes');
+                        if (customInput && customInput.value) {
+                            pauseMinutes = parseInt(customInput.value);
+                        }
+                    }
+                }
+                
+                // Apply pause
+                const netMinutes = Math.max(0, diff - pauseMinutes);
+                
+                const hours = Math.floor(netMinutes / 60);
+                const minutes = netMinutes % 60;
+                
+                let durationText = `${hours}h ${minutes}m`;
+                if (pauseMinutes > 0) {
+                    durationText += ` (incl. ${pauseMinutes}m pause)`;
+                }
+                
+                // Create or update preview element
+                let preview = document.getElementById('duration-preview');
+                if (!preview) {
+                    preview = document.createElement('div');
+                    preview.id = 'duration-preview';
+                    preview.className = 'duration-preview text-muted';
+                    preview.style.marginTop = '0.25rem';
+                    preview.style.fontSize = '0.85rem';
+                    preview.style.fontWeight = '500';
+                    preview.style.color = 'var(--primary-color)';
+                    
+                    // Append directly under the end time input
+                    endTimeInput.parentElement.appendChild(preview);
+                }
+                preview.textContent = `Duration: ${durationText}`;
+            } else {
+                const preview = document.getElementById('duration-preview');
+                if (preview) preview.textContent = '';
             }
         }
         
-        startTimeInput.addEventListener('change', updateDurationPreview);
-        endTimeInput.addEventListener('change', updateDurationPreview);
+        startTimeInput.addEventListener('input', updateDurationPreview);
+        endTimeInput.addEventListener('input', updateDurationPreview);
+        
+        // Listen for pause changes
+        const pauseRadios = document.querySelectorAll('input[name="pause_mode"]');
+        pauseRadios.forEach(radio => radio.addEventListener('change', updateDurationPreview));
+        
+        const customPauseInput = document.getElementById('custom_pause_minutes');
+        if (customPauseInput) {
+            customPauseInput.addEventListener('input', updateDurationPreview);
+            // Listen for custom event triggered by toggle function
+            customPauseInput.addEventListener('change', updateDurationPreview);
+        }
+        
+        // Initial calc
+        setTimeout(updateDurationPreview, 100);
     }
 
     // Timer Logic

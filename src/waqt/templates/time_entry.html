@@ -33,14 +33,12 @@
                     {% endif %}
                 </div>
             </div>
-            
-            <div id="duration-hint" style="margin-top: -1rem; margin-bottom: 1.5rem; font-weight: 500; color: var(--primary-color);"></div>
 
             <div class="form-group">
                 <label>Pause Deduction</label>
-                <div class="radio-group">
+                <div class="radio-group" id="pause-options">
                     <div class="radio-option">
-                        <input type="radio" id="pause_default" name="pause_mode" value="default" checked onchange="toggleCustomPause(false)">
+                        <input type="radio" id="pause_default" name="pause_mode" value="default" checked onchange="toggleCustomPause(false)" data-default-pause="{{ default_pause }}">
                         <label for="pause_default">Default ({{ default_pause }}m)</label>
                     </div>
                     <div class="radio-option">
@@ -82,73 +80,6 @@
 </div>
 
 <script>
-    const DEFAULT_PAUSE = {{ default_pause }};
-    const TIME_FORMAT = "{{ time_format }}";
-
-    function parseTime(timeStr) {
-        if (!timeStr) return null;
-        
-        if (TIME_FORMAT === '12') {
-            const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])$/i);
-            if (!match) return null;
-            
-            let hours = parseInt(match[1]);
-            let minutes = parseInt(match[2]);
-            let period = match[3].toUpperCase();
-            
-            if (period === 'PM' && hours < 12) hours += 12;
-            if (period === 'AM' && hours === 12) hours = 0;
-            
-            return hours * 60 + minutes;
-        } else {
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            if (isNaN(hours) || isNaN(minutes)) return null;
-            return hours * 60 + minutes;
-        }
-    }
-
-    function calculateDuration() {
-        const startStr = document.getElementById('start_time').value;
-        const endStr = document.getElementById('end_time').value;
-        const pauseMode = document.querySelector('input[name="pause_mode"]:checked').value;
-        
-        const startMinutes = parseTime(startStr);
-        const endMinutes = parseTime(endStr);
-        
-        if (startMinutes === null || endMinutes === null) {
-            document.getElementById('duration-hint').textContent = '';
-            return;
-        }
-        
-        let diffMinutes = endMinutes - startMinutes;
-        // Handle midnight crossing
-        if (diffMinutes < 0) diffMinutes += 24 * 60;
-        
-        // Calculate pause
-        let pauseMinutes = 0;
-        if (pauseMode === 'default') {
-            pauseMinutes = DEFAULT_PAUSE;
-        } else if (pauseMode === 'custom') {
-            const customVal = document.getElementById('custom_pause_minutes').value;
-            pauseMinutes = customVal ? parseInt(customVal) : 0;
-        }
-        
-        // Deduct pause
-        let netMinutes = Math.max(0, diffMinutes - pauseMinutes);
-        
-        const hours = Math.floor(netMinutes / 60);
-        const minutes = netMinutes % 60;
-        
-        let text = `Duration: ${hours}h ${minutes}m`;
-        
-        // Add detail about calculation
-        if (pauseMinutes > 0) {
-            text += ` (incl. ${pauseMinutes}m pause)`;
-        }
-        
-        document.getElementById('duration-hint').textContent = text;
-    }
-
     function toggleCustomPause(show) {
         const container = document.getElementById('custom_pause_container');
         const input = document.getElementById('custom_pause_minutes');
@@ -161,24 +92,10 @@
             input.required = false;
             input.value = '';
         }
-        calculateDuration();
+        // Trigger change event to update duration preview in main.js
+        if (input) {
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
-
-    // Add event listeners
-    document.addEventListener('DOMContentLoaded', () => {
-        const inputs = ['start_time', 'end_time', 'custom_pause_minutes'];
-        inputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('input', calculateDuration);
-        });
-        
-        // Also listen for radio changes (already handled by onclick but good for safety)
-        document.querySelectorAll('input[name="pause_mode"]').forEach(el => {
-            el.addEventListener('change', calculateDuration);
-        });
-        
-        // Initial calculation
-        calculateDuration();
-    });
 </script>
 {% endblock %}
