@@ -3,7 +3,7 @@ from datetime import datetime, time
 
 def test_submit_time_entry_12_hour_format(app):
     """Test submitting a time entry using 12-hour format."""
-    from src.waqt.models import TimeEntry, Settings
+    from waqt.models import TimeEntry, Settings
     
     client = app.test_client()
     
@@ -31,7 +31,7 @@ def test_submit_time_entry_12_hour_format(app):
 
 def test_submit_time_entry_24_hour_format_fallback(app):
     """Test submitting 24-hour format even when 12-hour is configured (fallback)."""
-    from src.waqt.models import TimeEntry, Settings
+    from waqt.models import TimeEntry, Settings
     
     client = app.test_client()
     
@@ -58,9 +58,9 @@ def test_submit_time_entry_24_hour_format_fallback(app):
 
 def test_edit_time_entry_format_handling(app):
     """Test editing a time entry using mixed formats."""
-    from src.waqt.models import TimeEntry, Settings
-    from src.waqt import db
-    
+    from waqt.models import TimeEntry, Settings
+    from waqt import db
+
     client = app.test_client()
     
     with app.app_context():

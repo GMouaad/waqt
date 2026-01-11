@@ -27,6 +27,7 @@ from .services import (
     start_time_entry,
     end_time_entry,
     update_time_entry,
+    add_time_entry,
     create_leave_requests,
 )
 from .config import (
@@ -50,6 +51,7 @@ and generating reports.
 Available tools:
 - start: Start time tracking for a day
 - end: End time tracking for a day
+- add_entry: Add a completed time entry with pause support
 - edit_entry: Edit an existing time entry
 - summary: Get time summary for week or month
 - leave_request: Request multi-day leave (vacation/sick)
@@ -221,6 +223,93 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
                 "duration_hours": duration,
                 "description": entry.description,
             },
+        }
+
+
+@mcp.tool()
+def add_entry(
+    start: str,
+    end: str,
+    date: Optional[str] = None,
+    description: str = "Work session",
+    pause_mode: str = "none",
+    pause_minutes: int = 0,
+) -> Dict[str, Any]:
+    """Add a completed time entry.
+    
+    Creates a past/completed time entry with start and end times.
+    Supports flexible pause handling.
+    
+    Args:
+        start: Start time in HH:MM format (e.g., "09:00").
+        end: End time in HH:MM format (e.g., "17:30").
+        date: Date in YYYY-MM-DD format. Defaults to today.
+        description: Description of the work. Defaults to "Work session".
+        pause_mode: How to handle pause: 'default', 'custom', or 'none'. Defaults to 'none'.
+        pause_minutes: Custom pause duration in minutes (required if pause_mode='custom').
+    
+    Returns:
+        Dictionary with status and entry details.
+    
+    Examples:
+        add_entry(start="09:00", end="17:00")
+        add_entry(start="09:00", end="17:30", pause_mode="default")
+        add_entry(start="09:00", end="18:00", pause_mode="custom", pause_minutes=45)
+    """
+    app = get_app()
+    with app.app_context():
+        # Parse date
+        if date:
+            try:
+                entry_date = datetime.strptime(date, "%Y-%m-%d").date()
+            except ValueError:
+                return {
+                    "status": "error",
+                    "message": f"Invalid date format '{date}'. Use YYYY-MM-DD.",
+                }
+        else:
+            entry_date = datetime.now().date()
+
+        # Parse times
+        try:
+            start_time = datetime.strptime(start, "%H:%M").time()
+            end_time = datetime.strptime(end, "%H:%M").time()
+        except ValueError:
+            return {
+                "status": "error",
+                "message": "Invalid time format. Use HH:MM.",
+            }
+
+        # Use shared service
+        result = add_time_entry(
+            entry_date=entry_date,
+            start_time=start_time,
+            end_time=end_time,
+            description=description,
+            pause_mode=pause_mode,
+            pause_minutes=pause_minutes
+        )
+        
+        if not result["success"]:
+            return {
+                "status": "error",
+                "message": result["message"]
+            }
+            
+        entry = result["entry"]
+
+        return {
+            "status": "success",
+            "message": "Time entry added successfully!",
+            "entry": {
+                "date": entry_date.isoformat(),
+                "start_time": format_time(entry.start_time),
+                "end_time": format_time(entry.end_time),
+                "duration": format_hours(entry.duration_hours),
+                "duration_hours": entry.duration_hours,
+                "pause_minutes": int(entry.accumulated_pause_seconds / 60) if entry.accumulated_pause_seconds else 0,
+                "description": entry.description,
+            }
         }
 
 

@@ -28,6 +28,7 @@ from .services import (
     start_time_entry,
     end_time_entry,
     update_time_entry,
+    add_time_entry,
     create_leave_requests,
 )
 from .config import (
@@ -350,6 +351,7 @@ def index():
 def time_entry():
     """Add or view time entries."""
     time_format = Settings.get_setting("time_format", "24")
+    default_pause = Settings.get_int("pause_duration_minutes", 45)
 
     if request.method == "POST":
         try:
@@ -358,6 +360,15 @@ def time_entry():
             start_time_str = request.form.get("start_time")
             end_time_str = request.form.get("end_time")
             description = request.form.get("description", "").strip()
+            
+            # Pause handling
+            pause_mode = request.form.get("pause_mode", "none")
+            custom_pause_str = request.form.get("custom_pause_minutes", "0")
+            
+            try:
+                pause_minutes = int(custom_pause_str) if custom_pause_str else 0
+            except ValueError:
+                pause_minutes = 0
 
             # Validate inputs
             if not all([date_str, start_time_str, end_time_str, description]):
@@ -370,40 +381,23 @@ def time_entry():
             start_time = parse_time_input(start_time_str, time_format)
             end_time = parse_time_input(end_time_str, time_format)
 
-            # Calculate duration
-            duration = calculate_duration(start_time, end_time)
-
-            if duration <= 0:
-                flash("End time must be after start time.", "error")
-                return redirect(url_for("main.time_entry"))
-
-            # Check for existing entries on this date (excluding active ones)
-            existing_entries = TimeEntry.query.filter_by(
-                date=date, is_active=False
-            ).all()
-
-            if existing_entries:
-                flash(
-                    f"An entry already exists for {date}. "
-                    "Only one entry per day is allowed. Please edit the existing entry instead.",
-                    "error",
-                )
-                return redirect(url_for("main.time_entry"))
-
-            # Create new entry
-            entry = TimeEntry(
-                date=date,
+            # Use shared service
+            result = add_time_entry(
+                entry_date=date,
                 start_time=start_time,
                 end_time=end_time,
-                duration_hours=duration,
                 description=description,
+                pause_mode=pause_mode,
+                pause_minutes=pause_minutes
             )
 
-            db.session.add(entry)
-            db.session.commit()
+            if not result["success"]:
+                flash(result["message"], "error")
+                return redirect(url_for("main.time_entry"))
 
+            entry = result["entry"]
             flash(
-                f"Time entry added successfully! Duration: {duration:.2f} hours",
+                f"Time entry added successfully! Duration: {entry.duration_hours:.2f} hours",
                 "success",
             )
             return redirect(url_for("main.index"))
@@ -417,7 +411,12 @@ def time_entry():
             return redirect(url_for("main.time_entry"))
 
     # GET request - show form
-    return render_template("time_entry.html", today=datetime.now().date(), time_format=time_format)
+    return render_template(
+        "time_entry.html", 
+        today=datetime.now().date(), 
+        time_format=time_format,
+        default_pause=default_pause
+    )
 
 
 @bp.route("/time-entry/<int:entry_id>/edit", methods=["GET", "POST"])

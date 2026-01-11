@@ -10,7 +10,7 @@ import platformdirs
 db = SQLAlchemy()
 
 
-def create_app():
+def create_app(test_config=None):
     """Create and configure the Flask application."""
     app = Flask(__name__)
 
@@ -27,11 +27,16 @@ def create_app():
             )
         secret_key = "dev-secret-key-change-in-production"
         # Warning will be visible in development
-        print(
-            "WARNING: Using default insecure SECRET_KEY. This is intended for development only. "
-            "Set the SECRET_KEY environment variable for production deployments."
-        )
+        if not test_config:
+            print(
+                "WARNING: Using default insecure SECRET_KEY. This is intended for development only. "
+                "Set the SECRET_KEY environment variable for production deployments."
+            )
     app.config["SECRET_KEY"] = secret_key
+    
+    if test_config:
+        # Load the test config if passed in
+        app.config.from_mapping(test_config)
     
     # Determine data directory
     # Priority:
@@ -58,7 +63,10 @@ def create_app():
             )
 
     # Configuration - Database URI
-    if not os.environ.get("SQLALCHEMY_DATABASE_URI"):
+    if test_config and "SQLALCHEMY_DATABASE_URI" in test_config:
+        # Already set via test_config
+        pass
+    elif not os.environ.get("SQLALCHEMY_DATABASE_URI"):
         db_filename = "time_tracker.db"
         db_path = os.path.join(data_dir, db_filename)
         

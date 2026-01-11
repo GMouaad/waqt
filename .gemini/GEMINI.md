@@ -144,23 +144,26 @@ waqt/
 ## Development Workflow
 
 ### Setting Up Development Environment
-1. Create virtual environment: `python -m venv venv`
-2. Activate: `source venv/bin/activate` (Unix) or `venv\Scripts\activate` (Windows)
-3. Install dependencies: `pip install -e .`
-4. Initialize database: `python -m waqtracker.scripts.init_db`
-5. Run app: `python -m waqtracker.wsgi`
+This project uses `uv` for dependency management.
+
+1. **Install uv**: If not installed, visit https://github.com/astral-sh/uv
+2. **Sync Dependencies**: `uv sync --extra dev`
+   This creates the virtual environment in `.venv` and installs all dependencies.
+3. **Initialize Database**: `uv run python -m waqt.scripts.init_db`
+4. **Run App**: `uv run python -m waqt.wsgi`
 
 ### Running Tests
+Use `uv run` to execute tests in the isolated environment:
 ```bash
-pytest tests/
-pytest tests/ -v  # Verbose output
-pytest tests/ --cov=app  # With coverage
+uv run pytest tests/
+uv run pytest tests/ -v  # Verbose output
+uv run pytest tests/ --cov=waqt  # With coverage
 ```
 
 ### Code Quality
-- Use `black` for code formatting
-- Use `flake8` for linting
-- Use `mypy` for type checking (optional)
+- Format: `uv run black .`
+- Lint: `uv run flake8`
+- Type Check: `uv run mypy src/`
 
 ## When Contributing to This Repository
 
