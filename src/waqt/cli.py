@@ -131,13 +131,12 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
             raise click.exceptions.Exit(1)
 
         # Parse pause
-        pause_mode = "none"
-        pause_minutes = 0
-        
         if pause.lower() == "default":
             pause_mode = "default"
+            pause_minutes = 0
         elif pause.lower() == "none":
             pause_mode = "none"
+            pause_minutes = 0
         else:
             try:
                 pause_minutes = int(pause)
@@ -173,7 +172,7 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
         click.echo(f"Time: {format_time(start_time)} - {format_time(end_time)}")
         click.echo(f"Duration: {format_hours(entry.duration_hours)}")
         if entry.accumulated_pause_seconds > 0:
-             click.echo(f"Pause: {int(entry.accumulated_pause_seconds/60)} minutes")
+            click.echo(f"Pause: {int(entry.accumulated_pause_seconds/60)} minutes")
         click.echo(f"Description: {description}")
 
 

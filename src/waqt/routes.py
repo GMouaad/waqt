@@ -362,11 +362,13 @@ def time_entry():
             description = request.form.get("description", "").strip()
             
             # Pause handling
-            pause_mode = request.form.get("pause_mode", "none")
+            pause_mode = request.form.get("pause_mode", "default")
             custom_pause_str = request.form.get("custom_pause_minutes", "0")
             
             try:
                 pause_minutes = int(custom_pause_str) if custom_pause_str else 0
+                if pause_minutes < 0:
+                    pause_minutes = 0
             except ValueError:
                 pause_minutes = 0
 

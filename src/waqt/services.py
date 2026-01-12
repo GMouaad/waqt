@@ -46,6 +46,20 @@ def add_time_entry(
             "message": "End time must be after start time."
         }
         
+    # Validate pause_mode
+    valid_pause_modes = ["default", "custom", "none"]
+    if pause_mode not in valid_pause_modes:
+        return {
+            "success": False,
+            "message": f"Invalid pause mode '{pause_mode}'. Must be one of: {', '.join(valid_pause_modes)}."
+        }
+        
+    if pause_mode == "custom" and pause_minutes < 0:
+        return {
+            "success": False,
+            "message": "Pause duration must not be negative."
+        }
+
     # Calculate pause deduction
     pause_seconds = 0
     if pause_mode == "default":

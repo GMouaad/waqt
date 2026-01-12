@@ -16,9 +16,10 @@ def test_submit_time_entry_12_hour_format(app):
             "date": "2024-01-01",
             "start_time": "02:30 PM",
             "end_time": "05:30 PM",
-            "description": "Afternoon work"
+            "description": "Afternoon work",
+            "pause_mode": "none"
         }, follow_redirects=True)
-        
+
         assert response.status_code == 200
         assert b"Time entry added successfully" in response.data
         

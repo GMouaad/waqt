@@ -98,20 +98,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 return h * 60 + m;
             } else {
                 // Text input, likely 12h format "HH:MM AM/PM"
-                // Try robust parsing
-                const match = val.match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$/i);
+                // Try robust parsing (require explicit AM/PM for 12h format)
+                const match = val.match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])$/i);
                 if (match) {
                     let h = parseInt(match[1]);
                     const m = parseInt(match[2]);
-                    const period = match[3] ? match[3].toUpperCase() : null;
+                    const period = match[3].toUpperCase();
                     
-                    if (period) {
-                        if (period === 'PM' && h < 12) h += 12;
-                        if (period === 'AM' && h === 12) h = 0;
-                    }
+                    if (period === 'PM' && h < 12) h += 12;
+                    if (period === 'AM' && h === 12) h = 0;
                     return h * 60 + m;
                 }
-                // Fallback basic parse
+                // Fallback basic parse: treat as 24-hour "HH:MM"
                 const [h, m] = val.split(':').map(Number);
                 if (!isNaN(h) && !isNaN(m)) return h * 60 + m;
                 return null;
@@ -138,12 +136,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Get default pause from data attribute
                         const defaultPauseAttr = pauseModeInput.getAttribute('data-default-pause');
                         if (defaultPauseAttr) {
-                            pauseMinutes = parseInt(defaultPauseAttr);
+                            const parsedDefaultPause = parseInt(defaultPauseAttr, 10);
+                            if (!Number.isNaN(parsedDefaultPause)) {
+                                pauseMinutes = parsedDefaultPause;
+                            }
                         }
                     } else if (mode === 'custom') {
                         const customInput = document.getElementById('custom_pause_minutes');
                         if (customInput && customInput.value) {
-                            pauseMinutes = parseInt(customInput.value);
+                            const parsedCustomPause = parseInt(customInput.value, 10);
+                            if (!Number.isNaN(parsedCustomPause)) {
+                                pauseMinutes = parsedCustomPause;
+                            }
                         }
                     }
                 }
@@ -173,10 +177,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Append directly under the end time input
                     endTimeInput.parentElement.appendChild(preview);
                 }
+                // Ensure preview is visible when there is a valid duration
+                preview.style.display = '';
                 preview.textContent = `Duration: ${durationText}`;
             } else {
                 const preview = document.getElementById('duration-preview');
-                if (preview) preview.textContent = '';
+                if (preview) {
+                    preview.textContent = '';
+                    preview.style.display = 'none';
+                }
             }
         }
         
