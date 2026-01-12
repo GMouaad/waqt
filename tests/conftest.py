@@ -75,15 +75,18 @@ def live_server(app):
 @pytest.fixture(scope="function")
 def app():
     """Create a test Flask application instance."""
-    from src.waqt import create_app, db
+    from waqt import create_app, db
     
     # Create a temporary database file
     db_fd, db_path = tempfile.mkstemp()
     
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
-    app.config["WTF_CSRF_ENABLED"] = False
+    test_config = {
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
+        "WTF_CSRF_ENABLED": False
+    }
+    
+    app = create_app(test_config=test_config)
     
     with app.app_context():
         db.create_all()

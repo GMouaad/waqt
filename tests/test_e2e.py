@@ -287,6 +287,8 @@ def test_complete_user_flow(page, live_server):
     page.get_by_test_id("input-start-time").fill("08:00")
     page.get_by_test_id("input-end-time").fill("16:00")
     page.get_by_test_id("input-description").fill("Full day of work")
+    # Ensure no pause is deducted for the calculation check
+    page.get_by_label("No Pause (0m)").check()
     page.get_by_test_id("btn-submit").click()
     
     # Should be redirected to dashboard with success message

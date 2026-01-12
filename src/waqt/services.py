@@ -9,6 +9,102 @@ from typing import Optional, Dict, Any, Union
 from .models import TimeEntry, LeaveDay
 from .utils import calculate_duration, get_working_days_in_range
 
+def add_time_entry(
+    entry_date: date,
+    start_time: time,
+    end_time: time,
+    description: str = "Work session",
+    pause_mode: str = "none",  # 'default', 'custom', 'none'
+    pause_minutes: int = 0
+) -> Dict[str, Any]:
+    """
+    Add a completed time entry with configurable pause handling.
+    
+    Args:
+        entry_date: Date of work
+        start_time: Start time
+        end_time: End time
+        description: Work description
+        pause_mode: How to handle pause ('default', 'custom', 'none')
+        pause_minutes: Custom pause duration in minutes (used if pause_mode='custom')
+        
+    Returns:
+        Dictionary with:
+        - success: Boolean
+        - message: Status message
+        - entry: TimeEntry object (if successful)
+    """
+    from . import db
+    from .models import Settings
+    
+    # Calculate initial duration (handles midnight crossing)
+    initial_duration_hours = calculate_duration(start_time, end_time)
+    
+    if initial_duration_hours <= 0:
+        return {
+            "success": False,
+            "message": "End time must be after start time."
+        }
+        
+    # Validate pause_mode
+    valid_pause_modes = ["default", "custom", "none"]
+    if pause_mode not in valid_pause_modes:
+        return {
+            "success": False,
+            "message": f"Invalid pause mode '{pause_mode}'. Must be one of: {', '.join(valid_pause_modes)}."
+        }
+        
+    if pause_mode == "custom" and pause_minutes < 0:
+        return {
+            "success": False,
+            "message": "Pause duration must not be negative."
+        }
+
+    # Calculate pause deduction
+    pause_seconds = 0
+    if pause_mode == "default":
+        default_pause = Settings.get_int("pause_duration_minutes", 45)
+        pause_seconds = default_pause * 60
+    elif pause_mode == "custom":
+        pause_seconds = pause_minutes * 60
+    # elif pause_mode == "none": pause_seconds = 0
+    
+    # Calculate final duration
+    initial_seconds = initial_duration_hours * 3600
+    final_seconds = max(0, initial_seconds - pause_seconds)
+    final_duration_hours = final_seconds / 3600.0
+    
+    # Check for existing entries on this date (excluding active ones)
+    existing_entries = TimeEntry.query.filter_by(
+        date=entry_date, is_active=False
+    ).all()
+
+    if existing_entries:
+        return {
+            "success": False,
+            "message": f"An entry already exists for {entry_date}. Only one entry per day is allowed."
+        }
+
+    entry = TimeEntry(
+        date=entry_date,
+        start_time=start_time,
+        end_time=end_time,
+        duration_hours=final_duration_hours,
+        accumulated_pause_seconds=pause_seconds,
+        is_active=False,
+        description=description.strip() or "Work session"
+    )
+    
+    db.session.add(entry)
+    db.session.commit()
+    
+    return {
+        "success": True,
+        "message": "Time entry added successfully",
+        "entry": entry
+    }
+
+
 def start_time_entry(
     entry_date: date,
     start_time: time,

@@ -33,6 +33,28 @@
                     {% endif %}
                 </div>
             </div>
+
+            <div class="form-group">
+                <label>Pause Deduction</label>
+                <div class="radio-group" id="pause-options">
+                    <label class="radio-option">
+                        <input type="radio" id="pause_default" name="pause_mode" value="default" checked onchange="toggleCustomPause(false)" data-default-pause="{{ default_pause }}">
+                        <span>Default ({{ default_pause }}m)</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" id="pause_none" name="pause_mode" value="none" onchange="toggleCustomPause(false)">
+                        <span>No Pause (0m)</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" id="pause_custom" name="pause_mode" value="custom" onchange="toggleCustomPause(true)">
+                        <span>Custom</span>
+                    </label>
+                </div>
+                <div id="custom_pause_container" style="display: none; margin-top: 1rem;">
+                    <label for="custom_pause_minutes" style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 0.5rem;">Pause Duration (minutes)</label>
+                    <input type="number" id="custom_pause_minutes" name="custom_pause_minutes" min="0" placeholder="e.g. 60" class="form-control" style="max-width: 200px;">
+                </div>
+            </div>
             
             <div class="form-group">
                 <label for="description">Description *</label>
@@ -56,4 +78,29 @@
         </ul>
     </div>
 </div>
+
+<script>
+    function toggleCustomPause(show) {
+        const container = document.getElementById('custom_pause_container');
+        const input = document.getElementById('custom_pause_minutes');
+        if (show) {
+            container.style.display = 'block';
+            input.required = true;
+            input.focus();
+        } else {
+            container.style.display = 'none';
+            input.required = false;
+            input.value = '';
+        }
+        // Trigger change event to update duration preview in main.js
+        if (show && input) {
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        // Always notify listeners of the current pause mode selection
+        const pauseModeRadio = document.querySelector('input[name="pause_mode"]:checked');
+        if (pauseModeRadio) {
+            pauseModeRadio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+</script>
 {% endblock %}

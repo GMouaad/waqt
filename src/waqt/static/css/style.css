@@ -1012,8 +1012,59 @@ footer p {
 
 }
 
+/* Radio Group Styling */
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
 
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface-hover);
+    border: 1px solid var(--border-color);
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
 
-/* Responsive */
+.radio-option:hover {
+    border-color: var(--primary-color);
+    background: var(--surface-color);
+}
+
+.radio-option:has(input:checked) {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .radio-option:has(input:checked) {
+    background: rgba(0, 212, 255, 0.1);
+}
+
+.radio-option input[type="radio"] {
+    width: 1.2em;
+    height: 1.2em;
+    accent-color: var(--primary-color);
+}
+
+.radio-option label {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+#custom_pause_container {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
 

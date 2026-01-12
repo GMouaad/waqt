@@ -22,6 +22,7 @@ from .services import (
     start_time_entry,
     end_time_entry,
     update_time_entry,
+    add_time_entry,
     create_leave_requests,
 )
 from ._version import VERSION, GIT_SHA
@@ -48,6 +49,131 @@ def cli():
     and generating reports.
     """
     pass
+
+
+@cli.command()
+@click.option(
+    "--date",
+    "-d",
+    type=str,
+    default=None,
+    help="Date in YYYY-MM-DD format (default: today)",
+)
+@click.option(
+    "--start",
+    "-s",
+    type=str,
+    required=True,
+    help="Start time in HH:MM format",
+)
+@click.option(
+    "--end",
+    "-e",
+    type=str,
+    required=True,
+    help="End time in HH:MM format",
+)
+@click.option(
+    "--description",
+    "-desc",
+    type=str,
+    default="Work session",
+    help="Description of the work session",
+)
+@click.option(
+    "--pause",
+    "-p",
+    type=str,
+    default="none",
+    help="Pause mode: 'default', 'none', or minutes (e.g. '30', '45')",
+)
+def add(date: Optional[str], start: str, end: str, description: str, pause: str):
+    """Add a completed time entry.
+
+    Creates a past/completed time entry with start and end times.
+    You can specify how to handle pauses:
+    - --pause none (default): No pause deduction
+    - --pause default: Use the configured default pause duration
+    - --pause 30: Deduct specific minutes (e.g. 30)
+
+    Examples:
+        waqt add --start 09:00 --end 17:00
+        waqt add -d 2024-01-15 -s 09:00 -e 17:30 --pause default
+        waqt add -s 09:00 -e 18:00 --pause 45 --desc "Long day"
+    """
+    app = create_app()
+    with app.app_context():
+        # Parse date
+        if date:
+            try:
+                entry_date = datetime.strptime(date, "%Y-%m-%d").date()
+            except ValueError:
+                click.echo(
+                    click.style(
+                        f"Error: Invalid date format '{date}'. Use YYYY-MM-DD.",
+                        fg="red",
+                    )
+                )
+                raise click.exceptions.Exit(1)
+        else:
+            entry_date = datetime.now().date()
+
+        # Parse times
+        try:
+            start_time = datetime.strptime(start, "%H:%M").time()
+            end_time = datetime.strptime(end, "%H:%M").time()
+        except ValueError:
+            click.echo(
+                click.style(
+                    "Error: Invalid time format. Use HH:MM.", fg="red"
+                )
+            )
+            raise click.exceptions.Exit(1)
+
+        # Parse pause
+        if pause.lower() == "default":
+            pause_mode = "default"
+            pause_minutes = 0
+        elif pause.lower() == "none":
+            pause_mode = "none"
+            pause_minutes = 0
+        else:
+            try:
+                pause_minutes = int(pause)
+                pause_mode = "custom"
+                if pause_minutes < 0:
+                    raise ValueError
+            except ValueError:
+                click.echo(
+                    click.style(
+                        f"Error: Invalid pause value '{pause}'. Use 'default', 'none', or a positive integer.",
+                        fg="red",
+                    )
+                )
+                raise click.exceptions.Exit(1)
+
+        # Use shared service
+        result = add_time_entry(
+            entry_date=entry_date,
+            start_time=start_time,
+            end_time=end_time,
+            description=description,
+            pause_mode=pause_mode,
+            pause_minutes=pause_minutes
+        )
+        
+        if not result["success"]:
+            click.echo(click.style(f"Error: {result['message']}", fg="red"))
+            raise click.exceptions.Exit(1)
+
+        entry = result["entry"]
+        click.echo(click.style("✓ Time entry added successfully!", fg="green", bold=True))
+        click.echo(f"Date: {entry_date}")
+        click.echo(f"Time: {format_time(start_time)} - {format_time(end_time)}")
+        click.echo(f"Duration: {format_hours(entry.duration_hours)}")
+        if entry.accumulated_pause_seconds > 0:
+            click.echo(f"Pause: {int(entry.accumulated_pause_seconds/60)} minutes")
+        click.echo(f"Description: {description}")
 
 
 @cli.command()
