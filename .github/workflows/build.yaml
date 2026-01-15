@@ -87,12 +87,12 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: Set up Python
-        run: uv python install 3.12
+        run: uv python install 3.13
 
       - name: Create virtual environment
         shell: bash
         run: |
-          uv venv --python 3.12
+          uv venv --python 3.13
           echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             echo "$PWD/.venv/Scripts" >> "$GITHUB_PATH"
