@@ -92,7 +92,7 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
 
     Creates a past/completed time entry with start and end times.
     You can specify how to handle pauses:
-    - --pause default (default): Use the configured default pause duration
+    - --pause default: Use the configured default pause duration (default behavior)
     - --pause none: No pause deduction
     - --pause 30: Deduct specific minutes (e.g. 30)
 
