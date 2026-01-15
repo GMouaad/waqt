@@ -565,3 +565,72 @@ def test_edit_entry_command_multiple_entries(runner, app, cli):
             date=test_date, start_time=time(9, 0)
         ).first()
         assert updated_entry.description == "Updated morning"
+
+
+def test_add_command_basic(runner, app, cli):
+    """Test basic add command functionality with default pause."""
+    from src.waqt.models import TimeEntry, Settings
+    from src.waqt import db
+    
+    with app.app_context():
+        # Ensure default pause is configured (45 minutes)
+        Settings.set_setting("pause_duration_minutes", "45")
+        
+        # Add a time entry without specifying pause (should use default)
+        result = runner.invoke(
+            cli,
+            ["add", "--start", "09:00", "--end", "17:00", "--date", "2024-01-15"],
+        )
+        assert result.exit_code == 0
+        assert "Time entry added successfully!" in result.output
+        assert "2024-01-15" in result.output
+        
+        # Verify entry was created with pause deduction
+        entry = TimeEntry.query.filter_by(date=date(2024, 1, 15)).first()
+        assert entry is not None
+        assert entry.start_time == time(9, 0)
+        assert entry.end_time == time(17, 0)
+        # 8 hours - 45 minutes = 7.25 hours
+        assert entry.duration_hours == 7.25
+        assert entry.accumulated_pause_seconds == 45 * 60
+
+
+def test_add_command_with_pause_none(runner, app, cli):
+    """Test add command with explicit --pause none."""
+    from src.waqt.models import TimeEntry
+    
+    with app.app_context():
+        # Add a time entry with explicit pause none
+        result = runner.invoke(
+            cli,
+            ["add", "--start", "09:00", "--end", "17:00", "--date", "2024-01-16", "--pause", "none"],
+        )
+        assert result.exit_code == 0
+        assert "Time entry added successfully!" in result.output
+        
+        # Verify entry was created without pause deduction
+        entry = TimeEntry.query.filter_by(date=date(2024, 1, 16)).first()
+        assert entry is not None
+        assert entry.duration_hours == 8.0
+        assert entry.accumulated_pause_seconds == 0
+
+
+def test_add_command_with_custom_pause(runner, app, cli):
+    """Test add command with custom pause duration."""
+    from src.waqt.models import TimeEntry
+    
+    with app.app_context():
+        # Add a time entry with custom 30 minute pause
+        result = runner.invoke(
+            cli,
+            ["add", "--start", "09:00", "--end", "17:00", "--date", "2024-01-17", "--pause", "30"],
+        )
+        assert result.exit_code == 0
+        assert "Time entry added successfully!" in result.output
+        
+        # Verify entry was created with custom pause deduction
+        entry = TimeEntry.query.filter_by(date=date(2024, 1, 17)).first()
+        assert entry is not None
+        # 8 hours - 30 minutes = 7.5 hours
+        assert entry.duration_hours == 7.5
+        assert entry.accumulated_pause_seconds == 30 * 60
