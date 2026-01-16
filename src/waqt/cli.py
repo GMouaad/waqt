@@ -84,7 +84,7 @@ def cli():
     "--pause",
     "-p",
     type=str,
-    default="none",
+    default="default",
     help="Pause mode: 'default', 'none', or minutes (e.g. '30', '45')",
 )
 def add(date: Optional[str], start: str, end: str, description: str, pause: str):
@@ -92,13 +92,13 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
 
     Creates a past/completed time entry with start and end times.
     You can specify how to handle pauses:
-    - --pause none (default): No pause deduction
-    - --pause default: Use the configured default pause duration
+    - --pause default: Use the configured default pause duration (default behavior)
+    - --pause none: No pause deduction
     - --pause 30: Deduct specific minutes (e.g. 30)
 
     Examples:
         waqt add --start 09:00 --end 17:00
-        waqt add -d 2024-01-15 -s 09:00 -e 17:30 --pause default
+        waqt add -d 2024-01-15 -s 09:00 -e 17:30 --pause none
         waqt add -s 09:00 -e 18:00 --pause 45 --desc "Long day"
     """
     app = create_app()

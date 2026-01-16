@@ -176,6 +176,76 @@
             </ol>
             <p><strong>Note</strong>: The system enforces one entry per day. If you try to add another entry for a date that already has one, you'll receive an error message asking you to edit the existing entry instead.</p>
 
+            <h3>Adding a Time Entry via CLI</h3>
+            <p>You can also add completed time entries directly from the command line using the <code>waqt add</code> command. This is useful for backfilling entries or when you prefer working from the terminal.</p>
+
+            <p><strong>Basic Usage:</strong></p>
+            <pre><code># Add an entry for today with default pause (45 minutes)
+waqt add --start 09:00 --end 17:00 --description "Development work"
+
+# Add an entry for a specific date
+waqt add --date 2026-01-15 --start 09:00 --end 17:30 --description "Bug fixes"
+
+# Shorter syntax using aliases
+waqt add -s 09:00 -e 17:00 -desc "Code review"</code></pre>
+
+            <h4>Pause Handling</h4>
+            <p>By default, the <code>add</code> command automatically deducts a pause/break from your work session. The default pause duration is <strong>45 minutes</strong> (configurable via <code>waqt config set pause_duration_minutes &lt;value&gt;</code>).</p>
+
+            <p><strong>Default behavior (with pause):</strong></p>
+            <pre><code># Automatically deducts 45 minutes
+waqt add --start 09:00 --end 17:00
+# Result: 7 hours 15 minutes (8 hours - 45 min pause)</code></pre>
+
+            <p><strong>No pause:</strong></p>
+            <p>If you want to record the full duration without any pause deduction:</p>
+            <pre><code>waqt add --start 09:00 --end 17:00 --pause none
+# Result: 8 hours (no pause deducted)</code></pre>
+
+            <p><strong>Custom pause:</strong></p>
+            <p>You can specify a custom pause duration in minutes:</p>
+            <pre><code># Deduct 30 minutes
+waqt add --start 09:00 --end 17:00 --pause 30
+# Result: 7 hours 30 minutes (8 hours - 30 min pause)
+
+# Deduct 60 minutes (1 hour lunch break)
+waqt add --start 09:00 --end 17:00 --pause 60
+# Result: 7 hours (8 hours - 1 hour pause)</code></pre>
+
+            <p><strong>Command Options:</strong></p>
+            <ul>
+                <li><code>--start</code> or <code>-s</code>: Start time in HH:MM format (<strong>required</strong>)</li>
+                <li><code>--end</code> or <code>-e</code>: End time in HH:MM format (<strong>required</strong>)</li>
+                <li><code>--date</code> or <code>-d</code>: Date in YYYY-MM-DD format (default: today)</li>
+                <li><code>--description</code> or <code>-desc</code>: Work description (default: "Work session")</li>
+                <li><code>--pause</code> or <code>-p</code>: Pause mode:
+                    <ul>
+                        <li><code>default</code>: Use configured default pause (45 min, or custom value) - <strong>this is the default</strong></li>
+                        <li><code>none</code>: No pause deduction</li>
+                        <li><code>&lt;number&gt;</code>: Custom pause in minutes (e.g., 30, 60)</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p><strong>Examples:</strong></p>
+            <pre><code># Full example with all options
+waqt add --date 2026-01-15 --start 08:30 --end 17:30 --pause 60 --description "Sprint planning and development"
+
+# Quick entry for today with no pause
+waqt add -s 09:00 -e 17:00 --pause none -desc "Client meeting"
+
+# Entry with custom 30-minute break
+waqt add -s 09:00 -e 18:00 --pause 30 -desc "Long work session"</code></pre>
+
+            <p><strong>Important Notes:</strong></p>
+            <ul>
+                <li>The default pause (45 minutes) is automatically applied unless you specify otherwise</li>
+                <li>You can configure the default pause duration: <code>waqt config set pause_duration_minutes &lt;value&gt;</code></li>
+                <li>Only one entry per day is allowed. Use <code>waqt edit-entry</code> to modify existing entries</li>
+                <li>End time must be after start time</li>
+                <li>The system handles midnight crossing (e.g., 23:00 to 01:00 next day)</li>
+            </ul>
+
             <h3>Editing a Time Entry</h3>
             <p>You can edit any completed time entry to correct mistakes or update information.</p>
 

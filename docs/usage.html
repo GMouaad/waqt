@@ -65,6 +65,15 @@ waqt start --time 09:00 --description "Working on feature X"
 # End tracking time
 waqt end --time 17:30
 
+# Add a completed time entry (automatically deducts default 45min pause)
+waqt add --start 09:00 --end 17:00 --description "Development work"
+
+# Add entry with no pause
+waqt add --start 09:00 --end 17:00 --pause none
+
+# Add entry with custom pause (e.g., 30 minutes)
+waqt add --start 09:00 --end 17:00 --pause 30
+
 # View summary
 waqt summary
 
