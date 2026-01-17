@@ -969,47 +969,26 @@ footer p {
 /* Dashboard Layout */
 
 .dashboard-columns {
-
     display: grid;
-
     grid-template-columns: 1fr 2fr;
-
     gap: 1.5rem;
-
     align-items: start;
-
 }
-
-
 
 .quick-actions-section {
-
     position: sticky;
-
     top: 5rem;
-
 }
-
-
 
 /* Responsive */
 
 @media (max-width: 992px) {
-
     .dashboard-columns {
-
         grid-template-columns: 1fr;
-
     }
-
-    
-
     .quick-actions-section {
-
         position: static;
-
     }
-
 }
 
 /* Radio Group Styling */
@@ -1067,4 +1046,24 @@ footer p {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Category Grid (Reports) */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
 
+.category-card {
+    border-left: 4px solid var(--category-color);
+}
+
+.category-card h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.category-card .stat-number {
+    font-size: 1.5rem;
+}

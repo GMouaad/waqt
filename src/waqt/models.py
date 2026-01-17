@@ -7,6 +7,34 @@ from . import db
 logger = logging.getLogger(__name__)
 
 
+class Category(db.Model):
+    """Model for time entry categories."""
+
+    __tablename__ = "categories"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    code = db.Column(db.String(20), unique=True, nullable=True)
+    color = db.Column(db.String(20), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f"<Category {self.name}>"
+
+    def to_dict(self):
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "code": self.code,
+            "color": self.color,
+            "description": self.description,
+            "is_active": self.is_active,
+        }
+
+
 class TimeEntry(db.Model):
     """Model for tracking work time entries."""
 
@@ -21,7 +49,10 @@ class TimeEntry(db.Model):
     last_pause_start_time = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text, nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    category = db.relationship("Category", backref=db.backref("time_entries", lazy=True))
 
     def __repr__(self):
         return f"<TimeEntry {self.date} - {self.duration_hours}h>"
@@ -38,6 +69,7 @@ class TimeEntry(db.Model):
             "end_time": format_time(self.end_time),
             "duration_hours": self.duration_hours,
             "description": self.description,
+            "category": self.category.to_dict() if self.category else None,
             "created_at": self.created_at.isoformat(),
         }
 

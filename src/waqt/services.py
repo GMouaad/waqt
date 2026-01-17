@@ -14,6 +14,7 @@ def add_time_entry(
     start_time: time,
     end_time: time,
     description: str = "Work session",
+    category_id: Optional[int] = None,
     pause_mode: str = "none",  # 'default', 'custom', 'none'
     pause_minutes: int = 0
 ) -> Dict[str, Any]:
@@ -25,6 +26,7 @@ def add_time_entry(
         start_time: Start time
         end_time: End time
         description: Work description
+        category_id: Optional category ID
         pause_mode: How to handle pause ('default', 'custom', 'none')
         pause_minutes: Custom pause duration in minutes (used if pause_mode='custom')
         
@@ -35,7 +37,7 @@ def add_time_entry(
         - entry: TimeEntry object (if successful)
     """
     from . import db
-    from .models import Settings
+    from .models import Settings, Category
     
     # Calculate initial duration (handles midnight crossing)
     initial_duration_hours = calculate_duration(start_time, end_time)
@@ -59,6 +61,15 @@ def add_time_entry(
             "success": False,
             "message": "Pause duration must not be negative."
         }
+
+    # Validate category if provided
+    if category_id:
+        category = db.session.get(Category, category_id)
+        if not category:
+            return {
+                "success": False,
+                "message": f"Category with ID {category_id} not found."
+            }
 
     # Calculate pause deduction
     pause_seconds = 0
@@ -92,7 +103,8 @@ def add_time_entry(
         duration_hours=final_duration_hours,
         accumulated_pause_seconds=pause_seconds,
         is_active=False,
-        description=description.strip() or "Work session"
+        description=description.strip() or "Work session",
+        category_id=category_id
     )
     
     db.session.add(entry)
@@ -108,7 +120,8 @@ def add_time_entry(
 def start_time_entry(
     entry_date: date,
     start_time: time,
-    description: str = "Work session"
+    description: str = "Work session",
+    category_id: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     Start a new time entry.
@@ -117,6 +130,7 @@ def start_time_entry(
         entry_date: Date of work
         start_time: Start time
         description: Work description
+        category_id: Optional category ID
         
     Returns:
         Dictionary with:
@@ -125,6 +139,17 @@ def start_time_entry(
         - entry: TimeEntry object (if successful)
     """
     from . import db
+    from .models import Category
+    
+    # Validate category if provided
+    if category_id:
+        category = db.session.get(Category, category_id)
+        if not category:
+            return {
+                "success": False,
+                "message": f"Category with ID {category_id} not found."
+            }
+            
     # Check for open entries
     # Don't restrict to date - if you left one running yesterday, you should close it
     # But wait, existing CLI/MCP logic checks for open entries *on this date*.
@@ -161,7 +186,8 @@ def start_time_entry(
         end_time=start_time, # Temporary
         duration_hours=0.0,
         is_active=True,
-        description=description.strip() or "Work session"
+        description=description.strip() or "Work session",
+        category_id=category_id
     )
     
     db.session.add(entry)
@@ -252,22 +278,28 @@ def update_time_entry(
     start_time: Optional[time] = None,
     end_time: Optional[time] = None,
     description: Optional[str] = None,
+    category_id: Optional[int] = None,
     date_check: Optional[date] = None
 ) -> Dict[str, Any]:
     """
-    Update an existing time entry.
+    update_time_entry.
     
     Args:
         entry_id: ID of entry to update
         start_time: New start time (optional)
         end_time: New end time (optional)
         description: New description (optional)
+        category_id: New category ID (optional). If None, the category is not
+                     changed. If 0, the category is cleared. For any other
+                     positive value, the entry is associated with the given
+                     category if it exists.
         date_check: Optional date to verify against entry
         
     Returns:
-        Dictionary with success/message/entry
     """
     from . import db
+    from .models import Category
+    
     entry = db.session.get(TimeEntry, entry_id)
     
     if not entry:
@@ -286,6 +318,16 @@ def update_time_entry(
         entry.end_time = end_time
     if description:
         entry.description = description.strip()
+    
+    if category_id is not None:
+        if category_id == 0:  # Convention to clear category
+            entry.category_id = None
+        else:
+            category = db.session.get(Category, category_id)
+            if category:
+                entry.category_id = category_id
+            else:
+                return {"success": False, "message": f"Category {category_id} not found."}
         
     # Recalculate duration if times changed
     # Note: editing overrides pause calculations currently.
