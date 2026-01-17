@@ -1,7 +1,13 @@
 import pytest
+import sys
+import os
+
+# Add scripts directory to path to allow importing seed_db
+sys.path.append(os.path.join(os.path.dirname(__file__), '../scripts'))
+
 from waqt import create_app, db
 from waqt.models import Category, TimeEntry, LeaveDay, Settings
-from waqt.scripts.seed_db import seed_database
+from seed_db import seed_database
 
 
 @pytest.fixture

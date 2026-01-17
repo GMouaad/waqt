@@ -222,8 +222,8 @@ waqt ui
 6. Open your browser and navigate to `http://localhost:5555`
 
 **Alternative:** Use the quick start scripts:
-- Linux/macOS: `./start.sh`
-- Windows: `.\start.ps1`
+- Linux/macOS: `./scripts/start.sh`
+- Windows: `.\scripts\start.ps1`
 
 ## CLI Usage (`waqt`)
 
@@ -432,7 +432,7 @@ pytest tests/ -v -m "not e2e"
 For development and manual testing, you can seed the database with sample data (categories, time entries, and leave days):
 
 ```bash
-uv run python -m waqt.scripts.seed_db
+uv run python scripts/seed_db.py
 ```
 
 The script is idempotent and can be run multiple times safely. It will skip creating records that already exist.

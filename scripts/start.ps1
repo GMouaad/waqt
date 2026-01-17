@@ -1,6 +1,11 @@
 # Startup script for Waqt application (PowerShell)
 # Supports both uv (recommended) and pip (legacy)
 
+# Ensure we are running from project root
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$ProjectRoot = Split-Path -Parent $ScriptDir
+Set-Location $ProjectRoot
+
 Write-Host "🚀 Starting Waqt..."
 Write-Host ""
 

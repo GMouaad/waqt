@@ -2,6 +2,11 @@
 # Startup script for Waqt application
 # Supports both uv (recommended) and pip (legacy)
 
+# Ensure we are running from project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT" || exit 1
+
 echo "🚀 Starting Waqt..."
 echo ""
 
