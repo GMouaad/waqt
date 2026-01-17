@@ -427,6 +427,16 @@ pytest tests/ -v -m "not e2e"
 
 *Note: E2E tests verify major user flows like navigation, time entries, leave management, and reports. If Playwright browsers are not installed, these tests will automatically skip.*
 
+### Database Seeding
+
+For development and manual testing, you can seed the database with sample data (categories, time entries, and leave days):
+
+```bash
+uv run python -m waqt.scripts.seed_db
+```
+
+The script is idempotent and can be run multiple times safely. It will skip creating records that already exist.
+
 ### Building Standalone Executables
 
 You can build single-file executables for Linux, macOS, and Windows using PyInstaller.
