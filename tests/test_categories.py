@@ -52,9 +52,11 @@ def test_create_category(client, init_db):
 
 def test_time_entry_with_category(client, init_db):
     # Create category
-    cat = Category(name="Dev")
-    db.session.add(cat)
-    db.session.commit()
+    with client.application.app_context():
+        cat = Category(name="Dev")
+        db.session.add(cat)
+        db.session.commit()
+        cat_id = cat.id
     
     # Add entry with category
     response = client.post('/time-entry', data={
@@ -62,7 +64,7 @@ def test_time_entry_with_category(client, init_db):
         'start_time': '09:00',
         'end_time': '10:00',
         'description': 'Coding',
-        'category_id': str(cat.id)
+        'category_id': str(cat_id)
     }, follow_redirects=True)
     
     assert response.status_code == 200
@@ -70,15 +72,17 @@ def test_time_entry_with_category(client, init_db):
     
     with client.application.app_context():
         entry = TimeEntry.query.first()
-        assert entry.category_id == cat.id
+        assert entry.category_id == cat_id
         assert entry.category.name == "Dev"
 
 def test_edit_category(client, init_db):
-    cat = Category(name="Old Name")
-    db.session.add(cat)
-    db.session.commit()
+    with client.application.app_context():
+        cat = Category(name="Old Name")
+        db.session.add(cat)
+        db.session.commit()
+        cat_id = cat.id
     
-    response = client.post(f'/categories/{cat.id}/edit', data={
+    response = client.post(f'/categories/{cat_id}/edit', data={
         'name': 'New Name',
         'code': 'NEW',
         'color': '#00ff00'
@@ -88,15 +92,17 @@ def test_edit_category(client, init_db):
     assert b"Category updated successfully" in response.data
     
     with client.application.app_context():
-        updated_cat = db.session.get(Category, cat.id)
+        updated_cat = db.session.get(Category, cat_id)
         assert updated_cat.name == "New Name"
 
 def test_delete_category(client, init_db):
-    cat = Category(name="To Delete")
-    db.session.add(cat)
-    db.session.commit()
+    with client.application.app_context():
+        cat = Category(name="To Delete")
+        db.session.add(cat)
+        db.session.commit()
+        cat_id = cat.id
     
-    response = client.post(f'/categories/{cat.id}/delete', follow_redirects=True)
+    response = client.post(f'/categories/{cat_id}/delete', follow_redirects=True)
     
     assert response.status_code == 200
     assert b"Category deleted successfully" in response.data
@@ -105,25 +111,49 @@ def test_delete_category(client, init_db):
         assert Category.query.count() == 0
 
 def test_delete_category_in_use_fails(client, init_db):
-    cat = Category(name="In Use")
-    db.session.add(cat)
-    db.session.commit()
+    with client.application.app_context():
+        cat = Category(name="In Use")
+        db.session.add(cat)
+        db.session.commit()
+        cat_id = cat.id
+        
+        entry = TimeEntry(
+            date=date(2023, 1, 1),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            duration_hours=1.0,
+            description="Work",
+            category_id=cat.id
+        )
+        db.session.add(entry)
+        db.session.commit()
     
-    entry = TimeEntry(
-        date=date(2023, 1, 1),
-        start_time=time(9, 0),
-        end_time=time(10, 0),
-        duration_hours=1.0,
-        description="Work",
-        category_id=cat.id
-    )
-    db.session.add(entry)
-    db.session.commit()
-    
-    response = client.post(f'/categories/{cat.id}/delete', follow_redirects=True)
+    response = client.post(f'/categories/{cat_id}/delete', follow_redirects=True)
     
     assert response.status_code == 200
     assert b"Cannot delete category currently assigned" in response.data
     
     with client.application.app_context():
         assert Category.query.count() == 1
+
+def test_category_color_validation(client, init_db):
+    # Test invalid color
+    response = client.post('/categories', data={
+        'name': 'Bad Color',
+        'color': 'invalid'
+    }, follow_redirects=True)
+    assert b"Color must be a valid hex code" in response.data
+    
+    # Test invalid hex
+    response = client.post('/categories', data={
+        'name': 'Bad Hex',
+        'color': '#GGGGGG'
+    }, follow_redirects=True)
+    assert b"Color must be a valid hex code" in response.data
+    
+    # Test valid hex
+    response = client.post('/categories', data={
+        'name': 'Good Color',
+        'color': '#FF0000'
+    }, follow_redirects=True)
+    assert b"Category added successfully" in response.data

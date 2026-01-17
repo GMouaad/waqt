@@ -61,12 +61,12 @@ def add_time_entry(
             "success": False,
             "message": "Pause duration must not be negative."
         }
-        
+
     # Validate category if provided
     if category_id:
         category = db.session.get(Category, category_id)
         if not category:
-             return {
+            return {
                 "success": False,
                 "message": f"Category with ID {category_id} not found."
             }
@@ -145,7 +145,7 @@ def start_time_entry(
     if category_id:
         category = db.session.get(Category, category_id)
         if not category:
-             return {
+            return {
                 "success": False,
                 "message": f"Category with ID {category_id} not found."
             }
@@ -282,22 +282,20 @@ def update_time_entry(
     date_check: Optional[date] = None
 ) -> Dict[str, Any]:
     """
-    Update an existing time entry.
+    update_time_entry.
     
     Args:
         entry_id: ID of entry to update
         start_time: New start time (optional)
         end_time: New end time (optional)
         description: New description (optional)
-        category_id: New category ID (optional - None means no change, 0 means clear?)
-                     For now let's assume if it's passed (even None if strictly typed, but here Optional)
-                     we might need a way to clear it. 
-                     Let's say -1 clears it, or we treat None as 'no change'.
-                     Let's treat None as 'no change' for now to keep it simple.
+        category_id: New category ID (optional). If None, the category is not
+                     changed. If 0, the category is cleared. For any other
+                     positive value, the entry is associated with the given
+                     category if it exists.
         date_check: Optional date to verify against entry
         
     Returns:
-        Dictionary with success/message/entry
     """
     from . import db
     from .models import Category
@@ -322,14 +320,14 @@ def update_time_entry(
         entry.description = description.strip()
     
     if category_id is not None:
-        if category_id == 0: # Convention to clear category
-             entry.category_id = None
+        if category_id == 0:  # Convention to clear category
+            entry.category_id = None
         else:
-             category = db.session.get(Category, category_id)
-             if category:
-                 entry.category_id = category_id
-             else:
-                 return {"success": False, "message": f"Category {category_id} not found."}
+            category = db.session.get(Category, category_id)
+            if category:
+                entry.category_id = category_id
+            else:
+                return {"success": False, "message": f"Category {category_id} not found."}
         
     # Recalculate duration if times changed
     # Note: editing overrides pause calculations currently.

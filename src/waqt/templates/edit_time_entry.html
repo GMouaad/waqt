@@ -18,7 +18,7 @@
             <div class="form-group">
                 <label for="category_id">Category</label>
                 <select id="category_id" name="category_id" class="form-control" data-testid="input-category">
-                    <option value="0" {% if not entry.category_id %}selected{% endif %}>-- No Category --</option>
+                    <option value="" {% if not entry.category_id %}selected{% endif %}>-- No Category --</option>
                     {% if categories %}
                         {% for category in categories %}
                             <option value="{{ category.id }}" {% if entry.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>

@@ -52,7 +52,7 @@ def migrate():
         print("Added category_id column to time_entries.")
     except sqlite3.OperationalError as e:
         if "duplicate column name" in str(e):
-             print("Column category_id already exists in time_entries.")
+            print("Column category_id already exists in time_entries.")
         else:
             print(f"Error adding column: {e}")
 

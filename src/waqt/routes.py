@@ -1,5 +1,6 @@
 """Route handlers for the time tracking application."""
 
+import re
 from flask import (
     Blueprint,
     render_template,
@@ -43,6 +44,8 @@ from .config import (
     get_config_select_options,
 )
 
+HEX_COLOR_REGEX = r'^#(?:[0-9a-fA-F]{3}){1,2}$'
+
 bp = Blueprint("main", __name__)
 
 @bp.route("/categories", methods=["GET", "POST"])
@@ -60,8 +63,7 @@ def categories():
                 return redirect(url_for("main.categories"))
 
             # Validate color format (Hex code)
-            import re
-            if color and not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color):
+            if color and not re.match(HEX_COLOR_REGEX, color):
                 flash("Color must be a valid hex code (e.g., #FF0000).", "error")
                 return redirect(url_for("main.categories"))
 
@@ -112,8 +114,7 @@ def edit_category(id):
             return redirect(url_for("main.categories"))
 
         # Validate color format (Hex code)
-        import re
-        if color and not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color):
+        if color and not re.match(HEX_COLOR_REGEX, color):
             flash("Color must be a valid hex code (e.g., #FF0000).", "error")
             return redirect(url_for("main.categories"))
 
@@ -588,21 +589,14 @@ def edit_time_entry(entry_id):
                 return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
             
             # Parse category
-            if category_id:
+            category_raw = request.form.get("category_id")
+            if category_raw in (None, ""):
+                category_id = 0 # Explicitly clear category
+            else:
                 try:
-                    category_id = int(category_id)
-                    if category_id == 0: category_id = 0 # Explicit clear
+                    category_id = int(category_raw)
                 except (ValueError, TypeError):
                     category_id = None # No change
-            else:
-                # If field missing or empty string, maybe clear it? 
-                # Let's assume if it's sent as "0" or empty, we treat as clear if it's a Select with value=""?
-                # Usually select with "No Category" has value="0" or "".
-                # If value is "", int("") fails. 
-                # Let's assume form sends "0" for "No Category".
-                category_id = 0 # Treat empty/missing as clear request if field is present in form?
-                # Actually, `request.form.get` returns None if missing, "" if empty.
-                pass
 
             # Parse times
             start_time = parse_time_input(start_time_str, time_format)
