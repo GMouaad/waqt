@@ -12,7 +12,7 @@ from flask import (
 )
 from datetime import datetime, timedelta
 from . import db
-from .models import TimeEntry, LeaveDay, Settings
+from .models import TimeEntry, LeaveDay, Settings, Category
 from .utils import (
     calculate_duration,
     calculate_weekly_stats,
@@ -44,6 +44,122 @@ from .config import (
 )
 
 bp = Blueprint("main", __name__)
+
+@bp.route("/categories", methods=["GET", "POST"])
+def categories():
+    """Manage time entry categories."""
+    if request.method == "POST":
+        try:
+            name = request.form.get("name", "").strip()
+            code = request.form.get("code", "").strip() or None
+            color = request.form.get("color", "").strip() or None
+            description = request.form.get("description", "").strip() or None
+
+            if not name:
+                flash("Category name is required.", "error")
+                return redirect(url_for("main.categories"))
+
+            # Validate color format (Hex code)
+            import re
+            if color and not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color):
+                flash("Color must be a valid hex code (e.g., #FF0000).", "error")
+                return redirect(url_for("main.categories"))
+
+            # Check for duplicate name
+            if Category.query.filter_by(name=name).first():
+                flash("Category with this name already exists.", "error")
+                return redirect(url_for("main.categories"))
+
+            # Check for duplicate code
+            if code and Category.query.filter_by(code=code).first():
+                flash("Category with this code already exists.", "error")
+                return redirect(url_for("main.categories"))
+
+            category = Category(
+                name=name,
+                code=code,
+                color=color,
+                description=description
+            )
+            db.session.add(category)
+            db.session.commit()
+            
+            flash("Category added successfully!", "success")
+            return redirect(url_for("main.categories"))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error adding category: {str(e)}", "error")
+            return redirect(url_for("main.categories"))
+
+    # GET request
+    categories = Category.query.order_by(Category.name).all()
+    return render_template("categories.html", categories=categories)
+
+
+@bp.route("/categories/<int:id>/edit", methods=["POST"])
+def edit_category(id):
+    """Edit a category."""
+    category = db.get_or_404(Category, id)
+    try:
+        name = request.form.get("name", "").strip()
+        code = request.form.get("code", "").strip() or None
+        color = request.form.get("color", "").strip() or None
+        description = request.form.get("description", "").strip() or None
+
+        if not name:
+            flash("Category name is required.", "error")
+            return redirect(url_for("main.categories"))
+
+        # Validate color format (Hex code)
+        import re
+        if color and not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color):
+            flash("Color must be a valid hex code (e.g., #FF0000).", "error")
+            return redirect(url_for("main.categories"))
+
+        # Check for duplicates if name/code changed
+        if name != category.name and Category.query.filter_by(name=name).first():
+            flash("Category with this name already exists.", "error")
+            return redirect(url_for("main.categories"))
+            
+        if code and code != category.code and Category.query.filter_by(code=code).first():
+            flash("Category with this code already exists.", "error")
+            return redirect(url_for("main.categories"))
+
+        category.name = name
+        category.code = code
+        category.color = color
+        category.description = description
+        
+        db.session.commit()
+        flash("Category updated successfully.", "success")
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error updating category: {str(e)}", "error")
+
+    return redirect(url_for("main.categories"))
+
+
+@bp.route("/categories/<int:id>/delete", methods=["POST"])
+def delete_category(id):
+    """Delete a category."""
+    category = db.get_or_404(Category, id)
+    try:
+        # Check if used in time entries
+        if TimeEntry.query.filter_by(category_id=id).first():
+            flash("Cannot delete category currently assigned to time entries.", "error")
+            return redirect(url_for("main.categories"))
+
+        db.session.delete(category)
+        db.session.commit()
+        flash("Category deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting category: {str(e)}", "error")
+
+    return redirect(url_for("main.categories"))
+
 
 
 def get_open_entry():
@@ -155,13 +271,21 @@ def start_timer():
 
         data = request.get_json() or {}
         description = data.get("description", "").strip()
+        category_id = data.get("category_id")
+        
+        if category_id:
+            try:
+                category_id = int(category_id)
+            except (ValueError, TypeError):
+                return jsonify({"success": False, "message": "Invalid category ID"}), 400
+
         if not description:
             description = "Work"
 
         now = datetime.now()
         
         # Use shared service
-        result = start_time_entry(now.date(), now.time(), description)
+        result = start_time_entry(now.date(), now.time(), description, category_id=category_id)
         
         if not result["success"]:
             # If it's a duplicate active timer error, we return 400.
@@ -360,7 +484,18 @@ def time_entry():
             start_time_str = request.form.get("start_time")
             end_time_str = request.form.get("end_time")
             description = request.form.get("description", "").strip()
+            category_id = request.form.get("category_id")
             
+            # Parse category
+            if category_id:
+                try:
+                    category_id = int(category_id)
+                    if category_id == 0: category_id = None
+                except (ValueError, TypeError):
+                    category_id = None
+            else:
+                category_id = None
+
             # Pause handling
             pause_mode = request.form.get("pause_mode", "default")
             custom_pause_str = request.form.get("custom_pause_minutes", "0")
@@ -389,6 +524,7 @@ def time_entry():
                 start_time=start_time,
                 end_time=end_time,
                 description=description,
+                category_id=category_id,
                 pause_mode=pause_mode,
                 pause_minutes=pause_minutes
             )
@@ -413,11 +549,13 @@ def time_entry():
             return redirect(url_for("main.time_entry"))
 
     # GET request - show form
+    categories = Category.query.filter_by(is_active=True).order_by(Category.name).all()
     return render_template(
         "time_entry.html", 
         today=datetime.now().date(), 
         time_format=time_format,
-        default_pause=default_pause
+        default_pause=default_pause,
+        categories=categories
     )
 
 
@@ -442,11 +580,29 @@ def edit_time_entry(entry_id):
             start_time_str = request.form.get("start_time")
             end_time_str = request.form.get("end_time")
             description = request.form.get("description", "").strip()
+            category_id = request.form.get("category_id")
 
             # Validate inputs
             if not all([start_time_str, end_time_str, description]):
                 flash("All fields are required.", "error")
                 return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
+            
+            # Parse category
+            if category_id:
+                try:
+                    category_id = int(category_id)
+                    if category_id == 0: category_id = 0 # Explicit clear
+                except (ValueError, TypeError):
+                    category_id = None # No change
+            else:
+                # If field missing or empty string, maybe clear it? 
+                # Let's assume if it's sent as "0" or empty, we treat as clear if it's a Select with value=""?
+                # Usually select with "No Category" has value="0" or "".
+                # If value is "", int("") fails. 
+                # Let's assume form sends "0" for "No Category".
+                category_id = 0 # Treat empty/missing as clear request if field is present in form?
+                # Actually, `request.form.get` returns None if missing, "" if empty.
+                pass
 
             # Parse times
             start_time = parse_time_input(start_time_str, time_format)
@@ -457,7 +613,8 @@ def edit_time_entry(entry_id):
                 entry_id,
                 start_time=start_time,
                 end_time=end_time,
-                description=description
+                description=description,
+                category_id=category_id
             )
             
             if not result["success"]:
@@ -481,7 +638,8 @@ def edit_time_entry(entry_id):
             return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
 
     # GET request - show form with existing data
-    return render_template("edit_time_entry.html", entry=entry, time_format=time_format)
+    categories = Category.query.filter_by(is_active=True).order_by(Category.name).all()
+    return render_template("edit_time_entry.html", entry=entry, time_format=time_format, categories=categories)
 
 
 @bp.route("/time-entry/<int:entry_id>/delete", methods=["POST"])
@@ -519,8 +677,10 @@ def reports():
         start_date, end_date = get_month_bounds(selected_date)
 
     # Get entries for the period
+    from sqlalchemy.orm import joinedload
     entries = (
-        TimeEntry.query.filter(TimeEntry.date >= start_date, TimeEntry.date <= end_date)
+        TimeEntry.query.options(joinedload(TimeEntry.category))
+        .filter(TimeEntry.date >= start_date, TimeEntry.date <= end_date)
         .order_by(TimeEntry.date.desc())
         .all()
     )
@@ -546,6 +706,17 @@ def reports():
             entries_by_date[date_key] = []
         entries_by_date[date_key].append(entry)
 
+    # Calculate category stats
+    category_stats = {}
+    for entry in entries:
+        cat_name = entry.category.name if entry.category else 'Uncategorized'
+        cat_color = entry.category.color if entry.category else '#9ca3af' # gray-400
+        
+        if cat_name not in category_stats:
+            category_stats[cat_name] = {'hours': 0, 'color': cat_color}
+        
+        category_stats[cat_name]['hours'] += entry.duration_hours
+
     return render_template(
         "reports.html",
         period=period,
@@ -556,6 +727,7 @@ def reports():
         entries_by_date=entries_by_date,
         leave_days=leave_days,
         stats=stats,
+        category_stats=category_stats,
         timedelta=timedelta,
     )
 

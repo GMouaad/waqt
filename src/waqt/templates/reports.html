@@ -81,11 +81,24 @@
     
     {% if entries %}
         <div class="section">
+            <h3>Category Breakdown</h3>
+            <div class="category-grid">
+                {% for name, data in category_stats.items() %}
+                <div class="stat-card category-card" style="--category-color: {{ data.color }};">
+                    <h4>{{ name }}</h4>
+                    <div class="stat-number">{{ "%.2f"|format(data.hours) }}h</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
             <h3>Time Entries</h3>
             <table class="data-table" data-testid="entries-table">
                 <thead>
                     <tr>
                         <th>Date</th>
+                        <th>Category</th>
                         <th>Time</th>
                         <th>Duration</th>
                         <th>Description</th>
@@ -96,6 +109,13 @@
                     {% for entry in entries %}
                     <tr>
                         <td>{{ entry.date.strftime('%Y-%m-%d (%a)') }}</td>
+                        <td>
+                            {% if entry.category %}
+                            <span class="badge" style="background-color: {{ entry.category.color }}; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">{{ entry.category.name }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
                         <td>{{ entry.start_time|format_time }} - {{ entry.end_time|format_time }}</td>
                         <td>{{ "%.2f"|format(entry.duration_hours) }}h</td>
                         <td>{{ entry.description }}</td>

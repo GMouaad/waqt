@@ -10,11 +10,23 @@
     <div class="section">
         <form method="POST" action="{{ url_for('main.edit_time_entry', entry_id=entry.id) }}" data-testid="edit-time-entry-form">
             <div class="form-group">
-                <label for="date">Date</label>
-                <input type="date" id="date" name="date" data-testid="input-date" value="{{ entry.date.isoformat() }}" disabled>
-                <p class="field-note" style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">Date cannot be changed. To move an entry to a different date, delete it and create a new one.</p>
+                <label>Date</label>
+                <input type="text" value="{{ entry.date.strftime('%Y-%m-%d') }}" disabled class="form-control-static">
+                <small class="form-text text-muted">Date cannot be changed. Delete and re-create if needed.</small>
             </div>
             
+            <div class="form-group">
+                <label for="category_id">Category</label>
+                <select id="category_id" name="category_id" class="form-control" data-testid="input-category">
+                    <option value="0" {% if not entry.category_id %}selected{% endif %}>-- No Category --</option>
+                    {% if categories %}
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if entry.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="start_time">Start Time *</label>
