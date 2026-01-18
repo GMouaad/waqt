@@ -21,6 +21,8 @@ from .utils import (
     get_week_bounds,
     get_month_bounds,
     export_time_entries_to_csv,
+    export_time_entries_to_json,
+    export_time_entries_to_excel,
     get_time_entries_for_period,
     generate_calendar_data,
     parse_time_input,
@@ -860,9 +862,13 @@ def delete_leave(leave_id):
     return redirect(url_for("main.leave"))
 
 
-@bp.route("/export/csv")
-def export_csv():
-    """Export time entries to CSV format."""
+def _handle_export_request(export_format):
+    """
+    Handle export request for CSV, JSON, and Excel formats.
+    
+    Args:
+        export_format: One of 'csv', 'json', 'excel'
+    """
     try:
         # Get filter parameters
         period = request.args.get("period", "all")
@@ -872,7 +878,6 @@ def export_csv():
         try:
             ref_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
-            # Log the error and fallback to current date
             flash(
                 f"Invalid date format '{date_str}', using current date instead.",
                 "warning",
@@ -896,36 +901,68 @@ def export_csv():
             flash("No time entries found to export.", "warning")
             return redirect(url_for("main.reports"))
 
-        # Generate CSV content
-        csv_content = export_time_entries_to_csv(entries, start_date, end_date)
+        # Generate content based on format
+        if export_format == "csv":
+            content = export_time_entries_to_csv(entries, start_date, end_date)
+            mimetype = "text/csv"
+            extension = "csv"
+        elif export_format == "json":
+            content = export_time_entries_to_json(entries, start_date, end_date)
+            mimetype = "application/json"
+            extension = "json"
+        elif export_format == "excel":
+            content = export_time_entries_to_excel(entries, start_date, end_date)
+            mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            extension = "xlsx"
+        else:
+            flash(f"Unsupported export format: {export_format}", "error")
+            return redirect(url_for("main.reports"))
 
         # Generate filename
         if start_date and end_date:
             filename = (
                 f"time_entries_{start_date.strftime('%Y%m%d')}_"
-                f"{end_date.strftime('%Y%m%d')}.csv"
+                f"{end_date.strftime('%Y%m%d')}.{extension}"
             )
         else:
-            filename = f"time_entries_all_{datetime.now().strftime('%Y%m%d')}.csv"
+            filename = f"time_entries_all_{datetime.now().strftime('%Y%m%d')}.{extension}"
 
-        # Return CSV as download
+        # Return content as download
         return Response(
-            csv_content,
-            mimetype="text/csv",
+            content,
+            mimetype=mimetype,
             headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except IOError as e:
         # Handle file system errors
-        flash(f"Error writing CSV file: {str(e)}", "error")
+        flash(f"Error generating export file: {str(e)}", "error")
         return redirect(url_for("main.reports"))
     except Exception as e:
         # Log unexpected errors for debugging
         import logging
 
-        logging.error(f"Unexpected error during CSV export: {str(e)}", exc_info=True)
+        logging.error(f"Unexpected error during {export_format.upper()} export: {str(e)}", exc_info=True)
         flash("An unexpected error occurred during export. Please try again.", "error")
         return redirect(url_for("main.reports"))
+
+
+@bp.route("/export/csv")
+def export_csv():
+    """Export time entries to CSV format."""
+    return _handle_export_request("csv")
+
+
+@bp.route("/export/json")
+def export_json():
+    """Export time entries to JSON format."""
+    return _handle_export_request("json")
+
+
+@bp.route("/export/excel")
+def export_excel():
+    """Export time entries to Excel format."""
+    return _handle_export_request("excel")
 
 
 @bp.route("/settings", methods=["GET", "POST"])

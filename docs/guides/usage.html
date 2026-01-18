@@ -560,6 +560,50 @@ waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical
                 <li>Export data to CSV for analysis in Excel/spreadsheets</li>
             </ol>
 
+            <h3 id="data-export">Data Export</h3>
+            <p>Waqt supports exporting your time entry data in multiple formats for external analysis, reporting, or backup purposes.</p>
+
+            <h4>Supported Formats</h4>
+            <ul>
+                <li><strong>CSV (Comma Separated Values)</strong>: Best for general spreadsheet use and importing into other tools.</li>
+                <li><strong>JSON (JavaScript Object Notation)</strong>: Ideal for programmatic processing and data interchange.</li>
+                <li><strong>Excel (XLSX)</strong>: A formatted spreadsheet with auto-adjusted column widths and summary statistics.</li>
+            </ul>
+
+            <h4>Exporting via Web Interface</h4>
+            <ol>
+                <li>Navigate to the <strong>Reports</strong> page.</li>
+                <li>Select your desired period (Week or Month) and date range.</li>
+                <li>In the "Export Controls" section (top right), click the button for your desired format:
+                    <ul>
+                        <li><strong>CSV</strong></li>
+                        <li><strong>JSON</strong></li>
+                        <li><strong>Excel</strong></li>
+                    </ul>
+                </li>
+                <li>The file will be downloaded to your device automatically.</li>
+            </ol>
+
+            <h4>Exporting via CLI</h4>
+            <p>You can export data from the command line using the <code>waqt export</code> command. The <code>--format</code> option allows you to specify the output format.</p>
+
+            <pre><code># Export to CSV (default)
+waqt export --period week --output weekly_report.csv
+
+# Export to JSON
+waqt export --period month --format json --output monthly_data.json
+
+# Export to Excel
+waqt export --period all --format excel --output full_backup.xlsx</code></pre>
+
+            <p><strong>Command Options:</strong></p>
+            <ul>
+                <li><code>--format</code> or <code>-f</code>: Specify format (<code>csv</code>, <code>json</code>, or <code>excel</code>). Default is <code>csv</code>.</li>
+                <li><code>--period</code> or <code>-p</code>: Range to export (<code>week</code>, <code>month</code>, or <code>all</code>).</li>
+                <li><code>--date</code> or <code>-d</code>: Reference date for the period (e.g., <code>2024-01-15</code>).</li>
+                <li><code>--output</code> or <code>-o</code>: Output file path.</li>
+            </ul>
+
             <h3>Database Queries (Advanced)</h3>
             <p>Example queries using <code>sqlite3</code> command-line tool:</p>
             <pre><code># Open database

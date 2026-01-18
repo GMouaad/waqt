@@ -1067,3 +1067,9 @@ footer p {
 .category-card .stat-number {
     font-size: 1.5rem;
 }
+
+/* Export Buttons */
+.export-button-group {
+    display: flex;
+    gap: 0.5rem;
+}
