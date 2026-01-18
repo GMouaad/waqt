@@ -3,8 +3,11 @@
 import calendar
 import csv
 import io
+import json
 from datetime import datetime, timedelta, date, time as datetime_time
 from typing import List, Dict, Tuple, Optional
+import openpyxl
+from openpyxl.styles import Font
 from .models import TimeEntry, LeaveDay, Settings
 
 
@@ -354,6 +357,29 @@ def get_time_entries_for_period(
     return query.order_by(TimeEntry.date.asc()).all()
 
 
+def calculate_daily_overtime_for_entries(entries: List[TimeEntry]) -> Dict[date, float]:
+    """
+    Calculate daily overtime for a list of entries.
+    
+    Args:
+        entries: List of TimeEntry objects
+        
+    Returns:
+        Dictionary mapping date to overtime hours
+    """
+    daily_totals = {}
+    for entry in entries:
+        if entry.date not in daily_totals:
+            daily_totals[entry.date] = 0.0
+        daily_totals[entry.date] += entry.duration_hours
+
+    daily_overtime = {}
+    for date_key, total_hours in daily_totals.items():
+        daily_overtime[date_key] = calculate_daily_overtime(total_hours)
+        
+    return daily_overtime
+
+
 def export_time_entries_to_csv(
     entries: List[TimeEntry],
     start_date: Optional[date] = None,
@@ -387,17 +413,8 @@ def export_time_entries_to_csv(
     ]
     writer.writerow(headers)
 
-    # Calculate daily totals for overtime (aggregate entries by date)
-    daily_totals = {}
-    for entry in entries:
-        if entry.date not in daily_totals:
-            daily_totals[entry.date] = 0.0
-        daily_totals[entry.date] += entry.duration_hours
-
-    # Calculate daily overtime based on aggregated totals
-    daily_overtime = {}
-    for date_key, total_hours in daily_totals.items():
-        daily_overtime[date_key] = calculate_daily_overtime(total_hours)
+    # Calculate daily totals for overtime
+    daily_overtime = calculate_daily_overtime_for_entries(entries)
 
     # Write data rows
     for entry in entries:
@@ -439,6 +456,160 @@ def export_time_entries_to_csv(
         total_overtime = sum(daily_overtime.values())
         writer.writerow(["Total Overtime", f"{total_overtime:.2f}"])
 
+    return output.getvalue()
+
+
+def export_time_entries_to_json(
+    entries: List[TimeEntry],
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> str:
+    """
+    Export time entries to JSON format.
+
+    Args:
+        entries: List of TimeEntry objects to export
+        start_date: Optional start date for the export period
+        end_date: Optional end date for the export period
+
+    Returns:
+        JSON content as a string
+    """
+    data = []
+
+    # Calculate daily totals for overtime
+    daily_overtime = calculate_daily_overtime_for_entries(entries)
+
+    for entry in entries:
+        overtime = daily_overtime[entry.date]
+        entry_data = {
+            "id": entry.id,
+            "date": entry.date.isoformat(),
+            "start_time": entry.start_time.strftime("%H:%M:%S"),
+            "end_time": entry.end_time.strftime("%H:%M:%S"),
+            "duration_hours": round(entry.duration_hours, 2),
+            "description": entry.description,
+            "overtime": round(overtime, 2),
+            "category": entry.category.name if entry.category else None,
+            "created_at": entry.created_at.isoformat() if entry.created_at else None,
+        }
+        data.append(entry_data)
+
+    export_data = {
+        "period": {
+            "start_date": start_date.isoformat() if start_date else None,
+            "end_date": end_date.isoformat() if end_date else None,
+        },
+        "entries": data,
+        "summary": {
+            "total_entries": len(entries),
+            "total_hours": round(sum(e.duration_hours for e in entries), 2),
+            "total_overtime": round(sum(daily_overtime.values()), 2),
+        },
+    }
+
+    return json.dumps(export_data, indent=2)
+
+
+def export_time_entries_to_excel(
+    entries: List[TimeEntry],
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> bytes:
+    """
+    Export time entries to Excel (XLSX) format.
+
+    Args:
+        entries: List of TimeEntry objects to export
+        start_date: Optional start date for the export period
+        end_date: Optional end date for the export period
+
+    Returns:
+        Excel file content as bytes
+    """
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Time Entries"
+
+    # Headers
+    headers = [
+        "Date",
+        "Day of Week",
+        "Start Time",
+        "End Time",
+        "Duration (Hours)",
+        "Duration (HH:MM)",
+        "Description",
+        "Category",
+        "Overtime",
+        "Created At",
+    ]
+
+    for col_idx, header in enumerate(headers, 1):
+        cell = sheet.cell(row=1, column=col_idx, value=header)
+        cell.font = Font(bold=True)
+
+    # Calculate daily totals for overtime
+    daily_overtime = calculate_daily_overtime_for_entries(entries)
+
+    # Data rows
+    for row_idx, entry in enumerate(entries, 2):
+        overtime = daily_overtime[entry.date]
+
+        row_data = [
+            entry.date,  # openpyxl handles dates
+            entry.date.strftime("%A"),
+            entry.start_time,  # openpyxl handles time
+            entry.end_time,
+            entry.duration_hours,
+            format_hours(entry.duration_hours),
+            entry.description,
+            entry.category.name if entry.category else "",
+            overtime,
+            entry.created_at,
+        ]
+
+        for col_idx, value in enumerate(row_data, 1):
+            sheet.cell(row=row_idx, column=col_idx, value=value)
+
+    # Auto-adjust column widths using header and a limited number of sample rows
+    max_sample_rows = 200
+    last_row = sheet.max_row
+    sample_last_row = min(last_row, max_sample_rows)
+
+    for col_idx, header in enumerate(headers, 1):
+        # Start with the header length
+        max_length = len(str(header)) if header is not None else 0
+
+        # Sample only up to max_sample_rows data rows for this column
+        for row_idx in range(2, sample_last_row + 1):
+            cell_value = sheet.cell(row=row_idx, column=col_idx).value
+            if cell_value is not None:
+                cell_length = len(str(cell_value))
+                if cell_length > max_length:
+                    max_length = cell_length
+
+        column_letter = sheet.cell(row=1, column=col_idx).column_letter
+        sheet.column_dimensions[column_letter].width = max_length + 2
+
+    # Summary sheet
+    summary_sheet = workbook.create_sheet(title="Summary")
+
+    summary_data = [
+        ("Period Start", start_date if start_date else "All time"),
+        ("Period End", end_date if end_date else "All time"),
+        ("Total Entries", len(entries)),
+        ("Total Hours", sum(e.duration_hours for e in entries)),
+        ("Total Overtime", sum(daily_overtime.values())),
+        ("Working Days", len(set(e.date for e in entries))),
+    ]
+
+    for row_idx, (label, value) in enumerate(summary_data, 1):
+        summary_sheet.cell(row=row_idx, column=1, value=label).font = Font(bold=True)
+        summary_sheet.cell(row=row_idx, column=2, value=value)
+
+    output = io.BytesIO()
+    workbook.save(output)
     return output.getvalue()
 
 

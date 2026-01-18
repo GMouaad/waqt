@@ -518,12 +518,45 @@ def test_export_entries_no_entries(app):
         assert result["csv_content"] == ""
 
 
+def test_export_entries_json_format(app):
+    """Test export with JSON format."""
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+    from src.waqt.mcp_server import export_entries
+    import json
+    
+    with app.app_context():
+        # Create test entries
+        today = date.today()
+        entry = TimeEntry(
+            date=today,
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Test work",
+        )
+        db.session.add(entry)
+        db.session.commit()
+        
+        result = export_entries(period="all", export_format="json")
+        
+        assert result["status"] == "success"
+        assert result["format"] == "json"
+        assert "content" in result
+        
+        # Verify JSON content
+        data = json.loads(result["content"])
+        assert "entries" in data
+        assert len(data["entries"]) == 1
+        assert data["entries"][0]["description"] == "Test work"
+
+
 def test_export_entries_invalid_format(app):
     """Test export with invalid format."""
     from src.waqt.mcp_server import export_entries
     
     with app.app_context():
-        result = export_entries(export_format="json")
+        result = export_entries(export_format="xml")
         
         assert result["status"] == "error"
         assert "Unsupported format" in result["message"]

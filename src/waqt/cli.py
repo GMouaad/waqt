@@ -13,6 +13,8 @@ from .utils import (
     calculate_duration,
     format_hours,
     export_time_entries_to_csv,
+    export_time_entries_to_json,
+    export_time_entries_to_excel,
     get_time_entries_for_period,
     format_time,
     get_working_days_in_range,
@@ -708,29 +710,27 @@ def reference():
     "-o",
     type=str,
     default=None,
-    help="Output file path (default: time_entries_<period>_<date>.csv)",
+    help="Output file path (default: time_entries_<period>_<date>.<ext>)",
 )
 @click.option(
     "--format",
     "-f",
     "export_format",
-    type=click.Choice(["csv"], case_sensitive=False),
+    type=click.Choice(["csv", "json", "excel"], case_sensitive=False),
     default="csv",
     help="Export format (default: csv)",
 )
 def export(period: str, date: Optional[str], output: Optional[str], export_format: str):
-    """Export time entries to CSV file.
+    """Export time entries to CSV, JSON or Excel file.
 
-    Export your time tracking data to a CSV file for use in spreadsheet
-    applications like Excel or Google Sheets. You can export by week, month,
-    or all entries.
+    Export your time tracking data to a file for external use.
+    You can export by week, month, or all entries.
 
     Examples:
         waqt export
-        waqt export --period week
-        waqt export --period month --date 2024-01-15
-        waqt export --output my_time_entries.csv
-        waqt export -p week -o weekly_report.csv
+        waqt export --format json
+        waqt export --period week --format excel
+        waqt export --output my_report.xlsx
     """
     app = create_app()
     with app.app_context():
@@ -768,23 +768,42 @@ def export(period: str, date: Optional[str], output: Optional[str], export_forma
             click.echo(click.style("No time entries found to export.", fg="yellow"))
             raise click.exceptions.Exit(0)
 
-        # Generate CSV content
-        csv_content = export_time_entries_to_csv(entries, start_date, end_date)
+        # Generate content based on format
+        if export_format.lower() == "json":
+            content = export_time_entries_to_json(entries, start_date, end_date)
+            default_ext = "json"
+            mode = "w"
+            encoding = "utf-8"
+        elif export_format.lower() in ("excel", "xlsx"):
+            content = export_time_entries_to_excel(entries, start_date, end_date)
+            default_ext = "xlsx"
+            mode = "wb"
+            encoding = None
+        else:  # csv
+            content = export_time_entries_to_csv(entries, start_date, end_date)
+            default_ext = "csv"
+            mode = "w"
+            encoding = "utf-8"
 
         # Determine output filename
         if output:
             output_file = output
         else:
             timestamp = datetime.now().strftime("%Y%m%d")
-            output_file = f"time_entries_{period_name}_{timestamp}.csv"
+            output_file = f"time_entries_{period_name}_{timestamp}.{default_ext}"
 
         # Write to file
         try:
-            with open(output_file, "w", newline="", encoding="utf-8") as f:
-                f.write(csv_content)
+            if mode == "wb":
+                with open(output_file, mode) as f:
+                    f.write(content)
+            else:
+                with open(output_file, mode, encoding=encoding) as f:
+                    f.write(content)
 
             click.echo(click.style("✓ Export successful!", fg="green", bold=True))
             click.echo(f"File: {output_file}")
+            click.echo(f"Format: {export_format.upper()}")
             click.echo(f"Entries exported: {len(entries)}")
 
             if start_date and end_date:
