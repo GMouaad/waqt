@@ -18,7 +18,7 @@
             </a>
         </div>
         
-        <div class="export-controls" style="display: flex; gap: 0.5rem;">
+        <div class="export-controls export-button-group">
             <a href="{{ url_for('main.export_csv', period=period, date=selected_date.isoformat()) }}" 
                class="btn btn-success" 
                title="Export to CSV">

@@ -357,6 +357,29 @@ def get_time_entries_for_period(
     return query.order_by(TimeEntry.date.asc()).all()
 
 
+def calculate_daily_overtime_for_entries(entries: List[TimeEntry]) -> Dict[date, float]:
+    """
+    Calculate daily overtime for a list of entries.
+    
+    Args:
+        entries: List of TimeEntry objects
+        
+    Returns:
+        Dictionary mapping date to overtime hours
+    """
+    daily_totals = {}
+    for entry in entries:
+        if entry.date not in daily_totals:
+            daily_totals[entry.date] = 0.0
+        daily_totals[entry.date] += entry.duration_hours
+
+    daily_overtime = {}
+    for date_key, total_hours in daily_totals.items():
+        daily_overtime[date_key] = calculate_daily_overtime(total_hours)
+        
+    return daily_overtime
+
+
 def export_time_entries_to_csv(
     entries: List[TimeEntry],
     start_date: Optional[date] = None,
@@ -390,17 +413,8 @@ def export_time_entries_to_csv(
     ]
     writer.writerow(headers)
 
-    # Calculate daily totals for overtime (aggregate entries by date)
-    daily_totals = {}
-    for entry in entries:
-        if entry.date not in daily_totals:
-            daily_totals[entry.date] = 0.0
-        daily_totals[entry.date] += entry.duration_hours
-
-    # Calculate daily overtime based on aggregated totals
-    daily_overtime = {}
-    for date_key, total_hours in daily_totals.items():
-        daily_overtime[date_key] = calculate_daily_overtime(total_hours)
+    # Calculate daily totals for overtime
+    daily_overtime = calculate_daily_overtime_for_entries(entries)
 
     # Write data rows
     for entry in entries:
@@ -463,16 +477,8 @@ def export_time_entries_to_json(
     """
     data = []
 
-    # Calculate daily totals for overtime (same logic as CSV)
-    daily_totals = {}
-    for entry in entries:
-        if entry.date not in daily_totals:
-            daily_totals[entry.date] = 0.0
-        daily_totals[entry.date] += entry.duration_hours
-
-    daily_overtime = {}
-    for date_key, total_hours in daily_totals.items():
-        daily_overtime[date_key] = calculate_daily_overtime(total_hours)
+    # Calculate daily totals for overtime
+    daily_overtime = calculate_daily_overtime_for_entries(entries)
 
     for entry in entries:
         overtime = daily_overtime[entry.date]
@@ -544,15 +550,7 @@ def export_time_entries_to_excel(
         cell.font = Font(bold=True)
 
     # Calculate daily totals for overtime
-    daily_totals = {}
-    for entry in entries:
-        if entry.date not in daily_totals:
-            daily_totals[entry.date] = 0.0
-        daily_totals[entry.date] += entry.duration_hours
-
-    daily_overtime = {}
-    for date_key, total_hours in daily_totals.items():
-        daily_overtime[date_key] = calculate_daily_overtime(total_hours)
+    daily_overtime = calculate_daily_overtime_for_entries(entries)
 
     # Data rows
     for row_idx, entry in enumerate(entries, 2):
@@ -574,10 +572,25 @@ def export_time_entries_to_excel(
         for col_idx, value in enumerate(row_data, 1):
             sheet.cell(row=row_idx, column=col_idx, value=value)
 
-    # Auto-adjust column widths (simple approximation)
-    for column_cells in sheet.columns:
-        length = max(len(str(cell.value) or "") for cell in column_cells)
-        sheet.column_dimensions[column_cells[0].column_letter].width = length + 2
+    # Auto-adjust column widths using header and a limited number of sample rows
+    max_sample_rows = 200
+    last_row = sheet.max_row
+    sample_last_row = min(last_row, max_sample_rows)
+
+    for col_idx, header in enumerate(headers, 1):
+        # Start with the header length
+        max_length = len(str(header)) if header is not None else 0
+
+        # Sample only up to max_sample_rows data rows for this column
+        for row_idx in range(2, sample_last_row + 1):
+            cell_value = sheet.cell(row=row_idx, column=col_idx).value
+            if cell_value is not None:
+                cell_length = len(str(cell_value))
+                if cell_length > max_length:
+                    max_length = cell_length
+
+        column_letter = sheet.cell(row=1, column=col_idx).column_letter
+        sheet.column_dimensions[column_letter].width = max_length + 2
 
     # Summary sheet
     summary_sheet = workbook.create_sheet(title="Summary")
