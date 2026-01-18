@@ -215,18 +215,19 @@ pip install -e .</code></pre>
 }</code></pre>
 
             <h3>5. export_entries</h3>
-            <p>Export time entries to CSV format.</p>
+            <p>Export time entries to CSV or JSON format.</p>
             <p><strong>Parameters:</strong></p>
             <ul>
                 <li><code>period</code> (optional): "week", "month", or "all". Defaults to "all".</li>
                 <li><code>date</code> (optional): Reference date in YYYY-MM-DD format. Defaults to today.</li>
-                <li><code>format</code> (optional): Export format, currently only "csv" is supported. Defaults to "csv".</li>
+                <li><code>format</code> (optional): Export format. Supported: <code>"csv"</code>, <code>"json"</code>. Defaults to <code>"csv"</code>.</li>
             </ul>
-            <p><strong>Returns:</strong> JSON object with CSV content as a string and metadata.</p>
+            <p><strong>Returns:</strong> JSON object with content as a string and metadata.</p>
+            <p><strong>Note on Excel:</strong> While the Web UI and CLI support Excel (XLSX) export, the MCP server currently only supports CSV and JSON for better compatibility with AI processing.</p>
             <p><strong>Example:</strong></p>
             <pre><code>{
   "period": "month",
-  "date": "2024-01-15"
+  "format": "json"
 }</code></pre>
             <p><strong>Response:</strong></p>
             <pre><code>{
@@ -236,10 +237,8 @@ pip install -e .</code></pre>
   "total_hours": 160.0,
   "total_hours_formatted": "160:00",
   "period": "month_2024-01",
-  "format": "csv",
-  "start_date": "2024-01-01",
-  "end_date": "2024-01-31",
-  "csv_content": "Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM),Description,Overtime,Created At\n..."
+  "format": "json",
+  "content": "{ \"period\": { ... }, \"entries\": [...] }"
 }</code></pre>
 
             <h2 id="comparison-with-cli">Comparison with CLI</h2>

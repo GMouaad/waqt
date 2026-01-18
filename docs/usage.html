@@ -77,8 +77,14 @@ waqt add --start 09:00 --end 17:00 --pause 30
 # View summary
 waqt summary
 
-# Export time entries
+# Export time entries (default: CSV)
 waqt export --period week
+
+# Export to JSON
+waqt export --period month --format json
+
+# Export to Excel
+waqt export --period all --format excel --output backup.xlsx
 
 # Request multi-day leave (excludes weekends)
 waqt leave-request --from 2026-01-13 --to 2026-01-19
@@ -154,6 +160,34 @@ waqt leave-request --from 2026-01-15 --to 2026-01-15</code></pre>
                             <li><strong>Codes:</strong> Use short codes for quick reference.</li>
                             <li><strong>Validation:</strong> Prevents deletion of categories currently in use.</li>
                         </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-highlight">
+                <h3><i class="fas fa-file-export"></i> Data Export</h3>
+                <p>Export your time tracking data in multiple formats for reporting, analysis, or backup.</p>
+                
+                <div class="feature-details">
+                    <div class="feature-section">
+                        <h4><i class="fas fa-laptop"></i> Web Interface</h4>
+                        <ul>
+                            <li><strong>Formats:</strong> Export to CSV, JSON, or Excel directly from the Reports page.</li>
+                            <li><strong>Context-Aware:</strong> Exports data for the currently selected week or month view.</li>
+                            <li><strong>Excel Features:</strong> Excel exports include formatted sheets with auto-adjusted columns and summary statistics.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-section">
+                        <h4><i class="fas fa-terminal"></i> Command Line</h4>
+                        <pre><code># Standard CSV export
+waqt export --period week --output report.csv
+
+# JSON export for processing
+waqt export --period month --format json --output data.json
+
+# Excel export for sharing
+waqt export --period all --format excel --output full_history.xlsx</code></pre>
                     </div>
                 </div>
             </div>

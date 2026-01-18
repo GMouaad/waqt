@@ -290,22 +290,22 @@ waqt sum -p week
 ```
 
 #### Export Time Entries
-Export your time tracking data to CSV:
+Export your time tracking data to CSV, JSON, or Excel:
 ```bash
-# Export all entries
+# Export all entries to CSV (default)
 waqt export
 
 # Export current week
 waqt export --period week
 
-# Export specific month
-waqt export --period month --date 2024-01-15
+# Export to JSON
+waqt export --period month --format json
+
+# Export to Excel (XLSX)
+waqt export --period all --format excel --output backup.xlsx
 
 # Export with custom filename
 waqt export --output my_report.csv
-
-# Export week to specific file
-waqt export -p week -o weekly_report.csv
 ```
 
 #### Configuration Management
@@ -476,7 +476,7 @@ The MCP server exposes these tools to AI assistants:
 - `end` - End time tracking  
 - `summary` - Get time summaries (week/month)
 - `list_entries` - List time entries
-- `export_entries` - Export data to CSV
+- `export_entries` - Export data to CSV/JSON
 
 ### Example Configuration for Claude Desktop
 
