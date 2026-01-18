@@ -18,11 +18,21 @@
             </a>
         </div>
         
-        <div class="export-controls">
+        <div class="export-controls" style="display: flex; gap: 0.5rem;">
             <a href="{{ url_for('main.export_csv', period=period, date=selected_date.isoformat()) }}" 
                class="btn btn-success" 
-               title="Export current view to CSV">
-                📥 Export CSV
+               title="Export to CSV">
+                CSV
+            </a>
+            <a href="{{ url_for('main.export_json', period=period, date=selected_date.isoformat()) }}" 
+               class="btn btn-secondary" 
+               title="Export to JSON">
+                JSON
+            </a>
+            <a href="{{ url_for('main.export_excel', period=period, date=selected_date.isoformat()) }}" 
+               class="btn btn-secondary" 
+               title="Export to Excel">
+                Excel
             </a>
         </div>
         

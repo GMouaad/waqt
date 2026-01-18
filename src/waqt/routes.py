@@ -21,6 +21,8 @@ from .utils import (
     get_week_bounds,
     get_month_bounds,
     export_time_entries_to_csv,
+    export_time_entries_to_json,
+    export_time_entries_to_excel,
     get_time_entries_for_period,
     generate_calendar_data,
     parse_time_input,
@@ -924,6 +926,134 @@ def export_csv():
         import logging
 
         logging.error(f"Unexpected error during CSV export: {str(e)}", exc_info=True)
+        flash("An unexpected error occurred during export. Please try again.", "error")
+        return redirect(url_for("main.reports"))
+
+
+@bp.route("/export/json")
+def export_json():
+    """Export time entries to JSON format."""
+    try:
+        # Get filter parameters
+        period = request.args.get("period", "all")
+        date_str = request.args.get("date", datetime.now().date().isoformat())
+
+        # Parse the reference date
+        try:
+            ref_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            # Log the error and fallback to current date
+            flash(
+                f"Invalid date format '{date_str}', using current date instead.",
+                "warning",
+            )
+            ref_date = datetime.now().date()
+
+        # Determine date range based on period
+        if period == "week":
+            start_date, end_date = get_week_bounds(ref_date)
+        elif period == "month":
+            start_date, end_date = get_month_bounds(ref_date)
+        else:
+            # Export all entries
+            start_date = None
+            end_date = None
+
+        # Query entries using utility function
+        entries = get_time_entries_for_period(start_date, end_date)
+
+        if not entries:
+            flash("No time entries found to export.", "warning")
+            return redirect(url_for("main.reports"))
+
+        # Generate JSON content
+        json_content = export_time_entries_to_json(entries, start_date, end_date)
+
+        # Generate filename
+        if start_date and end_date:
+            filename = (
+                f"time_entries_{start_date.strftime('%Y%m%d')}_"
+                f"{end_date.strftime('%Y%m%d')}.json"
+            )
+        else:
+            filename = f"time_entries_all_{datetime.now().strftime('%Y%m%d')}.json"
+
+        # Return JSON as download
+        return Response(
+            json_content,
+            mimetype="application/json",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+
+    except Exception as e:
+        # Log unexpected errors for debugging
+        import logging
+
+        logging.error(f"Unexpected error during JSON export: {str(e)}", exc_info=True)
+        flash("An unexpected error occurred during export. Please try again.", "error")
+        return redirect(url_for("main.reports"))
+
+
+@bp.route("/export/excel")
+def export_excel():
+    """Export time entries to Excel format."""
+    try:
+        # Get filter parameters
+        period = request.args.get("period", "all")
+        date_str = request.args.get("date", datetime.now().date().isoformat())
+
+        # Parse the reference date
+        try:
+            ref_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            # Log the error and fallback to current date
+            flash(
+                f"Invalid date format '{date_str}', using current date instead.",
+                "warning",
+            )
+            ref_date = datetime.now().date()
+
+        # Determine date range based on period
+        if period == "week":
+            start_date, end_date = get_week_bounds(ref_date)
+        elif period == "month":
+            start_date, end_date = get_month_bounds(ref_date)
+        else:
+            # Export all entries
+            start_date = None
+            end_date = None
+
+        # Query entries using utility function
+        entries = get_time_entries_for_period(start_date, end_date)
+
+        if not entries:
+            flash("No time entries found to export.", "warning")
+            return redirect(url_for("main.reports"))
+
+        # Generate Excel content
+        excel_content = export_time_entries_to_excel(entries, start_date, end_date)
+
+        # Generate filename
+        if start_date and end_date:
+            filename = (
+                f"time_entries_{start_date.strftime('%Y%m%d')}_"
+                f"{end_date.strftime('%Y%m%d')}.xlsx"
+            )
+        else:
+            filename = f"time_entries_all_{datetime.now().strftime('%Y%m%d')}.xlsx"
+
+        # Return Excel as download
+        return Response(
+            excel_content,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+
+    except Exception as e:
+        # Log unexpected errors for debugging
+        import logging
+
+        logging.error(f"Unexpected error during Excel export: {str(e)}", exc_info=True)
         flash("An unexpected error occurred during export. Please try again.", "error")
         return redirect(url_for("main.reports"))
 

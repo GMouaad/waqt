@@ -18,6 +18,7 @@ from .utils import (
     calculate_duration,
     format_hours,
     export_time_entries_to_csv,
+    export_time_entries_to_json,
     get_time_entries_for_period,
     format_time,
     get_working_days_in_range,
@@ -717,31 +718,32 @@ def export_entries(
     date: Optional[str] = None,
     export_format: str = "csv",
 ) -> Dict[str, Any]:
-    """Export time entries to CSV format.
+    """Export time entries to CSV or JSON format.
     
-    Export time tracking data for use in spreadsheet applications.
-    Returns the CSV content as a string.
+    Export time tracking data for use in external applications.
+    Returns the content as a string.
     
     Args:
         period: Export period: "week", "month", or "all". Defaults to "all".
         date: Reference date in YYYY-MM-DD format. Defaults to today.
-        export_format: Export format. Currently only "csv" is supported.
+        export_format: Export format. Supported: "csv", "json". Defaults to "csv".
     
     Returns:
-        Dictionary with status, metadata, and CSV content.
+        Dictionary with status, metadata, and content.
     
     Examples:
         export_entries()
+        export_entries(export_format="json")
         export_entries(period="week")
         export_entries(period="month", date="2024-01-15")
     """
     app = get_app()
     with app.app_context():
         # Validate format
-        if export_format.lower() != "csv":
+        if export_format.lower() not in ["csv", "json"]:
             return {
                 "status": "error",
-                "message": f"Unsupported format '{export_format}'. Only 'csv' is supported.",
+                "message": f"Unsupported format '{export_format}'. Only 'csv' and 'json' are supported.",
             }
 
         # Validate period
@@ -779,15 +781,21 @@ def export_entries(
         entries = get_time_entries_for_period(start_date, end_date)
 
         if not entries:
-            return {
+            result = {
                 "status": "success",
                 "message": "No time entries found to export.",
                 "count": 0,
-                "csv_content": "",
+                "content": "",
             }
+            if export_format.lower() == "csv":
+                result["csv_content"] = ""
+            return result
 
-        # Generate CSV content
-        csv_content = export_time_entries_to_csv(entries, start_date, end_date)
+        # Generate content
+        if export_format.lower() == "json":
+            content = export_time_entries_to_json(entries, start_date, end_date)
+        else:
+            content = export_time_entries_to_csv(entries, start_date, end_date)
 
         # Calculate total hours
         total_hours = sum(entry.duration_hours for entry in entries)
@@ -800,8 +808,12 @@ def export_entries(
             "total_hours_formatted": format_hours(total_hours),
             "period": period_name,
             "format": export_format,
-            "csv_content": csv_content,
+            "content": content,
         }
+
+        # Keep csv_content for backward compatibility if format is csv
+        if export_format.lower() == "csv":
+            result["csv_content"] = content
 
         if start_date and end_date:
             result["start_date"] = start_date.isoformat()
