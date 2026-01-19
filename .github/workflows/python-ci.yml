@@ -18,51 +18,35 @@ jobs:
         python-version: ['3.13']
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
     
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-    
-    - name: Cache uv packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/uv
-        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-uv-
-    
-    - name: Create virtual environment
-      run: |
-        uv venv
-        echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
-        echo "$PWD/.venv/bin" >> $GITHUB_PATH
-    
     - name: Install dependencies
       run: |
-        uv pip install -e ".[dev]"
+        uv sync --extra dev
     
     - name: Install Playwright browsers
       run: |
-        playwright install chromium --with-deps
+        uv run playwright install chromium --with-deps
     
     - name: Lint with flake8
       run: |
         # Stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,env,.venv,test-venv,build,dist
+        uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,env,.venv,test-venv,build,dist
         # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,env,.venv,test-venv,build,dist
+        uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,env,.venv,test-venv,build,dist
     
     - name: Run app smoke test
       run: |
-        timeout 10s python -m waqt.wsgi || code=$?; if [ $code -eq 124 ]; then echo "App started successfully"; else exit $code; fi
+        timeout 10s uv run python -m waqt.wsgi || code=$?; if [ $code -eq 124 ]; then echo "App started successfully"; else exit $code; fi
 
     - name: Run tests
       run: |
-        pytest tests/ -v --tb=short
+        uv run pytest tests/ -v --tb=short

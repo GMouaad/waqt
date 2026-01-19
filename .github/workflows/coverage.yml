@@ -1,0 +1,46 @@
+name: Coverage
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: ["main"]
+
+jobs:
+  coverage:
+    name: Test Coverage
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    # Permissions required to post comments on PRs
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run Tests and Generate Coverage
+        # Run pytest with coverage enabled.
+        # - --cov=src: Measure coverage for the src directory
+        # - --cov-report=term-missing:skip-covered: Output text report, skipping 100% covered files
+        # - --junitxml=pytest.xml: Generate JUnit XML report
+        # - | tee pytest-coverage.txt: Save stdout to file for the comment action
+        run: |
+          uv run pytest --cov=src --cov-report=term-missing:skip-covered --junitxml=pytest.xml | tee pytest-coverage.txt
+
+      - name: Post Coverage Comment
+        uses: MishaKav/pytest-coverage-comment@v1.2.0
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
