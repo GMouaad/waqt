@@ -40,7 +40,7 @@ jobs:
           uv run pytest --cov=src --cov-report=term-missing:skip-covered --junitxml=pytest.xml | tee pytest-coverage.txt
 
       - name: Post Coverage Comment
-        uses: MishaKav/pytest-coverage-comment@main
+        uses: MishaKav/pytest-coverage-comment@v1.2.0
         with:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
