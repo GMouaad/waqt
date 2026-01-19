@@ -1,0 +1,12 @@
+version: 2
+updates:
+  # Maintain dependencies for Python using uv (supported via pip ecosystem)
+  # Dependabot will automatically detect pyproject.toml and uv.lock
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "main"
+    open-pull-requests-limit: 5
+    # No specific reviewers assigned; use Branch Protection rules for approval requirements.
+
