@@ -73,6 +73,27 @@ def run_migrations(db_path=None):
                     SET is_active = 1 
                     WHERE duration_hours = 0.0 AND start_time = end_time
                 """
+            },
+            {
+                "name": "Add categories table and relation",
+                "sql": [
+                    """CREATE TABLE IF NOT EXISTS categories (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name VARCHAR(100) NOT NULL UNIQUE,
+                        code VARCHAR(20) UNIQUE,
+                        color VARCHAR(20),
+                        description TEXT,
+                        is_active BOOLEAN DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )""",
+                    "ALTER TABLE time_entries ADD COLUMN category_id INTEGER REFERENCES categories(id)"
+                ],
+                "check": """
+                    SELECT time_entries.category_id
+                    FROM time_entries
+                    JOIN categories ON time_entries.category_id = categories.id
+                    LIMIT 1
+                """
             }
         ]
 
