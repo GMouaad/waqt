@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from mcp.server.fastmcp import FastMCP
 
-from . import create_app, db
+from .database import get_session, initialize_database
 from .models import TimeEntry, LeaveDay, Settings
 from .utils import (
     get_week_bounds,
@@ -68,15 +68,16 @@ Overtime is automatically calculated for hours beyond the standard.
 )
 
 
-# Global app instance for the MCP server, initialized lazily
-_app = None
+# Flag to track if database has been initialized
+_db_initialized = False
 
-def get_app():
-    """Get or create the Flask app instance."""
-    global _app
-    if _app is None:
-        _app = create_app()
-    return _app
+
+def ensure_db_initialized():
+    """Ensure database is initialized before any tool runs."""
+    global _db_initialized
+    if not _db_initialized:
+        initialize_database()
+        _db_initialized = True
 
 
 @mcp.tool()
@@ -103,8 +104,9 @@ def start(
         start(time="09:00")
         start(date="2024-01-15", time="09:30", description="Morning session")
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         # Parse date
         if date:
             try:
@@ -135,7 +137,7 @@ def start(
             description = "Work session"
 
         # Use shared service
-        result = start_time_entry(entry_date, start_time, description)
+        result = start_time_entry(session, entry_date, start_time, description)
         
         if not result["success"]:
             return {
@@ -175,8 +177,9 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
         end(time="17:30")
         end(date="2024-01-15", time="18:00")
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         # Parse date
         if date:
             try:
@@ -202,7 +205,7 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
             end_time = datetime.now().time()
 
         # Use shared service
-        result = end_time_entry(end_time, entry_date)
+        result = end_time_entry(session, end_time, entry_date)
         
         if not result["success"]:
             return {
@@ -257,8 +260,9 @@ def add_entry(
         add_entry(start="09:00", end="17:30", pause_mode="default")
         add_entry(start="09:00", end="18:00", pause_mode="custom", pause_minutes=45)
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         # Parse date
         if date:
             try:
@@ -283,6 +287,7 @@ def add_entry(
 
         # Use shared service
         result = add_time_entry(
+            session,
             entry_date=entry_date,
             start_time=start_time,
             end_time=end_time,
@@ -341,8 +346,9 @@ def edit_entry(
     Returns:
         Dictionary with status and updated entry details.
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         # Parse date
         try:
             entry_date = datetime.strptime(date, "%Y-%m-%d").date()
@@ -378,7 +384,7 @@ def edit_entry(
         target_id = entry_id
         if not target_id:
             entries = (
-                TimeEntry.query.filter_by(date=entry_date, is_active=False)
+                session.query(TimeEntry).filter_by(date=entry_date, is_active=False)
                 .order_by(TimeEntry.created_at.desc())
                 .all()
             )
@@ -390,6 +396,7 @@ def edit_entry(
 
         # Use shared service
         result = update_time_entry(
+            session,
             target_id, 
             start_time=start_t, 
             end_time=end_t, 
@@ -435,8 +442,9 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
         summary(period="month")
         summary(period="week", date="2024-01-15")
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         # Validate period
         if period.lower() not in ["week", "month"]:
             return {
@@ -465,7 +473,7 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
 
         # Query time entries for the period
         entries = (
-            TimeEntry.query.filter(TimeEntry.date >= start_date)
+            session.query(TimeEntry).filter(TimeEntry.date >= start_date)
             .filter(TimeEntry.date <= end_date)
             .order_by(TimeEntry.date)
             .all()
@@ -477,7 +485,7 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
         else:
             # Query leave days for monthly statistics
             leave_days = (
-                LeaveDay.query.filter(LeaveDay.date >= start_date)
+                session.query(LeaveDay).filter(LeaveDay.date >= start_date)
                 .filter(LeaveDay.date <= end_date)
                 .all()
             )
@@ -544,8 +552,9 @@ def leave_request(
     Returns:
         Dictionary with status and summary of created leave.
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         # Parse dates
         try:
             start = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -587,8 +596,10 @@ def leave_request(
 
         # Create leave records
         try:
-            result = create_leave_requests(start, end, leave_type.lower(), description.strip() if description else "")
-            db.session.commit()
+            result = create_leave_requests(
+                session, start, end, leave_type.lower(), 
+                description.strip() if description else ""
+            )
             
             created_count = result["created"]
             skipped_count = result["skipped"]
@@ -615,7 +626,6 @@ def leave_request(
             }
 
         except Exception as e:
-            db.session.rollback()
             return {
                 "status": "error",
                 "message": f"Error creating leave records: {str(e)}",
@@ -645,8 +655,9 @@ def list_entries(
         list_entries(period="month")
         list_entries(period="all", limit=10)
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         # Validate period
         if period.lower() not in ["week", "month", "all"]:
             return {
@@ -676,7 +687,16 @@ def list_entries(
             end_date = None
 
         # Query entries
-        entries = get_time_entries_for_period(start_date, end_date)
+        if start_date and end_date:
+            entries = (
+                session.query(TimeEntry)
+                .filter(TimeEntry.date >= start_date)
+                .filter(TimeEntry.date <= end_date)
+                .order_by(TimeEntry.date)
+                .all()
+            )
+        else:
+            entries = session.query(TimeEntry).order_by(TimeEntry.date).all()
 
         # Apply limit if specified
         if limit and limit > 0:
@@ -737,8 +757,9 @@ def export_entries(
         export_entries(period="week")
         export_entries(period="month", date="2024-01-15")
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         # Validate format
         if export_format.lower() not in ["csv", "json"]:
             return {
@@ -778,7 +799,16 @@ def export_entries(
             period_name = "all"
 
         # Query entries
-        entries = get_time_entries_for_period(start_date, end_date)
+        if start_date and end_date:
+            entries = (
+                session.query(TimeEntry)
+                .filter(TimeEntry.date >= start_date)
+                .filter(TimeEntry.date <= end_date)
+                .order_by(TimeEntry.date)
+                .all()
+            )
+        else:
+            entries = session.query(TimeEntry).order_by(TimeEntry.date).all()
 
         if not entries:
             result = {
@@ -832,9 +862,10 @@ def list_config() -> Dict[str, Any]:
     Returns:
         Dictionary with status and settings.
     """
-    app = get_app()
-    with app.app_context():
-        all_settings = Settings.get_all_settings()
+    ensure_db_initialized()
+    
+    with get_session() as session:
+        all_settings = Settings.get_all_settings_with_session(session)
         
         settings_list = []
         for key in sorted(CONFIG_DEFAULTS.keys()):
@@ -867,8 +898,9 @@ def get_config(key: str) -> Dict[str, Any]:
     Returns:
         Dictionary with status and setting details.
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         if key not in CONFIG_DEFAULTS:
             return {
                 "status": "error",
@@ -876,7 +908,7 @@ def get_config(key: str) -> Dict[str, Any]:
                 "available_keys": list(CONFIG_DEFAULTS.keys())
             }
 
-        value = Settings.get_setting(key, CONFIG_DEFAULTS[key])
+        value = Settings.get_setting_with_session(session, key, CONFIG_DEFAULTS[key])
         description = CONFIG_DESCRIPTIONS.get(key, "No description available")
 
         return {
@@ -901,8 +933,9 @@ def set_config(key: str, value: str) -> Dict[str, Any]:
     Returns:
         Dictionary with status, message, and updated setting details.
     """
-    app = get_app()
-    with app.app_context():
+    ensure_db_initialized()
+    
+    with get_session() as session:
         if key not in CONFIG_DEFAULTS:
             return {
                 "status": "error",
@@ -923,10 +956,10 @@ def set_config(key: str, value: str) -> Dict[str, Any]:
             value = normalize_bool_value(value)
 
         # Get old value for reporting
-        old_value = Settings.get_setting(key, CONFIG_DEFAULTS[key])
+        old_value = Settings.get_setting_with_session(session, key, CONFIG_DEFAULTS[key])
 
         # Set the new value
-        Settings.set_setting(key, value)
+        Settings.set_setting_with_session(session, key, value)
 
         return {
             "status": "success",
@@ -944,6 +977,9 @@ def main():
     with MCP clients.
     """
     import asyncio
+    
+    # Initialize database before starting server
+    ensure_db_initialized()
     
     async def run_server():
         """Run the MCP server asynchronously."""

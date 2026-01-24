@@ -288,7 +288,7 @@ def start_timer():
         now = datetime.now()
         
         # Use shared service
-        result = start_time_entry(now.date(), now.time(), description, category_id=category_id)
+        result = start_time_entry(db.session, now.date(), now.time(), description, category_id=category_id)
         
         if not result["success"]:
             # If it's a duplicate active timer error, we return 400.
@@ -296,6 +296,7 @@ def start_timer():
             # The service returns specific error types we can use.
             return jsonify({"success": False, "message": result["message"]}), 400
 
+        db.session.commit()
         return jsonify(
             {
                 "success": True,
@@ -374,11 +375,12 @@ def stop_timer():
         # Use shared service
         # Note: shared service calculates effective end time based on pauses logic
         # which was originally taken from this route.
-        result = end_time_entry(now.time(), entry.date)
+        result = end_time_entry(db.session, now.time(), entry.date)
         
         if not result["success"]:
             return jsonify({"success": False, "message": result["message"]}), 500
             
+        db.session.commit()
         duration_hours = result["duration"]
 
         return jsonify(
@@ -523,6 +525,7 @@ def time_entry():
 
             # Use shared service
             result = add_time_entry(
+                db.session,
                 entry_date=date,
                 start_time=start_time,
                 end_time=end_time,
@@ -536,6 +539,7 @@ def time_entry():
                 flash(result["message"], "error")
                 return redirect(url_for("main.time_entry"))
 
+            db.session.commit()
             entry = result["entry"]
             flash(
                 f"Time entry added successfully! Duration: {entry.duration_hours:.2f} hours",
@@ -606,6 +610,7 @@ def edit_time_entry(entry_id):
 
             # Use shared service
             result = update_time_entry(
+                db.session,
                 entry_id,
                 start_time=start_time,
                 end_time=end_time,
@@ -616,7 +621,8 @@ def edit_time_entry(entry_id):
             if not result["success"]:
                 flash(result["message"], "error")
                 return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
-                
+            
+            db.session.commit()
             entry = result["entry"] # Get updated entry object
 
             flash(
@@ -785,7 +791,7 @@ def leave():
             leave_stats = calculate_leave_hours(start_date, end_date)
 
             # Create leave day records using shared utility
-            result = create_leave_requests(start_date, end_date, leave_type, description, db_session=db.session)
+            result = create_leave_requests(db.session, start_date, end_date, leave_type, description)
             db.session.commit()
             
             created_count = result["created"]

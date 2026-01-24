@@ -1,29 +1,42 @@
-"""Database models for time tracking application."""
+"""Database models for time tracking application.
+
+These models use standalone SQLAlchemy (via database.py Base) and are
+compatible with both Flask-SQLAlchemy and direct SQLAlchemy usage.
+"""
 
 import logging
 from datetime import datetime, timezone
-from . import db
+from sqlalchemy import (
+    Column, Integer, String, Float, Boolean, Date, Time, 
+    DateTime, Text, ForeignKey
+)
+from sqlalchemy.orm import relationship, Session
+from typing import Optional, Dict, Any, List
+
+from .database import Base
 
 logger = logging.getLogger(__name__)
 
 
-class Category(db.Model):
+class Category(Base):
     """Model for time entry categories."""
 
     __tablename__ = "categories"
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
-    code = db.Column(db.String(20), unique=True, nullable=True)
-    color = db.Column(db.String(20), nullable=True)
-    description = db.Column(db.Text, nullable=True)
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True, nullable=False)
+    code = Column(String(20), unique=True, nullable=True)
+    color = Column(String(20), nullable=True)
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationship defined in TimeEntry
 
     def __repr__(self):
         return f"<Category {self.name}>"
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "id": self.id,
@@ -35,29 +48,29 @@ class Category(db.Model):
         }
 
 
-class TimeEntry(db.Model):
+class TimeEntry(Base):
     """Model for tracking work time entries."""
 
     __tablename__ = "time_entries"
 
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date, nullable=False, index=True)
-    start_time = db.Column(db.Time, nullable=False)
-    end_time = db.Column(db.Time, nullable=False)
-    duration_hours = db.Column(db.Float, nullable=False)
-    accumulated_pause_seconds = db.Column(db.Float, default=0.0)
-    last_pause_start_time = db.Column(db.DateTime, nullable=True)
-    is_active = db.Column(db.Boolean, default=False)
-    description = db.Column(db.Text, nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False, index=True)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
+    duration_hours = Column(Float, nullable=False)
+    accumulated_pause_seconds = Column(Float, default=0.0)
+    last_pause_start_time = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=False)
+    description = Column(Text, nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     
-    category = db.relationship("Category", backref=db.backref("time_entries", lazy=True))
+    category = relationship("Category", backref="time_entries")
 
     def __repr__(self):
         return f"<TimeEntry {self.date} - {self.duration_hours}h>"
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         # Import here to avoid circular imports
         from .utils import format_time
@@ -70,84 +83,81 @@ class TimeEntry(db.Model):
             "duration_hours": self.duration_hours,
             "description": self.description,
             "category": self.category.to_dict() if self.category else None,
-            "created_at": self.created_at.isoformat(),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 
-class LeaveDay(db.Model):
+class LeaveDay(Base):
     """Model for tracking vacation and sick leave days."""
 
     __tablename__ = "leave_days"
 
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date, nullable=False, index=True)
-    leave_type = db.Column(db.String(20), nullable=False)  # 'vacation' or 'sick'
-    description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False, index=True)
+    leave_type = Column(String(20), nullable=False)  # 'vacation' or 'sick'
+    description = Column(Text)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
         return f"<LeaveDay {self.date} - {self.leave_type}>"
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "id": self.id,
             "date": self.date.isoformat(),
             "leave_type": self.leave_type,
             "description": self.description,
-            "created_at": self.created_at.isoformat(),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 
-class Settings(db.Model):
+class Settings(Base):
     """Model for application settings."""
 
     __tablename__ = "settings"
 
-    id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(50), unique=True, nullable=False)
-    value = db.Column(db.String(200), nullable=False)
+    id = Column(Integer, primary_key=True)
+    key = Column(String(50), unique=True, nullable=False)
+    value = Column(String(200), nullable=False)
 
     def __repr__(self):
         return f"<Settings {self.key}={self.value}>"
 
+    # ---------------------------------------------------------------------------
+    # Session-based methods (new pattern)
+    # ---------------------------------------------------------------------------
+
     @staticmethod
-    def get_setting(key, default=None):
-        """Get a setting value by key."""
-        setting = Settings.query.filter_by(key=key).first()
+    def get_setting_with_session(
+        session: Session, key: str, default: Optional[str] = None
+    ) -> Optional[str]:
+        """Get a setting value by key using explicit session."""
+        setting = session.query(Settings).filter_by(key=key).first()
         return setting.value if setting else default
 
     @staticmethod
-    def set_setting(key, value):
-        """Set a setting value."""
-        setting = Settings.query.filter_by(key=key).first()
+    def set_setting_with_session(session: Session, key: str, value: str) -> None:
+        """Set a setting value using explicit session (caller commits)."""
+        setting = session.query(Settings).filter_by(key=key).first()
         if setting:
             setting.value = str(value)
         else:
             setting = Settings(key=key, value=str(value))
-            db.session.add(setting)
-        db.session.commit()
+            session.add(setting)
 
     @staticmethod
-    def update_setting(key, value):
-        """Update a setting value without committing (for atomic transactions)."""
-        setting = Settings.query.filter_by(key=key).first()
-        if setting:
-            setting.value = str(value)
-        else:
-            setting = Settings(key=key, value=str(value))
-            db.session.add(setting)
-
-    @staticmethod
-    def get_all_settings():
-        """Get all settings as a dictionary."""
-        settings = Settings.query.all()
+    def get_all_settings_with_session(session: Session) -> Dict[str, str]:
+        """Get all settings as a dictionary using explicit session."""
+        settings = session.query(Settings).all()
         return {s.key: s.value for s in settings}
 
     @staticmethod
-    def get_int(key, default=None):
-        """Get a setting value as integer."""
-        value = Settings.get_setting(key, default)
+    def get_int_with_session(
+        session: Session, key: str, default: Optional[int] = None
+    ) -> Optional[int]:
+        """Get a setting value as integer using explicit session."""
+        value = Settings.get_setting_with_session(session, key, str(default) if default else None)
         if value is None:
             return None
         try:
@@ -160,9 +170,11 @@ class Settings(db.Model):
             return default
 
     @staticmethod
-    def get_float(key, default=None):
-        """Get a setting value as float."""
-        value = Settings.get_setting(key, default)
+    def get_float_with_session(
+        session: Session, key: str, default: Optional[float] = None
+    ) -> Optional[float]:
+        """Get a setting value as float using explicit session."""
+        value = Settings.get_setting_with_session(session, key, str(default) if default else None)
         if value is None:
             return None
         try:
@@ -175,9 +187,100 @@ class Settings(db.Model):
             return default
 
     @staticmethod
-    def get_bool(key, default=False):
-        """Get a setting value as boolean."""
-        value = Settings.get_setting(key)
+    def get_bool_with_session(
+        session: Session, key: str, default: bool = False
+    ) -> bool:
+        """Get a setting value as boolean using explicit session."""
+        value = Settings.get_setting_with_session(session, key)
         if value is None:
             return default
         return value.lower() in ("true", "1", "yes", "on")
+
+    # ---------------------------------------------------------------------------
+    # Legacy methods (for backward compatibility with Flask routes)
+    # These detect Flask context and use appropriate session
+    # ---------------------------------------------------------------------------
+
+    @staticmethod
+    def _get_flask_session():
+        """Try to get Flask-SQLAlchemy session if in Flask context."""
+        try:
+            from flask import has_app_context
+            if has_app_context():
+                from . import db
+                return db.session
+        except ImportError:
+            pass
+        return None
+
+    @staticmethod
+    def get_setting(key: str, default: Optional[str] = None) -> Optional[str]:
+        """Get a setting value by key."""
+        flask_session = Settings._get_flask_session()
+        if flask_session is not None:
+            return Settings.get_setting_with_session(flask_session, key, default)
+        from .database import get_session
+        with get_session() as session:
+            return Settings.get_setting_with_session(session, key, default)
+
+    @staticmethod
+    def set_setting(key: str, value: str) -> None:
+        """Set a setting value."""
+        flask_session = Settings._get_flask_session()
+        if flask_session is not None:
+            Settings.set_setting_with_session(flask_session, key, value)
+            flask_session.commit()
+            return
+        from .database import get_session
+        with get_session() as session:
+            Settings.set_setting_with_session(session, key, value)
+
+    @staticmethod
+    def update_setting(key: str, value: str) -> None:
+        """Update a setting value without committing (for atomic transactions)."""
+        flask_session = Settings._get_flask_session()
+        if flask_session is not None:
+            Settings.set_setting_with_session(flask_session, key, value)
+            # Don't commit - caller handles transaction
+            return
+        Settings.set_setting(key, value)
+
+    @staticmethod
+    def get_all_settings() -> Dict[str, str]:
+        """Get all settings as a dictionary."""
+        flask_session = Settings._get_flask_session()
+        if flask_session is not None:
+            return Settings.get_all_settings_with_session(flask_session)
+        from .database import get_session
+        with get_session() as session:
+            return Settings.get_all_settings_with_session(session)
+
+    @staticmethod
+    def get_int(key: str, default: Optional[int] = None) -> Optional[int]:
+        """Get a setting value as integer."""
+        flask_session = Settings._get_flask_session()
+        if flask_session is not None:
+            return Settings.get_int_with_session(flask_session, key, default)
+        from .database import get_session
+        with get_session() as session:
+            return Settings.get_int_with_session(session, key, default)
+
+    @staticmethod
+    def get_float(key: str, default: Optional[float] = None) -> Optional[float]:
+        """Get a setting value as float."""
+        flask_session = Settings._get_flask_session()
+        if flask_session is not None:
+            return Settings.get_float_with_session(flask_session, key, default)
+        from .database import get_session
+        with get_session() as session:
+            return Settings.get_float_with_session(session, key, default)
+
+    @staticmethod
+    def get_bool(key: str, default: bool = False) -> bool:
+        """Get a setting value as boolean."""
+        flask_session = Settings._get_flask_session()
+        if flask_session is not None:
+            return Settings.get_bool_with_session(flask_session, key, default)
+        from .database import get_session
+        with get_session() as session:
+            return Settings.get_bool_with_session(session, key, default)

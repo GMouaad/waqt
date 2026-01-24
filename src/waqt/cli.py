@@ -3,7 +3,8 @@
 import click
 from datetime import datetime
 from typing import Optional
-from . import create_app, db
+
+from .database import get_session, initialize_database
 from .models import TimeEntry, LeaveDay, Settings
 from .utils import (
     get_week_bounds,
@@ -42,6 +43,18 @@ from .updater import (
 )
 
 
+# Flag to track if database has been initialized this session
+_db_initialized = False
+
+
+def ensure_db_initialized():
+    """Ensure database is initialized before any command runs."""
+    global _db_initialized
+    if not _db_initialized:
+        initialize_database()
+        _db_initialized = True
+
+
 @click.group()
 @click.version_option(version=VERSION, prog_name="waqt")
 def cli():
@@ -50,7 +63,7 @@ def cli():
     A command-line interface for tracking work hours, managing time entries,
     and generating reports.
     """
-    pass
+    ensure_db_initialized()
 
 
 @cli.command()
@@ -103,8 +116,7 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
         waqt add -d 2024-01-15 -s 09:00 -e 17:30 --pause none
         waqt add -s 09:00 -e 18:00 --pause 45 --desc "Long day"
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         # Parse date
         if date:
             try:
@@ -156,6 +168,7 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
 
         # Use shared service
         result = add_time_entry(
+            session,
             entry_date=entry_date,
             start_time=start_time,
             end_time=end_time,
@@ -211,8 +224,7 @@ def start(time: Optional[str], date: Optional[str], description: str):
         waqt start --time 09:00
         waqt start --date 2024-01-15 --time 09:30 --description "Morning session"
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         # Parse date
         if date:
             try:
@@ -248,7 +260,7 @@ def start(time: Optional[str], date: Optional[str], description: str):
             description = "Work session"
 
         # Use shared service
-        result = start_time_entry(entry_date, start_time, description)
+        result = start_time_entry(session, entry_date, start_time, description)
         
         if not result["success"]:
             click.echo(click.style(f"Error: {result['message']}", fg="red"))
@@ -289,8 +301,7 @@ def end(time: Optional[str], date: Optional[str]):
         waqt end --time 17:30
         waqt end --date 2024-01-15 --time 18:00
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         # Parse date
         if date:
             try:
@@ -321,7 +332,7 @@ def end(time: Optional[str], date: Optional[str]):
             end_time = datetime.now().time()
 
         # Use shared service
-        result = end_time_entry(end_time, entry_date)
+        result = end_time_entry(session, end_time, entry_date)
         
         if not result["success"]:
             click.echo(click.style(f"Error: {result['message']}", fg="red"))
@@ -386,8 +397,7 @@ def edit_entry(
         waqt edit-entry -d 2026-01-08 --start 09:00 --end 17:30
         waqt edit-entry -d 2026-01-08 -s 08:30 -e 17:00 --desc "Full day work"
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         # Parse date
         try:
             entry_date = datetime.strptime(date, "%Y-%m-%d").date()
@@ -415,7 +425,7 @@ def edit_entry(
 
         # Find entries for this date (excluding active/open entries)
         entries = (
-            TimeEntry.query.filter_by(date=entry_date, is_active=False)
+            session.query(TimeEntry).filter_by(date=entry_date, is_active=False)
             .order_by(TimeEntry.created_at.desc())
             .all()
         )
@@ -451,8 +461,6 @@ def edit_entry(
                 )
             click.echo()
             click.echo("Please resolve multiple entries in UI or use ID-based editing (not available in CLI yet).")
-            # For now, default to most recent like before, but maybe we should abort?
-            # Existing logic tried to filter by start time.
             
             if start:
                 try:
@@ -498,6 +506,7 @@ def edit_entry(
 
         # Use shared service
         result = update_time_entry(
+            session,
             entry.id, 
             start_time=start_t, 
             end_time=end_t, 
@@ -558,8 +567,7 @@ def summary(period: str, date: Optional[str]):
         waqt summary --period month
         waqt sum -p week -d 2024-01-15
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         # Parse date
         if date:
             try:
@@ -584,7 +592,7 @@ def summary(period: str, date: Optional[str]):
 
         # Query time entries for the period
         entries = (
-            TimeEntry.query.filter(TimeEntry.date >= start_date)
+            session.query(TimeEntry).filter(TimeEntry.date >= start_date)
             .filter(TimeEntry.date <= end_date)
             .order_by(TimeEntry.date)
             .all()
@@ -596,7 +604,7 @@ def summary(period: str, date: Optional[str]):
         else:
             # Query leave days only for monthly statistics
             leave_days = (
-                LeaveDay.query.filter(LeaveDay.date >= start_date)
+                session.query(LeaveDay).filter(LeaveDay.date >= start_date)
                 .filter(LeaveDay.date <= end_date)
                 .all()
             )
@@ -732,8 +740,7 @@ def export(period: str, date: Optional[str], output: Optional[str], export_forma
         waqt export --period week --format excel
         waqt export --output my_report.xlsx
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         # Parse reference date
         if date:
             try:
@@ -761,8 +768,17 @@ def export(period: str, date: Optional[str], output: Optional[str], export_forma
             end_date = None
             period_name = "all"
 
-        # Query entries using utility function
-        entries = get_time_entries_for_period(start_date, end_date)
+        # Query entries using utility function (needs session-based version)
+        if start_date and end_date:
+            entries = (
+                session.query(TimeEntry)
+                .filter(TimeEntry.date >= start_date)
+                .filter(TimeEntry.date <= end_date)
+                .order_by(TimeEntry.date)
+                .all()
+            )
+        else:
+            entries = session.query(TimeEntry).order_by(TimeEntry.date).all()
 
         if not entries:
             click.echo(click.style("No time entries found to export.", fg="yellow"))
@@ -840,9 +856,8 @@ def config_list():
     Examples:
         waqt config list
     """
-    app = create_app()
-    with app.app_context():
-        all_settings = Settings.get_all_settings()
+    with get_session() as session:
+        all_settings = Settings.get_all_settings_with_session(session)
 
         click.echo(click.style("\n⚙️  Configuration Settings", fg="cyan", bold=True))
         click.echo("=" * 70)
@@ -877,8 +892,7 @@ def config_get(key: str):
         waqt config get weekly_hours
         waqt config get auto_end
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         if key not in CONFIG_DEFAULTS:
             click.echo(
                 click.style(
@@ -891,7 +905,7 @@ def config_get(key: str):
                 click.echo(f"  - {k}")
             raise click.exceptions.Exit(1)
 
-        value = Settings.get_setting(key, CONFIG_DEFAULTS[key])
+        value = Settings.get_setting_with_session(session, key, CONFIG_DEFAULTS[key])
         description = CONFIG_DESCRIPTIONS.get(key, "No description available")
 
         click.echo(click.style(f"\n{key}", fg="green", bold=True))
@@ -914,8 +928,7 @@ def config_set(key: str, value: str):
         waqt config set pause_duration_minutes 60
         waqt config set auto_end true
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         if key not in CONFIG_DEFAULTS:
             click.echo(
                 click.style(
@@ -945,10 +958,10 @@ def config_set(key: str, value: str):
             value = normalize_bool_value(value)
 
         # Get old value for display
-        old_value = Settings.get_setting(key, CONFIG_DEFAULTS[key])
+        old_value = Settings.get_setting_with_session(session, key, CONFIG_DEFAULTS[key])
 
         # Set the new value
-        Settings.set_setting(key, value)
+        Settings.set_setting_with_session(session, key, value)
 
         click.echo(click.style("✓ Configuration updated!", fg="green", bold=True))
         click.echo(f"Key: {key}")
@@ -968,8 +981,7 @@ def config_reset(key: str):
         waqt config reset weekly_hours
         waqt config reset auto_end
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         if key not in CONFIG_DEFAULTS:
             click.echo(
                 click.style(
@@ -983,10 +995,10 @@ def config_reset(key: str):
             raise click.exceptions.Exit(1)
 
         default_value = CONFIG_DEFAULTS[key]
-        old_value = Settings.get_setting(key, default_value)
+        old_value = Settings.get_setting_with_session(session, key, default_value)
 
         # Set to default value
-        Settings.set_setting(key, default_value)
+        Settings.set_setting_with_session(session, key, default_value)
 
         click.echo(
             click.style("✓ Configuration reset to default!", fg="green", bold=True)
@@ -1039,8 +1051,7 @@ def leave_request(start_date: str, end_date: str, leave_type: str, description: 
         waqt leave-request --from 2026-01-13 --to 2026-01-19 --type vacation
         waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical leave"
     """
-    app = create_app()
-    with app.app_context():
+    with get_session() as session:
         # Parse dates
         try:
             start = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -1118,8 +1129,10 @@ def leave_request(start_date: str, end_date: str, leave_type: str, description: 
 
         # Create leave records
         try:
-            result = create_leave_requests(start, end, leave_type.lower(), description.strip() if description else "")
-            db.session.commit()
+            result = create_leave_requests(
+                session, start, end, leave_type.lower(), 
+                description.strip() if description else ""
+            )
             
             created_count = result["created"]
             skipped_count = result["skipped"]
@@ -1142,7 +1155,6 @@ def leave_request(start_date: str, end_date: str, leave_type: str, description: 
             click.echo()
 
         except Exception as e:
-            db.session.rollback()
             click.echo(
                 click.style(
                     f"Error creating leave records: {str(e)}",
@@ -1357,6 +1369,9 @@ def ui(port: int, host: str, debug: bool):
         waqt ui --host 0.0.0.0 --port 8000
         waqt ui --debug
     """
+    # Import Flask app factory only when needed (for 'ui' command)
+    from . import create_app
+    
     click.echo(click.style("\n🚀 Starting waqt web application...", fg="cyan", bold=True))
     click.echo(f"Access the application at: http://{host}:{port}")
     click.echo("\nPress Ctrl+C to stop the server.")
