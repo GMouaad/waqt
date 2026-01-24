@@ -524,8 +524,10 @@ waqt/
 ├── src/
 │   └── waqt/          # Main application package
 │       ├── __init__.py      # Flask app initialization
+│       ├── database.py      # Standalone SQLAlchemy session management
 │       ├── models.py        # Database models
 │       ├── routes.py        # Application routes
+│       ├── services.py      # Business logic services
 │       ├── wsgi.py          # WSGI entry point
 │       ├── scripts/         # Utility scripts (init_db, etc.)
 │       ├── templates/       # HTML templates
