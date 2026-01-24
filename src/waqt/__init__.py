@@ -34,11 +34,11 @@ def create_app(test_config=None):
                 "Set the SECRET_KEY environment variable for production deployments."
             )
     app.config["SECRET_KEY"] = secret_key
-    
+
     if test_config:
         # Load the test config if passed in
         app.config.from_mapping(test_config)
-    
+
     # Determine database path from shared database module
     if test_config and "SQLALCHEMY_DATABASE_URI" in test_config:
         # Use test config URI
@@ -66,29 +66,30 @@ def create_app(test_config=None):
         from .utils import format_time
 
         app.register_blueprint(routes.bp)
-        
+
         # Register Jinja filters
-        @app.template_filter('format_time')
+        @app.template_filter("format_time")
         def format_time_filter(time_obj):
             """Jinja filter to format time according to user settings."""
             return format_time(time_obj)
 
         # Create tables if they don't exist
         db.create_all()
-        
+
         # Run migrations for existing databases
         actual_db_path = database_url.replace("sqlite:///", "")
         run_migrations(actual_db_path)
 
         # Seed default settings if they don't exist
         from .models import Settings
+
         default_settings = [
             ("standard_hours_per_day", "8"),
             ("weekly_hours", "40"),
             ("pause_duration_minutes", "45"),
             ("auto_end", "false"),
         ]
-        
+
         settings_changed = False
         for key, value in default_settings:
             existing = db.session.query(Settings).filter_by(key=key).first()
@@ -96,7 +97,7 @@ def create_app(test_config=None):
                 setting = Settings(key=key, value=value)
                 db.session.add(setting)
                 settings_changed = True
-        
+
         if settings_changed:
             db.session.commit()
 

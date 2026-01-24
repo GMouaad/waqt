@@ -9,7 +9,7 @@ from datetime import date, time
 def app():
     """Create and configure a test app instance."""
     from src.waqt import create_app, db
-    
+
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -25,6 +25,7 @@ def app():
 def cli():
     """Return the CLI entry point."""
     from src.waqt.cli import cli as cli_obj
+
     return cli_obj
 
 
@@ -56,7 +57,7 @@ def test_cli_version(runner, cli):
 def test_start_command_basic(runner, app, cli):
     """Test basic start command functionality."""
     from src.waqt.models import TimeEntry
-    
+
     with app.app_context():
         result = runner.invoke(cli, ["start", "--time", "09:00"])
         assert result.exit_code == 0
@@ -73,7 +74,7 @@ def test_start_command_basic(runner, app, cli):
 def test_start_command_with_description(runner, app, cli):
     """Test start command with custom description."""
     from src.waqt.models import TimeEntry
-    
+
     with app.app_context():
         result = runner.invoke(
             cli,
@@ -90,7 +91,7 @@ def test_start_command_with_description(runner, app, cli):
 def test_start_command_with_date(runner, app, cli):
     """Test start command with specific date."""
     from src.waqt.models import TimeEntry
-    
+
     with app.app_context():
         result = runner.invoke(
             cli, ["start", "--date", "2024-01-15", "--time", "09:00"]
@@ -134,7 +135,7 @@ def test_start_command_duplicate(runner, app, cli):
 def test_end_command_basic(runner, app, cli):
     """Test basic end command functionality."""
     from src.waqt.models import TimeEntry
-    
+
     with app.app_context():
         # Start tracking
         runner.invoke(cli, ["start", "--time", "09:00"])
@@ -176,7 +177,7 @@ def test_summary_command_week(runner, app, cli):
     """Test weekly summary command."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create some test entries for the current date
         today = date.today()
@@ -209,7 +210,7 @@ def test_summary_command_month(runner, app, cli):
     """Test monthly summary command."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create some test entries for the current month
         today = date.today()
@@ -258,7 +259,7 @@ def test_summary_with_leave_days(runner, app, cli):
     """Test monthly summary with leave days."""
     from src.waqt.models import TimeEntry, LeaveDay
     from src.waqt import db
-    
+
     with app.app_context():
         # Create test entry
         entry = TimeEntry(
@@ -311,7 +312,7 @@ def test_edit_entry_command_basic(runner, app, cli):
     """Test basic edit-entry command functionality."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create a test entry first
         test_date = date(2024, 1, 15)
@@ -343,7 +344,7 @@ def test_edit_entry_command_times(runner, app, cli):
     """Test edit-entry command with time changes."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create a test entry first
         test_date = date(2024, 1, 15)
@@ -361,7 +362,15 @@ def test_edit_entry_command_times(runner, app, cli):
         # Edit the times
         result = runner.invoke(
             cli,
-            ["edit-entry", "--date", "2024-01-15", "--start", "08:30", "--end", "17:30"],
+            [
+                "edit-entry",
+                "--date",
+                "2024-01-15",
+                "--start",
+                "08:30",
+                "--end",
+                "17:30",
+            ],
         )
         assert result.exit_code == 0
         assert "Time entry updated successfully!" in result.output
@@ -377,7 +386,7 @@ def test_edit_entry_command_all_fields(runner, app, cli):
     """Test edit-entry command updating all fields at once."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create a test entry first
         test_date = date(2024, 1, 15)
@@ -432,7 +441,7 @@ def test_edit_entry_command_no_fields(runner, app, cli):
     """Test edit-entry command without any fields to update."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create a test entry
         entry = TimeEntry(
@@ -455,7 +464,7 @@ def test_edit_entry_command_invalid_time_format(runner, app, cli):
     """Test edit-entry command with invalid time format."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create a test entry
         entry = TimeEntry(
@@ -480,7 +489,7 @@ def test_edit_entry_command_active_entry(runner, app, cli):
     """Test edit-entry command on active entry (should fail)."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create an active entry
         entry = TimeEntry(
@@ -512,7 +521,7 @@ def test_edit_entry_command_multiple_entries(runner, app, cli):
     """Test edit-entry command when multiple entries exist for a date."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create multiple entries for the same date (legacy case)
         test_date = date(2024, 1, 15)
@@ -571,22 +580,30 @@ def test_add_command_basic(runner, app, cli):
     """Test basic add command functionality with default pause."""
     from src.waqt.models import TimeEntry, Settings
     from src.waqt import db
-    
+
     test_date = date(2024, 1, 15)
-    
+
     with app.app_context():
         # Ensure default pause is configured (45 minutes)
         Settings.set_setting("pause_duration_minutes", "45")
-        
+
         # Add a time entry without specifying pause (should use default)
         result = runner.invoke(
             cli,
-            ["add", "--start", "09:00", "--end", "17:00", "--date", test_date.isoformat()],
+            [
+                "add",
+                "--start",
+                "09:00",
+                "--end",
+                "17:00",
+                "--date",
+                test_date.isoformat(),
+            ],
         )
         assert result.exit_code == 0
         assert "Time entry added successfully!" in result.output
         assert test_date.isoformat() in result.output
-        
+
         # Verify entry was created with pause deduction
         entry = TimeEntry.query.filter_by(date=test_date).first()
         assert entry is not None
@@ -600,18 +617,28 @@ def test_add_command_basic(runner, app, cli):
 def test_add_command_with_pause_none(runner, app, cli):
     """Test add command with explicit --pause none."""
     from src.waqt.models import TimeEntry
-    
+
     test_date = date(2024, 1, 16)
-    
+
     with app.app_context():
         # Add a time entry with explicit pause none
         result = runner.invoke(
             cli,
-            ["add", "--start", "09:00", "--end", "17:00", "--date", test_date.isoformat(), "--pause", "none"],
+            [
+                "add",
+                "--start",
+                "09:00",
+                "--end",
+                "17:00",
+                "--date",
+                test_date.isoformat(),
+                "--pause",
+                "none",
+            ],
         )
         assert result.exit_code == 0
         assert "Time entry added successfully!" in result.output
-        
+
         # Verify entry was created without pause deduction
         entry = TimeEntry.query.filter_by(date=test_date).first()
         assert entry is not None
@@ -622,18 +649,28 @@ def test_add_command_with_pause_none(runner, app, cli):
 def test_add_command_with_custom_pause(runner, app, cli):
     """Test add command with custom pause duration."""
     from src.waqt.models import TimeEntry
-    
+
     test_date = date(2024, 1, 17)
-    
+
     with app.app_context():
         # Add a time entry with custom 30 minute pause
         result = runner.invoke(
             cli,
-            ["add", "--start", "09:00", "--end", "17:00", "--date", test_date.isoformat(), "--pause", "30"],
+            [
+                "add",
+                "--start",
+                "09:00",
+                "--end",
+                "17:00",
+                "--date",
+                test_date.isoformat(),
+                "--pause",
+                "30",
+            ],
         )
         assert result.exit_code == 0
         assert "Time entry added successfully!" in result.output
-        
+
         # Verify entry was created with custom pause deduction
         entry = TimeEntry.query.filter_by(date=test_date).first()
         assert entry is not None

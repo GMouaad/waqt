@@ -2,20 +2,26 @@ import sqlite3
 import os
 import sys
 
+
 def get_db_path():
     """Locate the database file."""
     # Prioritize instance folder as that seems to be where it ends up
-    possible_paths = ["instance/time_tracker.db", "time_tracker.db", "src/instance/time_tracker.db"]
+    possible_paths = [
+        "instance/time_tracker.db",
+        "time_tracker.db",
+        "src/instance/time_tracker.db",
+    ]
     for path in possible_paths:
         if os.path.exists(path):
             return path
     return None
 
+
 def run_migrations(db_path=None):
     """Run all database migrations."""
     if not db_path:
         db_path = get_db_path()
-            
+
     if not db_path:
         return
 
@@ -27,7 +33,7 @@ def run_migrations(db_path=None):
             # Flask-SQLAlchemy 3+ puts relative dbs in instance folder
             instance_path = os.path.join(os.getcwd(), "instance", db_path)
             root_path = os.path.join(os.getcwd(), db_path)
-            
+
             if os.path.exists(instance_path):
                 db_path = instance_path
             elif os.path.exists(root_path):
@@ -46,9 +52,13 @@ def run_migrations(db_path=None):
         cursor = conn.cursor()
 
         # Check if the main table exists before proceeding
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='time_entries'")
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='time_entries'"
+        )
         if not cursor.fetchone():
-            print("  Table 'time_entries' not found. Skipping migrations (likely a new database).")
+            print(
+                "  Table 'time_entries' not found. Skipping migrations (likely a new database)."
+            )
             conn.close()
             return
 
@@ -58,9 +68,9 @@ def run_migrations(db_path=None):
                 "name": "Add pause feature columns",
                 "sql": [
                     "ALTER TABLE time_entries ADD COLUMN accumulated_pause_seconds FLOAT DEFAULT 0.0",
-                    "ALTER TABLE time_entries ADD COLUMN last_pause_start_time TIMESTAMP"
+                    "ALTER TABLE time_entries ADD COLUMN last_pause_start_time TIMESTAMP",
                 ],
-                "check": "SELECT accumulated_pause_seconds FROM time_entries LIMIT 1"
+                "check": "SELECT accumulated_pause_seconds FROM time_entries LIMIT 1",
             },
             {
                 "name": "Add is_active column",
@@ -72,7 +82,7 @@ def run_migrations(db_path=None):
                     UPDATE time_entries 
                     SET is_active = 1 
                     WHERE duration_hours = 0.0 AND start_time = end_time
-                """
+                """,
             },
             {
                 "name": "Add categories table and relation",
@@ -86,22 +96,22 @@ def run_migrations(db_path=None):
                         is_active BOOLEAN DEFAULT 1,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )""",
-                    "ALTER TABLE time_entries ADD COLUMN category_id INTEGER REFERENCES categories(id)"
+                    "ALTER TABLE time_entries ADD COLUMN category_id INTEGER REFERENCES categories(id)",
                 ],
                 "check": """
                     SELECT time_entries.category_id
                     FROM time_entries
                     JOIN categories ON time_entries.category_id = categories.id
                     LIMIT 1
-                """
-            }
+                """,
+            },
         ]
 
         for migration in migrations:
             try:
                 # Check if already applied
                 try:
-                    cursor.execute(migration['check'])
+                    cursor.execute(migration["check"])
                     continue
                 except sqlite3.OperationalError:
                     # Column likely missing, proceed with migration
@@ -109,21 +119,23 @@ def run_migrations(db_path=None):
 
                 print(f"  Applying migration: {migration['name']}...")
                 # Apply SQL commands
-                for sql in migration['sql']:
+                for sql in migration["sql"]:
                     try:
                         cursor.execute(sql)
                     except sqlite3.OperationalError as e:
                         if "duplicate column name" in str(e):
                             pass
                         elif "no such table" in str(e):
-                             print(f"    ❌ Error: Table not found. Is the database initialized?")
-                             break
+                            print(
+                                f"    ❌ Error: Table not found. Is the database initialized?"
+                            )
+                            break
                         else:
                             raise e
-                
+
                 # Run post-migration SQL if any
-                if 'post_sql' in migration:
-                    cursor.execute(migration['post_sql'])
+                if "post_sql" in migration:
+                    cursor.execute(migration["post_sql"])
 
                 print(f"    ✅ Applied successfully.")
 
@@ -134,6 +146,7 @@ def run_migrations(db_path=None):
         conn.close()
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
+
 
 if __name__ == "__main__":
     run_migrations()

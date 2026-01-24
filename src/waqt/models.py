@@ -7,11 +7,19 @@ compatible with both Flask-SQLAlchemy and direct SQLAlchemy usage.
 import logging
 from datetime import datetime, timezone
 from sqlalchemy import (
-    Column, Integer, String, Float, Boolean, Date, Time, 
-    DateTime, Text, ForeignKey
+    Column,
+    Integer,
+    String,
+    Float,
+    Boolean,
+    Date,
+    Time,
+    DateTime,
+    Text,
+    ForeignKey,
 )
 from sqlalchemy.orm import relationship, Session
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 from .database import Base
 
@@ -64,7 +72,7 @@ class TimeEntry(Base):
     description = Column(Text, nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    
+
     category = relationship("Category", backref="time_entries")
 
     def __repr__(self):
@@ -74,7 +82,7 @@ class TimeEntry(Base):
         """Convert to dictionary for JSON serialization."""
         # Import here to avoid circular imports
         from .utils import format_time
-        
+
         return {
             "id": self.id,
             "date": self.date.isoformat(),
@@ -157,7 +165,9 @@ class Settings(Base):
         session: Session, key: str, default: Optional[int] = None
     ) -> Optional[int]:
         """Get a setting value as integer using explicit session."""
-        value = Settings.get_setting_with_session(session, key, str(default) if default else None)
+        value = Settings.get_setting_with_session(
+            session, key, str(default) if default else None
+        )
         if value is None:
             return None
         try:
@@ -174,7 +184,9 @@ class Settings(Base):
         session: Session, key: str, default: Optional[float] = None
     ) -> Optional[float]:
         """Get a setting value as float using explicit session."""
-        value = Settings.get_setting_with_session(session, key, str(default) if default else None)
+        value = Settings.get_setting_with_session(
+            session, key, str(default) if default else None
+        )
         if value is None:
             return None
         try:
@@ -206,8 +218,10 @@ class Settings(Base):
         """Try to get Flask-SQLAlchemy session if in Flask context."""
         try:
             from flask import has_app_context
+
             if has_app_context():
                 from . import db
+
                 return db.session
         except ImportError:
             pass
@@ -220,6 +234,7 @@ class Settings(Base):
         if flask_session is not None:
             return Settings.get_setting_with_session(flask_session, key, default)
         from .database import get_session
+
         with get_session() as session:
             return Settings.get_setting_with_session(session, key, default)
 
@@ -232,6 +247,7 @@ class Settings(Base):
             flask_session.commit()
             return
         from .database import get_session
+
         with get_session() as session:
             Settings.set_setting_with_session(session, key, value)
 
@@ -252,6 +268,7 @@ class Settings(Base):
         if flask_session is not None:
             return Settings.get_all_settings_with_session(flask_session)
         from .database import get_session
+
         with get_session() as session:
             return Settings.get_all_settings_with_session(session)
 
@@ -262,6 +279,7 @@ class Settings(Base):
         if flask_session is not None:
             return Settings.get_int_with_session(flask_session, key, default)
         from .database import get_session
+
         with get_session() as session:
             return Settings.get_int_with_session(session, key, default)
 
@@ -272,6 +290,7 @@ class Settings(Base):
         if flask_session is not None:
             return Settings.get_float_with_session(flask_session, key, default)
         from .database import get_session
+
         with get_session() as session:
             return Settings.get_float_with_session(session, key, default)
 
@@ -282,5 +301,6 @@ class Settings(Base):
         if flask_session is not None:
             return Settings.get_bool_with_session(flask_session, key, default)
         from .database import get_session
+
         with get_session() as session:
             return Settings.get_bool_with_session(session, key, default)

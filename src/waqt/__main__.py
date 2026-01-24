@@ -8,7 +8,7 @@ import sys
 import os
 
 # Handle both package and frozen execution
-if getattr(sys, 'frozen', False):
+if getattr(sys, "frozen", False):
     # Running as frozen executable (PyInstaller)
     from waqt import create_app
     from waqt.cli import cli
@@ -34,7 +34,7 @@ def main():
             print(f"\nTip: Use '{cli_name} ui' to start with custom options")
             print(f"For CLI help, run: {cli_name} --help")
             print("-" * 50)
-            
+
             try:
                 app = create_app()
                 debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() == "true"

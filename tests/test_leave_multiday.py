@@ -47,7 +47,7 @@ class TestDateRange:
     def test_get_date_range_week(self):
         """Test range for a full week (Mon-Sun)."""
         start = date(2026, 1, 12)  # Monday
-        end = date(2026, 1, 18)    # Sunday
+        end = date(2026, 1, 18)  # Sunday
         result = get_date_range(start, end)
         assert len(result) == 7
         assert result[0] == start
@@ -74,7 +74,7 @@ class TestWorkingDays:
     def test_get_working_days_full_week(self):
         """Test working days in a full Mon-Sun week."""
         start = date(2026, 1, 12)  # Monday
-        end = date(2026, 1, 18)    # Sunday
+        end = date(2026, 1, 18)  # Sunday
         result = get_working_days_in_range(start, end)
         assert len(result) == 5  # Mon-Fri
         assert date(2026, 1, 12) in result
@@ -85,21 +85,21 @@ class TestWorkingDays:
     def test_get_working_days_weekdays_only(self):
         """Test working days in a Mon-Fri range."""
         start = date(2026, 1, 12)  # Monday
-        end = date(2026, 1, 16)    # Friday
+        end = date(2026, 1, 16)  # Friday
         result = get_working_days_in_range(start, end)
         assert len(result) == 5
 
     def test_get_working_days_weekend_only(self):
         """Test working days in a Sat-Sun range."""
         start = date(2026, 1, 17)  # Saturday
-        end = date(2026, 1, 18)    # Sunday
+        end = date(2026, 1, 18)  # Sunday
         result = get_working_days_in_range(start, end)
         assert len(result) == 0
 
     def test_get_working_days_two_weeks(self):
         """Test working days across two weeks."""
         start = date(2026, 1, 16)  # Friday
-        end = date(2026, 1, 19)    # Monday
+        end = date(2026, 1, 19)  # Monday
         result = get_working_days_in_range(start, end)
         assert len(result) == 2  # Friday and Monday
         assert date(2026, 1, 16) in result
@@ -110,10 +110,12 @@ class TestLeaveHoursCalculation:
     @pytest.fixture
     def app(self):
         app = create_app()
-        app.config.update({
-            "TESTING": True,
-            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        })
+        app.config.update(
+            {
+                "TESTING": True,
+                "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            }
+        )
         with app.app_context():
             db.create_all()
             yield app
@@ -144,7 +146,7 @@ class TestLeaveHoursCalculation:
         """Test stats for Mon-Sun week."""
         with app.app_context():
             start = date(2026, 1, 12)  # Monday
-            end = date(2026, 1, 18)    # Sunday
+            end = date(2026, 1, 18)  # Sunday
             result = calculate_leave_hours(start, end)
             assert result["total_days"] == 7
             assert result["working_days"] == 5
@@ -155,7 +157,7 @@ class TestLeaveHoursCalculation:
         """Test stats for Fri-Mon range."""
         with app.app_context():
             start = date(2026, 1, 16)  # Friday
-            end = date(2026, 1, 19)    # Monday
+            end = date(2026, 1, 19)  # Monday
             result = calculate_leave_hours(start, end)
             assert result["total_days"] == 4
             assert result["working_days"] == 2  # Fri, Mon
@@ -167,12 +169,14 @@ class TestMultiDayLeaveBackend:
     @pytest.fixture
     def app(self):
         app = create_app()
-        app.config.update({
-            "TESTING": True,
-            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-            "WTF_CSRF_ENABLED": False
-        })
-        
+        app.config.update(
+            {
+                "TESTING": True,
+                "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+                "WTF_CSRF_ENABLED": False,
+            }
+        )
+
         with app.app_context():
             db.create_all()
             yield app
@@ -197,17 +201,20 @@ class TestMultiDayLeaveBackend:
                 },
                 follow_redirects=True,
             )
-    
+
             # Should redirect back to leave page
             assert response.status_code == 200
-            
+
             # Check for success message
-            assert b"leave added successfully" in response.data or b"leave processed" in response.data
-    
+            assert (
+                b"leave added successfully" in response.data
+                or b"leave processed" in response.data
+            )
+
             # Check that 5 leave records were created (Mon-Fri)
             leave_days = LeaveDay.query.all()
             assert len(leave_days) == 5
-            
+
             # Verify data
             dates = sorted([l.date for l in leave_days])
             assert dates[0] == date(2026, 1, 12)  # Monday
@@ -222,19 +229,19 @@ class TestMultiDayLeaveBackend:
                 "/leave",
                 data={
                     "start_date": "2026-01-16",  # Friday
-                    "end_date": "2026-01-19",    # Monday
+                    "end_date": "2026-01-19",  # Monday
                     "leave_type": "vacation",
                     "description": "Long weekend",
                 },
                 follow_redirects=True,
             )
-    
+
             assert response.status_code == 200
-    
+
             # Should create only 2 records (Friday and Monday)
             leave_days = LeaveDay.query.all()
             assert len(leave_days) == 2
-            
+
             dates = sorted([l.date for l in leave_days])
             assert dates[0] == date(2026, 1, 16)  # Friday
             assert dates[1] == date(2026, 1, 19)  # Monday
@@ -252,9 +259,9 @@ class TestMultiDayLeaveBackend:
                 },
                 follow_redirects=True,
             )
-    
+
             assert response.status_code == 200
-    
+
             # Should create 1 record
             leave_days = LeaveDay.query.all()
             assert len(leave_days) == 1
@@ -271,7 +278,7 @@ class TestLeaveRequestCLI:
         app = create_app()
         app.config["TESTING"] = True
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-        
+
         with app.app_context():
             db.create_all()
             yield app
@@ -281,81 +288,111 @@ class TestLeaveRequestCLI:
     def test_leave_request_cli_basic(self, runner, app):
         """Test CLI leave request basic functionality."""
         from src.waqt.cli import cli
-        
+
         with app.app_context():
-            result = runner.invoke(cli, [
-                "leave-request",
-                "--from", "2026-01-12",
-                "--to", "2026-01-16",
-                "--type", "vacation"
-            ], input="y\n")
-            
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from",
+                    "2026-01-12",
+                    "--to",
+                    "2026-01-16",
+                    "--type",
+                    "vacation",
+                ],
+                input="y\n",
+            )
+
             assert result.exit_code == 0
             assert "Leave request created successfully" in result.output
             assert "Created 5 leave record(s)" in result.output
-            
+
             # Verify DB
             assert LeaveDay.query.count() == 5
 
     def test_leave_request_cli_excludes_weekends(self, runner, app):
         """Test CLI excludes weekends."""
         from src.waqt.cli import cli
-        
+
         with app.app_context():
             # Fri-Mon
-            result = runner.invoke(cli, [
-                "leave-request",
-                "--from", "2026-01-16",
-                "--to", "2026-01-19",
-                "--type", "vacation"
-            ], input="y\n")
-            
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from",
+                    "2026-01-16",
+                    "--to",
+                    "2026-01-19",
+                    "--type",
+                    "vacation",
+                ],
+                input="y\n",
+            )
+
             assert result.exit_code == 0
             assert "Created 2 leave record(s)" in result.output
             assert "Excluded 2 weekend day(s)" in result.output
-            
+
             # Verify DB
             assert LeaveDay.query.count() == 2
 
     def test_leave_request_cli_weekend_only(self, runner, app):
         """Test CLI error on weekend-only request."""
         from src.waqt.cli import cli
-        
+
         with app.app_context():
-            result = runner.invoke(cli, [
-                "leave-request",
-                "--from", "2026-01-17",  # Sat
-                "--to", "2026-01-18",    # Sun
-            ])
-            
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from",
+                    "2026-01-17",  # Sat
+                    "--to",
+                    "2026-01-18",  # Sun
+                ],
+            )
+
             assert result.exit_code != 0
             assert "No working days in the selected range" in result.output
 
     def test_leave_request_cli_invalid_date_range(self, runner, app):
         """Test CLI error on invalid date range."""
         from src.waqt.cli import cli
-        
+
         with app.app_context():
-            result = runner.invoke(cli, [
-                "leave-request",
-                "--from", "2026-01-18",
-                "--to", "2026-01-12",
-            ])
-            
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from",
+                    "2026-01-18",
+                    "--to",
+                    "2026-01-12",
+                ],
+            )
+
             assert result.exit_code != 0
             assert "End date must be on or after start date" in result.output
 
     def test_leave_request_cli_cancel(self, runner, app):
         """Test cancelling request."""
         from src.waqt.cli import cli
-        
+
         with app.app_context():
-            result = runner.invoke(cli, [
-                "leave-request",
-                "--from", "2026-01-12",
-                "--to", "2026-01-12",
-            ], input="n\n")  # Say no
-            
+            result = runner.invoke(
+                cli,
+                [
+                    "leave-request",
+                    "--from",
+                    "2026-01-12",
+                    "--to",
+                    "2026-01-12",
+                ],
+                input="n\n",
+            )  # Say no
+
             assert result.exit_code == 0
             assert "Leave request cancelled" in result.output
             assert LeaveDay.query.count() == 0

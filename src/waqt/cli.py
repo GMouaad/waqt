@@ -137,11 +137,7 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
             start_time = datetime.strptime(start, "%H:%M").time()
             end_time = datetime.strptime(end, "%H:%M").time()
         except ValueError:
-            click.echo(
-                click.style(
-                    "Error: Invalid time format. Use HH:MM.", fg="red"
-                )
-            )
+            click.echo(click.style("Error: Invalid time format. Use HH:MM.", fg="red"))
             raise click.exceptions.Exit(1)
 
         # Parse pause
@@ -174,15 +170,17 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
             end_time=end_time,
             description=description,
             pause_mode=pause_mode,
-            pause_minutes=pause_minutes
+            pause_minutes=pause_minutes,
         )
-        
+
         if not result["success"]:
             click.echo(click.style(f"Error: {result['message']}", fg="red"))
             raise click.exceptions.Exit(1)
 
         entry = result["entry"]
-        click.echo(click.style("✓ Time entry added successfully!", fg="green", bold=True))
+        click.echo(
+            click.style("✓ Time entry added successfully!", fg="green", bold=True)
+        )
         click.echo(f"Date: {entry_date}")
         click.echo(f"Time: {format_time(start_time)} - {format_time(end_time)}")
         click.echo(f"Duration: {format_hours(entry.duration_hours)}")
@@ -261,7 +259,7 @@ def start(time: Optional[str], date: Optional[str], description: str):
 
         # Use shared service
         result = start_time_entry(session, entry_date, start_time, description)
-        
+
         if not result["success"]:
             click.echo(click.style(f"Error: {result['message']}", fg="red"))
             if result.get("error_type") == "duplicate_active":
@@ -333,13 +331,13 @@ def end(time: Optional[str], date: Optional[str]):
 
         # Use shared service
         result = end_time_entry(session, end_time, entry_date)
-        
+
         if not result["success"]:
             click.echo(click.style(f"Error: {result['message']}", fg="red"))
             if result.get("error_type") == "no_active_timer":
                 click.echo("Run 'waqt start' first to begin tracking time.")
             raise click.exceptions.Exit(1)
-            
+
         entry = result["entry"]
         duration = result["duration"]
 
@@ -425,7 +423,8 @@ def edit_entry(
 
         # Find entries for this date (excluding active/open entries)
         entries = (
-            session.query(TimeEntry).filter_by(date=entry_date, is_active=False)
+            session.query(TimeEntry)
+            .filter_by(date=entry_date, is_active=False)
             .order_by(TimeEntry.created_at.desc())
             .all()
         )
@@ -460,8 +459,10 @@ def edit_entry(
                     f"({format_hours(entry_item.duration_hours)}) - {entry_item.description[:50]}"
                 )
             click.echo()
-            click.echo("Please resolve multiple entries in UI or use ID-based editing (not available in CLI yet).")
-            
+            click.echo(
+                "Please resolve multiple entries in UI or use ID-based editing (not available in CLI yet)."
+            )
+
             if start:
                 try:
                     start_filter = datetime.strptime(start, "%H:%M").time()
@@ -469,13 +470,25 @@ def edit_entry(
                     if len(matching) == 1:
                         entry = matching[0]
                     else:
-                        click.echo(click.style("Error: Could not uniquely identify entry by start time.", fg="red"))
+                        click.echo(
+                            click.style(
+                                "Error: Could not uniquely identify entry by start time.",
+                                fg="red",
+                            )
+                        )
                         raise click.exceptions.Exit(1)
                 except ValueError:
-                    click.echo(click.style(f"Error: Invalid time format '{start}'.", fg="red"))
+                    click.echo(
+                        click.style(f"Error: Invalid time format '{start}'.", fg="red")
+                    )
                     raise click.exceptions.Exit(1)
             else:
-                click.echo(click.style("Error: Multiple entries. Provide --start to select one.", fg="red"))
+                click.echo(
+                    click.style(
+                        "Error: Multiple entries. Provide --start to select one.",
+                        fg="red",
+                    )
+                )
                 raise click.exceptions.Exit(1)
         else:
             entry = entries[0]
@@ -484,7 +497,7 @@ def edit_entry(
         original_start = entry.start_time
         original_end = entry.end_time
         original_description = entry.description
-        
+
         # Prepare updates
         start_t = None
         if start:
@@ -493,30 +506,34 @@ def edit_entry(
                 if entry.start_time != parsed_start:
                     start_t = parsed_start
             except ValueError:
-                click.echo(click.style(f"Error: Invalid time format '{start}'.", fg="red"))
+                click.echo(
+                    click.style(f"Error: Invalid time format '{start}'.", fg="red")
+                )
                 raise click.exceptions.Exit(1)
-                
+
         end_t = None
         if end:
             try:
                 end_t = datetime.strptime(end, "%H:%M").time()
             except ValueError:
-                click.echo(click.style(f"Error: Invalid time format '{end}'.", fg="red"))
+                click.echo(
+                    click.style(f"Error: Invalid time format '{end}'.", fg="red")
+                )
                 raise click.exceptions.Exit(1)
 
         # Use shared service
         result = update_time_entry(
             session,
-            entry.id, 
-            start_time=start_t, 
-            end_time=end_t, 
-            description=description
+            entry.id,
+            start_time=start_t,
+            end_time=end_t,
+            description=description,
         )
-        
+
         if not result["success"]:
             click.echo(click.style(f"Error: {result['message']}", fg="red"))
             raise click.exceptions.Exit(1)
-            
+
         entry = result["entry"]
 
         # Display success message
@@ -592,7 +609,8 @@ def summary(period: str, date: Optional[str]):
 
         # Query time entries for the period
         entries = (
-            session.query(TimeEntry).filter(TimeEntry.date >= start_date)
+            session.query(TimeEntry)
+            .filter(TimeEntry.date >= start_date)
             .filter(TimeEntry.date <= end_date)
             .order_by(TimeEntry.date)
             .all()
@@ -604,7 +622,8 @@ def summary(period: str, date: Optional[str]):
         else:
             # Query leave days only for monthly statistics
             leave_days = (
-                session.query(LeaveDay).filter(LeaveDay.date >= start_date)
+                session.query(LeaveDay)
+                .filter(LeaveDay.date >= start_date)
                 .filter(LeaveDay.date <= end_date)
                 .all()
             )
@@ -958,7 +977,9 @@ def config_set(key: str, value: str):
             value = normalize_bool_value(value)
 
         # Get old value for display
-        old_value = Settings.get_setting_with_session(session, key, CONFIG_DEFAULTS[key])
+        old_value = Settings.get_setting_with_session(
+            session, key, CONFIG_DEFAULTS[key]
+        )
 
         # Set the new value
         Settings.set_setting_with_session(session, key, value)
@@ -1130,10 +1151,13 @@ def leave_request(start_date: str, end_date: str, leave_type: str, description: 
         # Create leave records
         try:
             result = create_leave_requests(
-                session, start, end, leave_type.lower(), 
-                description.strip() if description else ""
+                session,
+                start,
+                end,
+                leave_type.lower(),
+                description.strip() if description else "",
             )
-            
+
             created_count = result["created"]
             skipped_count = result["skipped"]
 
@@ -1147,11 +1171,9 @@ def leave_request(start_date: str, end_date: str, leave_type: str, description: 
             click.echo(f"Created {created_count} leave record(s)")
             if skipped_count > 0:
                 click.echo(f"Skipped {skipped_count} duplicate record(s)")
-                
+
             if leave_stats["weekend_days"] > 0:
-                click.echo(
-                    f"Excluded {leave_stats['weekend_days']} weekend day(s)"
-                )
+                click.echo(f"Excluded {leave_stats['weekend_days']} weekend day(s)")
             click.echo()
 
         except Exception as e:
@@ -1371,8 +1393,10 @@ def ui(port: int, host: str, debug: bool):
     """
     # Import Flask app factory only when needed (for 'ui' command)
     from . import create_app
-    
-    click.echo(click.style("\n🚀 Starting waqt web application...", fg="cyan", bold=True))
+
+    click.echo(
+        click.style("\n🚀 Starting waqt web application...", fg="cyan", bold=True)
+    )
     click.echo(f"Access the application at: http://{host}:{port}")
     click.echo("\nPress Ctrl+C to stop the server.")
     click.echo("-" * 50)

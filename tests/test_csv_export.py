@@ -11,7 +11,7 @@ from click.testing import CliRunner
 def app():
     """Create and configure a test app instance."""
     from src.waqt import create_app, db
-    
+
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -33,6 +33,7 @@ def client(app):
 def cli():
     """Return the CLI entry point."""
     from src.waqt.cli import cli as cli_obj
+
     return cli_obj
 
 
@@ -47,7 +48,7 @@ def sample_entries(app):
     """Create sample time entries for testing."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         entries = [
             TimeEntry(
@@ -82,7 +83,7 @@ def test_export_time_entries_to_csv_basic(app, sample_entries):
     """Test basic CSV export functionality."""
     from src.waqt.models import TimeEntry
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -101,7 +102,7 @@ def test_export_csv_contains_data(app, sample_entries):
     """Test that CSV export contains actual data."""
     from src.waqt.models import TimeEntry
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -129,7 +130,7 @@ def test_export_csv_summary_statistics(app, sample_entries):
     """Test that CSV export includes summary statistics."""
     from src.waqt.models import TimeEntry
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(
@@ -149,7 +150,7 @@ def test_export_csv_multiple_entries_same_day(app):
     from src.waqt.models import TimeEntry
     from src.waqt import db
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         # Create multiple entries for the same day
         entries = [
@@ -199,14 +200,16 @@ def test_export_csv_multiple_entries_same_day(app):
             assert entry["Overtime"] == "2.00"
 
         # Verify total overtime in summary
-        assert "Total Overtime,2.00" in csv_content or "Total Overtime,2.0" in csv_content
+        assert (
+            "Total Overtime,2.00" in csv_content or "Total Overtime,2.0" in csv_content
+        )
 
 
 def test_export_csv_all_entries_period(app, sample_entries):
     """Test that CSV export shows 'All time entries' when no date range given."""
     from src.waqt.models import TimeEntry
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -385,7 +388,7 @@ def test_export_csv_special_characters(app):
     from src.waqt.models import TimeEntry
     from src.waqt import db
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         entry = TimeEntry(
             date=date(2024, 1, 15),
@@ -412,14 +415,14 @@ def test_export_csv_special_characters(app):
 def test_export_csv_empty_entries_list(app):
     """Test CSV export with empty entries list."""
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         csv_content = export_time_entries_to_csv([])
 
         # Should return CSV with headers but no data rows
         assert "Date" in csv_content
         assert "Start Time" in csv_content
-        
+
         # Should not have summary section for empty entries
         # Use csv.reader to count actual rows
         reader = csv.reader(io.StringIO(csv_content))
@@ -432,7 +435,7 @@ def test_export_includes_all_fields(app, sample_entries):
     """Test that export includes all required fields."""
     from src.waqt.models import TimeEntry
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -461,7 +464,7 @@ def test_export_day_of_week_format(app, sample_entries):
     """Test that day of week is properly formatted."""
     from src.waqt.models import TimeEntry
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)
@@ -477,7 +480,7 @@ def test_export_duration_formats(app, sample_entries):
     """Test that both duration formats are included."""
     from src.waqt.models import TimeEntry
     from src.waqt.utils import export_time_entries_to_csv
-    
+
     with app.app_context():
         entries = TimeEntry.query.all()
         csv_content = export_time_entries_to_csv(entries)

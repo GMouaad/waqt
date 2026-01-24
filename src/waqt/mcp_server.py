@@ -15,7 +15,6 @@ from .utils import (
     get_month_bounds,
     calculate_weekly_stats,
     calculate_monthly_stats,
-    calculate_duration,
     format_hours,
     export_time_entries_to_csv,
     export_time_entries_to_json,
@@ -87,25 +86,25 @@ def start(
     description: str = "Work session",
 ) -> Dict[str, Any]:
     """Start time tracking for the current or specified day.
-    
+
     Creates a new time entry with the specified or current time as the start time.
     The entry will remain open until you call 'end'.
-    
+
     Args:
         time: Start time in HH:MM format (e.g., "09:00"). Defaults to current time.
         date: Date in YYYY-MM-DD format (e.g., "2024-01-15"). Defaults to today.
         description: Description of the work session. Defaults to "Work session".
-    
+
     Returns:
         Dictionary with status, message, and entry details.
-    
+
     Examples:
         start()
         start(time="09:00")
         start(date="2024-01-15", time="09:30", description="Morning session")
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         # Parse date
         if date:
@@ -138,13 +137,10 @@ def start(
 
         # Use shared service
         result = start_time_entry(session, entry_date, start_time, description)
-        
+
         if not result["success"]:
-            return {
-                "status": "error",
-                "message": result["message"]
-            }
-            
+            return {"status": "error", "message": result["message"]}
+
         entry = result["entry"]
 
         return {
@@ -161,24 +157,24 @@ def start(
 @mcp.tool()
 def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any]:
     """End time tracking for the current or specified day.
-    
+
     Closes the most recent open time entry by setting the end time and
     calculating the duration.
-    
+
     Args:
         time: End time in HH:MM format (e.g., "17:30"). Defaults to current time.
         date: Date in YYYY-MM-DD format (e.g., "2024-01-15"). Defaults to today.
-    
+
     Returns:
         Dictionary with status, message, and entry details including duration.
-    
+
     Examples:
         end()
         end(time="17:30")
         end(date="2024-01-15", time="18:00")
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         # Parse date
         if date:
@@ -206,13 +202,10 @@ def end(time: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any
 
         # Use shared service
         result = end_time_entry(session, end_time, entry_date)
-        
+
         if not result["success"]:
-            return {
-                "status": "error",
-                "message": result["message"]
-            }
-            
+            return {"status": "error", "message": result["message"]}
+
         entry = result["entry"]
         duration = result["duration"]
 
@@ -240,10 +233,10 @@ def add_entry(
     pause_minutes: int = 0,
 ) -> Dict[str, Any]:
     """Add a completed time entry.
-    
+
     Creates a past/completed time entry with start and end times.
     Supports flexible pause handling.
-    
+
     Args:
         start: Start time in HH:MM format (e.g., "09:00").
         end: End time in HH:MM format (e.g., "17:30").
@@ -251,17 +244,17 @@ def add_entry(
         description: Description of the work. Defaults to "Work session".
         pause_mode: How to handle pause: 'default', 'custom', or 'none'. Defaults to 'none'.
         pause_minutes: Custom pause duration in minutes (required if pause_mode='custom').
-    
+
     Returns:
         Dictionary with status and entry details.
-    
+
     Examples:
         add_entry(start="09:00", end="17:00")
         add_entry(start="09:00", end="17:30", pause_mode="default")
         add_entry(start="09:00", end="18:00", pause_mode="custom", pause_minutes=45)
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         # Parse date
         if date:
@@ -293,15 +286,12 @@ def add_entry(
             end_time=end_time,
             description=description,
             pause_mode=pause_mode,
-            pause_minutes=pause_minutes
+            pause_minutes=pause_minutes,
         )
-        
+
         if not result["success"]:
-            return {
-                "status": "error",
-                "message": result["message"]
-            }
-            
+            return {"status": "error", "message": result["message"]}
+
         entry = result["entry"]
 
         return {
@@ -313,9 +303,13 @@ def add_entry(
                 "end_time": format_time(entry.end_time),
                 "duration": format_hours(entry.duration_hours),
                 "duration_hours": entry.duration_hours,
-                "pause_minutes": int(entry.accumulated_pause_seconds / 60) if entry.accumulated_pause_seconds else 0,
+                "pause_minutes": (
+                    int(entry.accumulated_pause_seconds / 60)
+                    if entry.accumulated_pause_seconds
+                    else 0
+                ),
                 "description": entry.description,
-            }
+            },
         }
 
 
@@ -332,7 +326,7 @@ def edit_entry(
     Modify the details of a time entry for a specific date. You can update
     the start time, end time, and/or description. At least one field must
     be provided to update.
-    
+
     If multiple entries exist for a date, use 'entry_id' (available from list_entries)
     to target a specific one.
 
@@ -342,12 +336,12 @@ def edit_entry(
         start: New start time in HH:MM format (optional).
         end: New end time in HH:MM format (optional).
         description: New description (optional).
-    
+
     Returns:
         Dictionary with status and updated entry details.
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         # Parse date
         try:
@@ -372,7 +366,7 @@ def edit_entry(
                 start_t = datetime.strptime(start, "%H:%M").time()
             except ValueError:
                 return {"status": "error", "message": f"Invalid start time '{start}'."}
-                
+
         end_t = None
         if end:
             try:
@@ -384,29 +378,36 @@ def edit_entry(
         target_id = entry_id
         if not target_id:
             entries = (
-                session.query(TimeEntry).filter_by(date=entry_date, is_active=False)
+                session.query(TimeEntry)
+                .filter_by(date=entry_date, is_active=False)
                 .order_by(TimeEntry.created_at.desc())
                 .all()
             )
             if not entries:
-                return {"status": "error", "message": f"No completed entry found for {date}."}
+                return {
+                    "status": "error",
+                    "message": f"No completed entry found for {date}.",
+                }
             if len(entries) > 1:
-                return {"status": "error", "message": f"Multiple entries found for {date}, please specify entry_id."}
+                return {
+                    "status": "error",
+                    "message": f"Multiple entries found for {date}, please specify entry_id.",
+                }
             target_id = entries[0].id
 
         # Use shared service
         result = update_time_entry(
             session,
-            target_id, 
-            start_time=start_t, 
-            end_time=end_t, 
+            target_id,
+            start_time=start_t,
+            end_time=end_t,
             description=description,
-            date_check=entry_date
+            date_check=entry_date,
         )
-        
+
         if not result["success"]:
             return {"status": "error", "message": result["message"]}
-            
+
         entry = result["entry"]
 
         return {
@@ -419,31 +420,31 @@ def edit_entry(
                 "end_time": format_time(entry.end_time),
                 "duration": format_hours(entry.duration_hours),
                 "description": entry.description,
-            }
+            },
         }
 
 
 @mcp.tool()
 def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
     """Summarize tracked time for the specified period.
-    
+
     Displays statistics including total hours, overtime, working days,
     and leave days for the week or month.
-    
+
     Args:
         period: Summary period, either "week" or "month". Defaults to "week".
         date: Reference date in YYYY-MM-DD format. Defaults to today.
-    
+
     Returns:
         Dictionary with status, period information, statistics, and recent entries.
-    
+
     Examples:
         summary()
         summary(period="month")
         summary(period="week", date="2024-01-15")
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         # Validate period
         if period.lower() not in ["week", "month"]:
@@ -473,7 +474,8 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
 
         # Query time entries for the period
         entries = (
-            session.query(TimeEntry).filter(TimeEntry.date >= start_date)
+            session.query(TimeEntry)
+            .filter(TimeEntry.date >= start_date)
             .filter(TimeEntry.date <= end_date)
             .order_by(TimeEntry.date)
             .all()
@@ -485,7 +487,8 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
         else:
             # Query leave days for monthly statistics
             leave_days = (
-                session.query(LeaveDay).filter(LeaveDay.date >= start_date)
+                session.query(LeaveDay)
+                .filter(LeaveDay.date >= start_date)
                 .filter(LeaveDay.date <= end_date)
                 .all()
             )
@@ -494,15 +497,17 @@ def summary(period: str = "week", date: Optional[str] = None) -> Dict[str, Any]:
         # Format recent entries
         recent_entries = []
         for entry in entries[-5:]:  # Last 5 entries
-            recent_entries.append({
-                "date": entry.date.isoformat(),
-                "start_time": format_time(entry.start_time),
-                "end_time": format_time(entry.end_time),
-                "duration": format_hours(entry.duration_hours),
-                "duration_hours": entry.duration_hours,
-                "description": entry.description,
-                "has_overtime": entry.duration_hours > 8.0,
-            })
+            recent_entries.append(
+                {
+                    "date": entry.date.isoformat(),
+                    "start_time": format_time(entry.start_time),
+                    "end_time": format_time(entry.end_time),
+                    "duration": format_hours(entry.duration_hours),
+                    "duration_hours": entry.duration_hours,
+                    "description": entry.description,
+                    "has_overtime": entry.duration_hours > 8.0,
+                }
+            )
 
         result = {
             "status": "success",
@@ -542,18 +547,18 @@ def leave_request(
 
     Creates leave records for all working days (Monday-Friday) in the specified
     date range, automatically excluding weekends.
-    
+
     Args:
         start_date: Start date in YYYY-MM-DD format.
         end_date: End date in YYYY-MM-DD format.
         leave_type: Type of leave ('vacation' or 'sick'). Defaults to 'vacation'.
         description: Description or notes for the leave.
-    
+
     Returns:
         Dictionary with status and summary of created leave.
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         # Parse dates
         try:
@@ -583,7 +588,7 @@ def leave_request(
                 "status": "error",
                 "message": f"Invalid leave type '{leave_type}'. Use 'vacation' or 'sick'.",
             }
-            
+
         # Calculate leave statistics
         leave_stats = calculate_leave_hours(start, end)
         working_days = get_working_days_in_range(start, end)
@@ -597,14 +602,19 @@ def leave_request(
         # Create leave records
         try:
             result = create_leave_requests(
-                session, start, end, leave_type.lower(), 
-                description.strip() if description else ""
+                session,
+                start,
+                end,
+                leave_type.lower(),
+                description.strip() if description else "",
             )
-            
+
             created_count = result["created"]
             skipped_count = result["skipped"]
-            
-            message = f"Leave request created successfully! ({created_count} days created"
+
+            message = (
+                f"Leave request created successfully! ({created_count} days created"
+            )
             if skipped_count > 0:
                 message += f", {skipped_count} skipped as duplicates)"
             else:
@@ -616,13 +626,13 @@ def leave_request(
                 "summary": {
                     "start_date": start.isoformat(),
                     "end_date": end.isoformat(),
-                    "total_days": leave_stats['total_days'],
-                    "working_days": leave_stats['working_days'],
-                    "weekend_days": leave_stats['weekend_days'],
+                    "total_days": leave_stats["total_days"],
+                    "working_days": leave_stats["working_days"],
+                    "weekend_days": leave_stats["weekend_days"],
                     "created_days": created_count,
                     "skipped_days": skipped_count,
-                    "working_hours": format_hours(leave_stats['working_hours']),
-                }
+                    "working_hours": format_hours(leave_stats["working_hours"]),
+                },
             }
 
         except Exception as e:
@@ -639,24 +649,24 @@ def list_entries(
     limit: Optional[int] = None,
 ) -> Dict[str, Any]:
     """List time entries for the specified period.
-    
+
     Retrieves all time entries for a week, month, or all entries.
-    
+
     Args:
         period: Period filter: "week", "month", or "all". Defaults to "week".
         date: Reference date in YYYY-MM-DD format. Defaults to today.
         limit: Maximum number of entries to return. If None, returns all.
-    
+
     Returns:
         Dictionary with status, period information, and list of entries.
-    
+
     Examples:
         list_entries()
         list_entries(period="month")
         list_entries(period="all", limit=10)
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         # Validate period
         if period.lower() not in ["week", "month", "all"]:
@@ -705,18 +715,22 @@ def list_entries(
         # Format entries
         formatted_entries = []
         for entry in entries:
-            formatted_entries.append({
-                "id": entry.id,
-                "date": entry.date.isoformat(),
-                "day_of_week": entry.date.strftime("%A"),
-                "start_time": format_time(entry.start_time),
-                "end_time": format_time(entry.end_time),
-                "duration": format_hours(entry.duration_hours),
-                "duration_hours": entry.duration_hours,
-                "description": entry.description,
-                "is_open": entry.duration_hours == 0.0,
-                "created_at": entry.created_at.isoformat() if entry.created_at else None,
-            })
+            formatted_entries.append(
+                {
+                    "id": entry.id,
+                    "date": entry.date.isoformat(),
+                    "day_of_week": entry.date.strftime("%A"),
+                    "start_time": format_time(entry.start_time),
+                    "end_time": format_time(entry.end_time),
+                    "duration": format_hours(entry.duration_hours),
+                    "duration_hours": entry.duration_hours,
+                    "description": entry.description,
+                    "is_open": entry.duration_hours == 0.0,
+                    "created_at": (
+                        entry.created_at.isoformat() if entry.created_at else None
+                    ),
+                }
+            )
 
         result = {
             "status": "success",
@@ -739,18 +753,18 @@ def export_entries(
     export_format: str = "csv",
 ) -> Dict[str, Any]:
     """Export time entries to CSV or JSON format.
-    
+
     Export time tracking data for use in external applications.
     Returns the content as a string.
-    
+
     Args:
         period: Export period: "week", "month", or "all". Defaults to "all".
         date: Reference date in YYYY-MM-DD format. Defaults to today.
         export_format: Export format. Supported: "csv", "json". Defaults to "csv".
-    
+
     Returns:
         Dictionary with status, metadata, and content.
-    
+
     Examples:
         export_entries()
         export_entries(export_format="json")
@@ -758,7 +772,7 @@ def export_entries(
         export_entries(period="month", date="2024-01-15")
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         # Validate format
         if export_format.lower() not in ["csv", "json"]:
@@ -856,35 +870,37 @@ def export_entries(
 def list_config() -> Dict[str, Any]:
     """Display all configuration options and their current values.
 
-    Returns a dictionary of all configuration settings with their 
+    Returns a dictionary of all configuration settings with their
     current values, descriptions, and default values.
-    
+
     Returns:
         Dictionary with status and settings.
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         all_settings = Settings.get_all_settings_with_session(session)
-        
+
         settings_list = []
         for key in sorted(CONFIG_DEFAULTS.keys()):
             current_value = all_settings.get(key, CONFIG_DEFAULTS[key])
             default_value = CONFIG_DEFAULTS[key]
             description = CONFIG_DESCRIPTIONS.get(key, "No description available")
-            
-            settings_list.append({
-                "key": key,
-                "value": current_value,
-                "default": default_value,
-                "description": description,
-                "is_default": current_value == default_value
-            })
-            
+
+            settings_list.append(
+                {
+                    "key": key,
+                    "value": current_value,
+                    "default": default_value,
+                    "description": description,
+                    "is_default": current_value == default_value,
+                }
+            )
+
         return {
             "status": "success",
             "count": len(settings_list),
-            "settings": settings_list
+            "settings": settings_list,
         }
 
 
@@ -894,18 +910,18 @@ def get_config(key: str) -> Dict[str, Any]:
 
     Args:
         key: Configuration key (e.g., 'weekly_hours', 'auto_end')
-    
+
     Returns:
         Dictionary with status and setting details.
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         if key not in CONFIG_DEFAULTS:
             return {
                 "status": "error",
                 "message": f"Unknown configuration key '{key}'.",
-                "available_keys": list(CONFIG_DEFAULTS.keys())
+                "available_keys": list(CONFIG_DEFAULTS.keys()),
             }
 
         value = Settings.get_setting_with_session(session, key, CONFIG_DEFAULTS[key])
@@ -915,7 +931,7 @@ def get_config(key: str) -> Dict[str, Any]:
             "status": "success",
             "key": key,
             "value": value,
-            "description": description
+            "description": description,
         }
 
 
@@ -929,18 +945,18 @@ def set_config(key: str, value: str) -> Dict[str, Any]:
     Args:
         key: Configuration key (e.g., 'weekly_hours')
         value: New value to set
-    
+
     Returns:
         Dictionary with status, message, and updated setting details.
     """
     ensure_db_initialized()
-    
+
     with get_session() as session:
         if key not in CONFIG_DEFAULTS:
             return {
                 "status": "error",
                 "message": f"Unknown configuration key '{key}'.",
-                "available_keys": list(CONFIG_DEFAULTS.keys())
+                "available_keys": list(CONFIG_DEFAULTS.keys()),
             }
 
         # Validate the value
@@ -956,7 +972,9 @@ def set_config(key: str, value: str) -> Dict[str, Any]:
             value = normalize_bool_value(value)
 
         # Get old value for reporting
-        old_value = Settings.get_setting_with_session(session, key, CONFIG_DEFAULTS[key])
+        old_value = Settings.get_setting_with_session(
+            session, key, CONFIG_DEFAULTS[key]
+        )
 
         # Set the new value
         Settings.set_setting_with_session(session, key, value)
@@ -966,25 +984,25 @@ def set_config(key: str, value: str) -> Dict[str, Any]:
             "message": f"Configuration '{key}' updated successfully.",
             "key": key,
             "old_value": old_value,
-            "new_value": value
+            "new_value": value,
         }
 
 
 def main():
     """Main entry point for the MCP server.
-    
+
     Runs the MCP server using stdio transport for communication
     with MCP clients.
     """
     import asyncio
-    
+
     # Initialize database before starting server
     ensure_db_initialized()
-    
+
     async def run_server():
         """Run the MCP server asynchronously."""
         await mcp.run_stdio_async()
-    
+
     asyncio.run(run_server())
 
 

@@ -7,7 +7,7 @@ sharing the same database with the web interface.
 
 from contextlib import contextmanager
 from typing import Optional, Generator
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from sqlalchemy.engine import Engine
 import os
@@ -26,11 +26,11 @@ _SessionFactory: Optional[sessionmaker] = None
 def get_database_path() -> str:
     """
     Resolve database path using the same logic as Flask app.
-    
+
     Priority:
     1. WAQT_DATA_DIR environment variable
     2. Platform-specific user data directory (platformdirs)
-    
+
     Returns:
         Absolute path to the SQLite database file.
     """
@@ -39,7 +39,7 @@ def get_database_path() -> str:
         data_dir = os.path.abspath(custom_data_dir)
     else:
         data_dir = platformdirs.user_data_dir("waqt", "GMouaad")
-    
+
     os.makedirs(data_dir, exist_ok=True)
     return os.path.join(data_dir, "time_tracker.db")
 
@@ -53,13 +53,13 @@ def _get_legacy_db_candidates() -> list[str]:
         # 2. Current working directory
         os.path.abspath(db_filename),
     ]
-    
+
     # If running as PyInstaller executable
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         exe_dir = os.path.dirname(sys.executable)
         candidates.append(os.path.join(exe_dir, db_filename))
         candidates.append(os.path.join(exe_dir, "instance", db_filename))
-    
+
     return candidates
 
 
@@ -67,7 +67,7 @@ def _migrate_legacy_database(db_path: str) -> None:
     """Migrate database from legacy locations if needed."""
     if os.path.exists(db_path):
         return  # Already exists, no migration needed
-    
+
     for legacy_path in _get_legacy_db_candidates():
         if os.path.exists(legacy_path) and os.path.isfile(legacy_path):
             try:
@@ -82,30 +82,30 @@ def _migrate_legacy_database(db_path: str) -> None:
 def init_engine(database_url: Optional[str] = None) -> Engine:
     """
     Initialize the SQLAlchemy engine.
-    
+
     Args:
         database_url: SQLAlchemy database URL. If None, uses default SQLite path.
-        
+
     Returns:
         The SQLAlchemy Engine instance.
     """
     global _engine, _SessionFactory
-    
+
     if database_url is None:
         db_path = get_database_path()
         _migrate_legacy_database(db_path)
         database_url = f"sqlite:///{db_path}"
-    
+
     _engine = create_engine(database_url, echo=False)
     _SessionFactory = sessionmaker(bind=_engine)
-    
+
     return _engine
 
 
 def get_engine() -> Engine:
     """
     Get or create the SQLAlchemy engine.
-    
+
     Returns:
         The SQLAlchemy Engine instance.
     """
@@ -118,7 +118,7 @@ def get_engine() -> Engine:
 def get_session_factory() -> sessionmaker:
     """
     Get or create the session factory.
-    
+
     Returns:
         The sessionmaker instance.
     """
@@ -132,12 +132,12 @@ def get_session_factory() -> sessionmaker:
 def get_session() -> Generator[Session, None, None]:
     """
     Provide a transactional scope around a series of operations.
-    
+
     Usage:
         with get_session() as session:
             result = some_service_function(session, ...)
             # Auto-commits on success, rolls back on exception
-    
+
     Yields:
         A SQLAlchemy Session instance.
     """
@@ -162,13 +162,13 @@ def create_tables() -> None:
 def run_migrations(db_path: Optional[str] = None) -> None:
     """
     Run database migrations.
-    
+
     Args:
         db_path: Path to the database file. If None, uses default.
     """
     if db_path is None:
         db_path = get_database_path()
-    
+
     try:
         # Add project root to sys.path to import migrations
         project_root = os.path.abspath(
@@ -176,8 +176,9 @@ def run_migrations(db_path: Optional[str] = None) -> None:
         )
         if project_root not in sys.path:
             sys.path.insert(0, project_root)
-        
+
         from migrations.run_migrations import run_migrations as _run_migrations
+
         _run_migrations(db_path)
     except ImportError:
         # Migrations folder missing, skip
@@ -189,20 +190,20 @@ def run_migrations(db_path: Optional[str] = None) -> None:
 def initialize_database() -> None:
     """
     Full database initialization for CLI/MCP contexts.
-    
+
     Creates tables, runs migrations, and seeds default settings.
     """
     from .models import Settings
-    
+
     # Ensure engine is initialized
     get_engine()
-    
+
     # Create tables
     create_tables()
-    
+
     # Run migrations
     run_migrations()
-    
+
     # Seed default settings
     with get_session() as session:
         default_settings = [
@@ -211,7 +212,7 @@ def initialize_database() -> None:
             ("pause_duration_minutes", "45"),
             ("auto_end", "false"),
         ]
-        
+
         for key, value in default_settings:
             existing = session.query(Settings).filter_by(key=key).first()
             if not existing:

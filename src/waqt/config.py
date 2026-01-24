@@ -69,17 +69,17 @@ CONFIG_DISPLAY_NAMES = {
 def validate_config_value(key, value):
     """
     Validate a configuration value.
-    
+
     Args:
         key: Configuration key
         value: Value to validate
-        
+
     Returns:
         tuple: (is_valid: bool, error_message: str or None)
     """
     if key not in CONFIG_DEFAULTS:
         return False, f"Unknown configuration key '{key}'"
-    
+
     validator = CONFIG_VALIDATORS.get(key)
     if validator:
         try:
@@ -93,17 +93,17 @@ def validate_config_value(key, value):
                 key, "Value validation failed"
             )
             return False, f"{validation_msg}: {str(e)}"
-    
+
     return True, None
 
 
 def normalize_bool_value(value):
     """
     Normalize boolean values to 'true' or 'false' strings.
-    
+
     Args:
         value: String value to normalize
-        
+
     Returns:
         str: 'true' or 'false'
     """
@@ -115,10 +115,10 @@ def normalize_bool_value(value):
 def get_config_input_type(key):
     """
     Get the HTML input type for a configuration key.
-    
+
     Args:
         key: Configuration key
-        
+
     Returns:
         str: HTML input type ('number', 'checkbox', 'text', 'select')
     """
@@ -135,10 +135,10 @@ def get_config_input_type(key):
 def get_config_validation_bounds(key):
     """
     Get min/max validation bounds for numeric configuration fields.
-    
+
     Args:
         key: Configuration key
-        
+
     Returns:
         dict: Dictionary with 'min' and 'max' keys, or empty dict for non-numeric fields
     """
@@ -154,10 +154,10 @@ def get_config_validation_bounds(key):
 def get_config_select_options(key):
     """
     Get select dropdown options for configuration fields.
-    
+
     Args:
         key: Configuration key
-        
+
     Returns:
         list: List of tuples (value, label) for select options, or empty list
     """
