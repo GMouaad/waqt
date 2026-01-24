@@ -8,7 +8,7 @@ from datetime import time, date
 def app():
     """Create and configure a test app instance."""
     from src.waqt import create_app, db
-    
+
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -35,7 +35,7 @@ def test_app_creation(app):
 def test_calculate_duration():
     """Test duration calculation between two times."""
     from src.waqt.utils import calculate_duration
-    
+
     start = time(9, 0)
     end = time(17, 0)
     duration = calculate_duration(start, end)
@@ -51,7 +51,7 @@ def test_calculate_duration():
 def test_calculate_daily_overtime():
     """Test overtime calculation."""
     from src.waqt.utils import calculate_daily_overtime
-    
+
     # No overtime
     overtime = calculate_daily_overtime(8.0, standard_hours=8.0)
     assert overtime == 0.0
@@ -68,7 +68,7 @@ def test_calculate_daily_overtime():
 def test_get_week_bounds():
     """Test getting week boundaries."""
     from src.waqt.utils import get_week_bounds
-    
+
     # Monday
     test_date = date(2024, 1, 1)  # This is a Monday
     start, end = get_week_bounds(test_date)
@@ -109,7 +109,7 @@ def test_create_time_entry(app):
     """Test creating a time entry in the database."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         entry = TimeEntry(
             date=date(2024, 1, 1),
@@ -132,7 +132,7 @@ def test_create_leave_day(app):
     """Test creating a leave day in the database."""
     from src.waqt.models import LeaveDay
     from src.waqt import db
-    
+
     with app.app_context():
         leave = LeaveDay(
             date=date(2024, 1, 15), leave_type="vacation", description="Family vacation"
@@ -150,7 +150,7 @@ def test_create_leave_day(app):
 def test_settings_model(app):
     """Test the settings model."""
     from src.waqt.models import Settings
-    
+
     with app.app_context():
         # Set a setting
         Settings.set_setting("test_key", "test_value")
@@ -168,7 +168,7 @@ def test_edit_time_entry_page(client, app):
     """Test the edit time entry page."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create a test entry
         entry = TimeEntry(
@@ -194,7 +194,7 @@ def test_edit_time_entry_post(client, app):
     """Test editing a time entry via POST."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create a test entry
         entry = TimeEntry(
@@ -235,7 +235,7 @@ def test_prevent_duplicate_entries(client, app):
     """Test that creating a duplicate entry for the same date is prevented."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create a test entry
         entry = TimeEntry(
@@ -275,7 +275,7 @@ def test_edit_time_entry_invalid_time(client, app):
     """Test editing a time entry with times that would result in very long duration."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create a test entry
         entry = TimeEntry(
@@ -316,7 +316,7 @@ def test_edit_active_timer_prevented(client, app):
     """Test that editing an active timer is prevented."""
     from src.waqt.models import TimeEntry
     from src.waqt import db
-    
+
     with app.app_context():
         # Create an active entry (timer running)
         entry = TimeEntry(

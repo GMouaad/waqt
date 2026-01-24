@@ -10,7 +10,7 @@ def app():
     """Create and configure a test app instance."""
     from src.waqt import create_app, db
     from src.waqt.models import Settings
-    
+
     app = create_app()
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -35,7 +35,7 @@ def test_session_alert_disabled_by_default(client, app):
     """Test that session alert is disabled by default."""
     response = client.get("/api/timer/session-alert-check")
     data = json.loads(response.data)
-    
+
     assert response.status_code == 200
     assert data["alert"] is False
     assert data["enabled"] is False
@@ -44,13 +44,13 @@ def test_session_alert_disabled_by_default(client, app):
 def test_session_alert_no_active_timer(client, app):
     """Test that no alert is shown when there's no active timer."""
     from src.waqt.models import Settings
-    
+
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
-    
+
     response = client.get("/api/timer/session-alert-check")
     data = json.loads(response.data)
-    
+
     assert response.status_code == 200
     assert data["alert"] is False
     assert data["enabled"] is True
@@ -61,10 +61,10 @@ def test_session_alert_paused_timer(client, app):
     """Test that no alert is shown when timer is paused."""
     from src.waqt.models import TimeEntry, Settings
     from src.waqt import db
-    
+
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
-        
+
         # Create an active entry that's paused
         now = datetime.now()
         entry = TimeEntry(
@@ -74,14 +74,14 @@ def test_session_alert_paused_timer(client, app):
             duration_hours=0.0,
             is_active=True,
             last_pause_start_time=now,
-            description="Test Work"
+            description="Test Work",
         )
         db.session.add(entry)
         db.session.commit()
-    
+
     response = client.get("/api/timer/session-alert-check")
     data = json.loads(response.data)
-    
+
     assert response.status_code == 200
     assert data["alert"] is False
     assert data["enabled"] is True
@@ -92,10 +92,10 @@ def test_session_alert_under_8_hours(client, app):
     """Test that no alert is shown when session is under 8 hours."""
     from src.waqt.models import TimeEntry, Settings
     from src.waqt import db
-    
+
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
-        
+
         # Create an active entry started 7 hours ago
         now = datetime.now()
         start_time = (now - timedelta(hours=7)).time()
@@ -105,14 +105,14 @@ def test_session_alert_under_8_hours(client, app):
             end_time=now.time(),
             duration_hours=0.0,
             is_active=True,
-            description="Test Work"
+            description="Test Work",
         )
         db.session.add(entry)
         db.session.commit()
-    
+
     response = client.get("/api/timer/session-alert-check")
     data = json.loads(response.data)
-    
+
     assert response.status_code == 200
     assert data["alert"] is False
     assert data["enabled"] is True
@@ -124,11 +124,11 @@ def test_session_alert_over_8_hours(client, app):
     """Test that alert is shown when session exceeds 8 hours."""
     from src.waqt.models import TimeEntry, Settings
     from src.waqt import db
-    
+
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
         Settings.set_setting("max_work_session_hours", "10")
-        
+
         # Create an active entry started 9 hours ago
         now = datetime.now()
         start_dt = now - timedelta(hours=9)
@@ -138,14 +138,14 @@ def test_session_alert_over_8_hours(client, app):
             end_time=now.time(),
             duration_hours=0.0,
             is_active=True,
-            description="Test Work"
+            description="Test Work",
         )
         db.session.add(entry)
         db.session.commit()
-    
+
     response = client.get("/api/timer/session-alert-check")
     data = json.loads(response.data)
-    
+
     assert response.status_code == 200
     assert data["alert"] is True
     assert data["enabled"] is True
@@ -159,10 +159,10 @@ def test_session_alert_with_pauses(client, app):
     """Test that alert calculation accounts for pauses."""
     from src.waqt.models import TimeEntry, Settings
     from src.waqt import db
-    
+
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
-        
+
         # Create an active entry started 10 hours ago with 2.5 hours of pauses
         # So actual work time is 7.5 hours, should not alert
         now = datetime.now()
@@ -174,14 +174,14 @@ def test_session_alert_with_pauses(client, app):
             duration_hours=0.0,
             is_active=True,
             accumulated_pause_seconds=2.5 * 3600,  # 2.5 hours in seconds
-            description="Test Work"
+            description="Test Work",
         )
         db.session.add(entry)
         db.session.commit()
-    
+
     response = client.get("/api/timer/session-alert-check")
     data = json.loads(response.data)
-    
+
     assert response.status_code == 200
     # Should not alert because actual work time is 7.5 hours (10 - 2.5)
     assert data["alert"] is False
@@ -194,11 +194,11 @@ def test_session_alert_custom_threshold(client, app):
     """Test that custom threshold is respected."""
     from src.waqt.models import TimeEntry, Settings
     from src.waqt import db
-    
+
     with app.app_context():
         Settings.set_setting("alert_on_max_work_session", "true")
         Settings.set_setting("max_work_session_hours", "12")
-        
+
         # Create an active entry started 9 hours ago
         now = datetime.now()
         start_dt = now - timedelta(hours=9)
@@ -208,14 +208,14 @@ def test_session_alert_custom_threshold(client, app):
             end_time=now.time(),
             duration_hours=0.0,
             is_active=True,
-            description="Test Work"
+            description="Test Work",
         )
         db.session.add(entry)
         db.session.commit()
-    
+
     response = client.get("/api/timer/session-alert-check")
     data = json.loads(response.data)
-    
+
     assert response.status_code == 200
     assert data["alert"] is True
     assert data["enabled"] is True

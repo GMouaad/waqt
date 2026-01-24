@@ -9,7 +9,11 @@ from pathlib import Path
 def test_mcp_server_entry_point_exists():
     """Test that waqt is installed."""
     result = subprocess.run(
-        [sys.executable, "-c", "import importlib.metadata; print(importlib.metadata.version('waqt'))"],
+        [
+            sys.executable,
+            "-c",
+            "import importlib.metadata; print(importlib.metadata.version('waqt'))",
+        ],
         capture_output=True,
         text=True,
     )
@@ -21,6 +25,7 @@ def test_mcp_server_starts():
     """Test that MCP server starts without errors."""
     # Try to start the server with a timeout
     import os
+
     env = os.environ.copy()
     # Ensure src is in PYTHONPATH so waqt can be imported
     src_path = str(Path(__file__).parent.parent / "src")
@@ -28,14 +33,14 @@ def test_mcp_server_starts():
         env["PYTHONPATH"] = f"{src_path}:{env['PYTHONPATH']}"
     else:
         env["PYTHONPATH"] = src_path
-        
+
     try:
         result = subprocess.run(
             [sys.executable, "-m", "waqt.mcp_server"],
             capture_output=True,
             text=True,
             timeout=2,
-            env=env
+            env=env,
         )
     except subprocess.TimeoutExpired:
         # This is expected - the server should keep running

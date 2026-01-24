@@ -3,7 +3,7 @@ import sys
 import os
 
 # Add scripts directory to path to allow importing seed_db
-sys.path.append(os.path.join(os.path.dirname(__file__), '../scripts'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../scripts"))
 
 from waqt import create_app, db
 from waqt.models import Category, TimeEntry, LeaveDay, Settings

@@ -46,9 +46,10 @@ from .config import (
     get_config_select_options,
 )
 
-HEX_COLOR_REGEX = r'^#(?:[0-9a-fA-F]{3}){1,2}$'
+HEX_COLOR_REGEX = r"^#(?:[0-9a-fA-F]{3}){1,2}$"
 
 bp = Blueprint("main", __name__)
+
 
 @bp.route("/categories", methods=["GET", "POST"])
 def categories():
@@ -80,17 +81,14 @@ def categories():
                 return redirect(url_for("main.categories"))
 
             category = Category(
-                name=name,
-                code=code,
-                color=color,
-                description=description
+                name=name, code=code, color=color, description=description
             )
             db.session.add(category)
             db.session.commit()
-            
+
             flash("Category added successfully!", "success")
             return redirect(url_for("main.categories"))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f"Error adding category: {str(e)}", "error")
@@ -124,8 +122,12 @@ def edit_category(id):
         if name != category.name and Category.query.filter_by(name=name).first():
             flash("Category with this name already exists.", "error")
             return redirect(url_for("main.categories"))
-            
-        if code and code != category.code and Category.query.filter_by(code=code).first():
+
+        if (
+            code
+            and code != category.code
+            and Category.query.filter_by(code=code).first()
+        ):
             flash("Category with this code already exists.", "error")
             return redirect(url_for("main.categories"))
 
@@ -133,10 +135,10 @@ def edit_category(id):
         category.code = code
         category.color = color
         category.description = description
-        
+
         db.session.commit()
         flash("Category updated successfully.", "success")
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error updating category: {str(e)}", "error")
@@ -162,7 +164,6 @@ def delete_category(id):
         flash(f"Error deleting category: {str(e)}", "error")
 
     return redirect(url_for("main.categories"))
-
 
 
 def get_open_entry():
@@ -275,27 +276,33 @@ def start_timer():
         data = request.get_json() or {}
         description = data.get("description", "").strip()
         category_id = data.get("category_id")
-        
+
         if category_id:
             try:
                 category_id = int(category_id)
             except (ValueError, TypeError):
-                return jsonify({"success": False, "message": "Invalid category ID"}), 400
+                return (
+                    jsonify({"success": False, "message": "Invalid category ID"}),
+                    400,
+                )
 
         if not description:
             description = "Work"
 
         now = datetime.now()
-        
+
         # Use shared service
-        result = start_time_entry(now.date(), now.time(), description, category_id=category_id)
-        
+        result = start_time_entry(
+            db.session, now.date(), now.time(), description, category_id=category_id
+        )
+
         if not result["success"]:
             # If it's a duplicate active timer error, we return 400.
             # (Though shared service logic is slightly different, checking date vs any active)
             # The service returns specific error types we can use.
             return jsonify({"success": False, "message": result["message"]}), 400
 
+        db.session.commit()
         return jsonify(
             {
                 "success": True,
@@ -370,15 +377,16 @@ def stop_timer():
             return jsonify({"success": False, "message": "No active timer"}), 400
 
         now = datetime.now()
-        
+
         # Use shared service
         # Note: shared service calculates effective end time based on pauses logic
         # which was originally taken from this route.
-        result = end_time_entry(now.time(), entry.date)
-        
+        result = end_time_entry(db.session, now.time(), entry.date)
+
         if not result["success"]:
             return jsonify({"success": False, "message": result["message"]}), 500
-            
+
+        db.session.commit()
         duration_hours = result["duration"]
 
         return jsonify(
@@ -395,33 +403,42 @@ def get_day_details(date_str):
     """Get details for a specific day including time entries and leave."""
     try:
         day_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        
+
         # Validate date is within reasonable range
         if day_date.year < 1900 or day_date.year > 2100:
-            return jsonify({"success": False, "message": "Date out of valid range"}), 400
+            return (
+                jsonify({"success": False, "message": "Date out of valid range"}),
+                400,
+            )
     except ValueError:
         return jsonify({"success": False, "message": "Invalid date format"}), 400
-    
+
     try:
         # Get time entries for the day
-        entries = TimeEntry.query.filter_by(date=day_date).order_by(TimeEntry.start_time).all()
-        
+        entries = (
+            TimeEntry.query.filter_by(date=day_date)
+            .order_by(TimeEntry.start_time)
+            .all()
+        )
+
         # Get leave for the day
         leave = LeaveDay.query.filter_by(date=day_date).first()
-        
+
         # Calculate total hours
         total_hours = sum(e.duration_hours for e in entries)
-        
-        return jsonify({
-            "success": True,
-            "date": date_str,
-            "entries": [e.to_dict() for e in entries],
-            "leave": leave.to_dict() if leave else None,
-            "total_hours": round(total_hours, 2),
-            "entry_count": len(entries),
-            "has_entry": len(entries) > 0,
-            "has_leave": leave is not None
-        })
+
+        return jsonify(
+            {
+                "success": True,
+                "date": date_str,
+                "entries": [e.to_dict() for e in entries],
+                "leave": leave.to_dict() if leave else None,
+                "total_hours": round(total_hours, 2),
+                "entry_count": len(entries),
+                "has_entry": len(entries) > 0,
+                "has_leave": leave is not None,
+            }
+        )
     except Exception as e:
         return jsonify({"success": False, "message": "Database error occurred"}), 500
 
@@ -457,12 +474,12 @@ def index():
     except Exception:
         # Provide empty calendar structure as fallback
         calendar_data = {
-            'weeks': [],
-            'month_name': today.strftime('%B'),
-            'year': today.year,
-            'month': today.month,
-            'prev_month': {'year': today.year, 'month': today.month},
-            'next_month': {'year': today.year, 'month': today.month}
+            "weeks": [],
+            "month_name": today.strftime("%B"),
+            "year": today.year,
+            "month": today.month,
+            "prev_month": {"year": today.year, "month": today.month},
+            "next_month": {"year": today.year, "month": today.month},
         }
 
     return render_template(
@@ -488,12 +505,13 @@ def time_entry():
             end_time_str = request.form.get("end_time")
             description = request.form.get("description", "").strip()
             category_id = request.form.get("category_id")
-            
+
             # Parse category
             if category_id:
                 try:
                     category_id = int(category_id)
-                    if category_id == 0: category_id = None
+                    if category_id == 0:
+                        category_id = None
                 except (ValueError, TypeError):
                     category_id = None
             else:
@@ -502,7 +520,7 @@ def time_entry():
             # Pause handling
             pause_mode = request.form.get("pause_mode", "default")
             custom_pause_str = request.form.get("custom_pause_minutes", "0")
-            
+
             try:
                 pause_minutes = int(custom_pause_str) if custom_pause_str else 0
                 if pause_minutes < 0:
@@ -517,25 +535,27 @@ def time_entry():
 
             # Parse date and times
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
-            
+
             start_time = parse_time_input(start_time_str, time_format)
             end_time = parse_time_input(end_time_str, time_format)
 
             # Use shared service
             result = add_time_entry(
+                db.session,
                 entry_date=date,
                 start_time=start_time,
                 end_time=end_time,
                 description=description,
                 category_id=category_id,
                 pause_mode=pause_mode,
-                pause_minutes=pause_minutes
+                pause_minutes=pause_minutes,
             )
 
             if not result["success"]:
                 flash(result["message"], "error")
                 return redirect(url_for("main.time_entry"))
 
+            db.session.commit()
             entry = result["entry"]
             flash(
                 f"Time entry added successfully! Duration: {entry.duration_hours:.2f} hours",
@@ -554,11 +574,11 @@ def time_entry():
     # GET request - show form
     categories = Category.query.filter_by(is_active=True).order_by(Category.name).all()
     return render_template(
-        "time_entry.html", 
-        today=datetime.now().date(), 
+        "time_entry.html",
+        today=datetime.now().date(),
         time_format=time_format,
         default_pause=default_pause,
-        categories=categories
+        categories=categories,
     )
 
 
@@ -589,16 +609,16 @@ def edit_time_entry(entry_id):
             if not all([start_time_str, end_time_str, description]):
                 flash("All fields are required.", "error")
                 return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
-            
+
             # Parse category
             category_raw = request.form.get("category_id")
             if category_raw in (None, ""):
-                category_id = 0 # Explicitly clear category
+                category_id = 0  # Explicitly clear category
             else:
                 try:
                     category_id = int(category_raw)
                 except (ValueError, TypeError):
-                    category_id = None # No change
+                    category_id = None  # No change
 
             # Parse times
             start_time = parse_time_input(start_time_str, time_format)
@@ -606,18 +626,20 @@ def edit_time_entry(entry_id):
 
             # Use shared service
             result = update_time_entry(
+                db.session,
                 entry_id,
                 start_time=start_time,
                 end_time=end_time,
                 description=description,
-                category_id=category_id
+                category_id=category_id,
             )
-            
+
             if not result["success"]:
                 flash(result["message"], "error")
                 return redirect(url_for("main.edit_time_entry", entry_id=entry_id))
-                
-            entry = result["entry"] # Get updated entry object
+
+            db.session.commit()
+            entry = result["entry"]  # Get updated entry object
 
             flash(
                 f"Time entry updated successfully! Duration: {entry.duration_hours:.2f} hours",
@@ -635,7 +657,12 @@ def edit_time_entry(entry_id):
 
     # GET request - show form with existing data
     categories = Category.query.filter_by(is_active=True).order_by(Category.name).all()
-    return render_template("edit_time_entry.html", entry=entry, time_format=time_format, categories=categories)
+    return render_template(
+        "edit_time_entry.html",
+        entry=entry,
+        time_format=time_format,
+        categories=categories,
+    )
 
 
 @bp.route("/time-entry/<int:entry_id>/delete", methods=["POST"])
@@ -674,6 +701,7 @@ def reports():
 
     # Get entries for the period
     from sqlalchemy.orm import joinedload
+
     entries = (
         TimeEntry.query.options(joinedload(TimeEntry.category))
         .filter(TimeEntry.date >= start_date, TimeEntry.date <= end_date)
@@ -705,13 +733,13 @@ def reports():
     # Calculate category stats
     category_stats = {}
     for entry in entries:
-        cat_name = entry.category.name if entry.category else 'Uncategorized'
-        cat_color = entry.category.color if entry.category else '#9ca3af' # gray-400
-        
+        cat_name = entry.category.name if entry.category else "Uncategorized"
+        cat_color = entry.category.color if entry.category else "#9ca3af"  # gray-400
+
         if cat_name not in category_stats:
-            category_stats[cat_name] = {'hours': 0, 'color': cat_color}
-        
-        category_stats[cat_name]['hours'] += entry.duration_hours
+            category_stats[cat_name] = {"hours": 0, "color": cat_color}
+
+        category_stats[cat_name]["hours"] += entry.duration_hours
 
     return render_template(
         "reports.html",
@@ -785,9 +813,11 @@ def leave():
             leave_stats = calculate_leave_hours(start_date, end_date)
 
             # Create leave day records using shared utility
-            result = create_leave_requests(start_date, end_date, leave_type, description, db_session=db.session)
+            result = create_leave_requests(
+                db.session, start_date, end_date, leave_type, description
+            )
             db.session.commit()
-            
+
             created_count = result["created"]
             skipped_count = result["skipped"]
 
@@ -804,9 +834,11 @@ def leave():
                     msg_parts.append(f"{created_count} working days added")
                 if skipped_count > 0:
                     msg_parts.append(f"{skipped_count} days skipped (duplicates)")
-                if leave_stats['weekend_days'] > 0:
-                    msg_parts.append(f"excluded {leave_stats['weekend_days']} weekend days")
-                
+                if leave_stats["weekend_days"] > 0:
+                    msg_parts.append(
+                        f"excluded {leave_stats['weekend_days']} weekend days"
+                    )
+
                 details = ", ".join(msg_parts)
                 flash(
                     f"{leave_type.capitalize()} leave processed! {details}. "
@@ -865,7 +897,7 @@ def delete_leave(leave_id):
 def _handle_export_request(export_format):
     """
     Handle export request for CSV, JSON, and Excel formats.
-    
+
     Args:
         export_format: One of 'csv', 'json', 'excel'
     """
@@ -912,7 +944,9 @@ def _handle_export_request(export_format):
             extension = "json"
         elif export_format == "excel":
             content = export_time_entries_to_excel(entries, start_date, end_date)
-            mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mimetype = (
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
             extension = "xlsx"
         else:
             flash(f"Unsupported export format: {export_format}", "error")
@@ -925,7 +959,9 @@ def _handle_export_request(export_format):
                 f"{end_date.strftime('%Y%m%d')}.{extension}"
             )
         else:
-            filename = f"time_entries_all_{datetime.now().strftime('%Y%m%d')}.{extension}"
+            filename = (
+                f"time_entries_all_{datetime.now().strftime('%Y%m%d')}.{extension}"
+            )
 
         # Return content as download
         return Response(
@@ -942,7 +978,10 @@ def _handle_export_request(export_format):
         # Log unexpected errors for debugging
         import logging
 
-        logging.error(f"Unexpected error during {export_format.upper()} export: {str(e)}", exc_info=True)
+        logging.error(
+            f"Unexpected error during {export_format.upper()} export: {str(e)}",
+            exc_info=True,
+        )
         flash("An unexpected error occurred during export. Please try again.", "error")
         return redirect(url_for("main.reports"))
 

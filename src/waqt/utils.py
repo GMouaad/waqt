@@ -14,10 +14,10 @@ from .models import TimeEntry, LeaveDay, Settings
 def is_weekend(check_date: date) -> bool:
     """
     Check if a given date falls on a weekend (Saturday or Sunday).
-    
+
     Args:
         check_date: Date to check
-        
+
     Returns:
         True if the date is Saturday (5) or Sunday (6), False otherwise
     """
@@ -27,34 +27,34 @@ def is_weekend(check_date: date) -> bool:
 def get_date_range(start_date: date, end_date: date) -> List[date]:
     """
     Generate a list of dates between start_date and end_date (inclusive).
-    
+
     Args:
         start_date: Start date (inclusive)
         end_date: End date (inclusive)
-        
+
     Returns:
         List of date objects from start_date to end_date
     """
     if start_date > end_date:
         return []
-    
+
     date_list = []
     current_date = start_date
     while current_date <= end_date:
         date_list.append(current_date)
         current_date += timedelta(days=1)
-    
+
     return date_list
 
 
 def get_working_days_in_range(start_date: date, end_date: date) -> List[date]:
     """
     Get all working days (excluding weekends) in a date range.
-    
+
     Args:
         start_date: Start date (inclusive)
         end_date: End date (inclusive)
-        
+
     Returns:
         List of date objects that are working days (Monday-Friday)
     """
@@ -65,11 +65,11 @@ def get_working_days_in_range(start_date: date, end_date: date) -> List[date]:
 def calculate_leave_hours(start_date: date, end_date: date) -> Dict:
     """
     Calculate leave statistics for a date range.
-    
+
     Args:
         start_date: Start date of leave
         end_date: End date of leave
-        
+
     Returns:
         Dictionary with:
         - total_days: Total calendar days in range
@@ -80,15 +80,15 @@ def calculate_leave_hours(start_date: date, end_date: date) -> Dict:
     # Generate date range once and reuse it
     all_dates = get_date_range(start_date, end_date)
     working_days_list = [d for d in all_dates if not is_weekend(d)]
-    
+
     total_days = len(all_dates)
     working_days = len(working_days_list)
     weekend_days = total_days - working_days
-    
+
     # Get standard hours per day from settings
     standard_hours_per_day = get_standard_hours_per_day()
     working_hours = working_days * standard_hours_per_day
-    
+
     return {
         "total_days": total_days,
         "working_days": working_days,
@@ -97,34 +97,36 @@ def calculate_leave_hours(start_date: date, end_date: date) -> Dict:
     }
 
 
-def format_time(time_obj: Optional[datetime_time], time_format: Optional[str] = None) -> str:
+def format_time(
+    time_obj: Optional[datetime_time], time_format: Optional[str] = None
+) -> str:
     """
     Format a time object according to the user's preferred time format.
-    
+
     Args:
         time_obj: datetime.time object to format. If None, returns an empty string.
         time_format: Time format preference ('12' or '24'). If None, reads from settings.
-    
+
     Returns:
         Formatted time string (e.g., '13:30' or '01:30 PM'), or empty string if time_obj is None
     """
     if time_obj is None:
         return ""
-    
+
     if time_format is None:
         time_format = Settings.get_setting("time_format", "24")
-    
+
     if time_format == "12":
         # Convert to 12-hour format with AM/PM
         hour = time_obj.hour
         minute = time_obj.minute
         am_pm = "AM" if hour < 12 else "PM"
-        
+
         # Convert hour to 12-hour format
         display_hour = hour % 12
         if display_hour == 0:
             display_hour = 12
-        
+
         return f"{display_hour:d}:{minute:02d} {am_pm}"
     else:
         # Default to 24-hour format
@@ -134,14 +136,14 @@ def format_time(time_obj: Optional[datetime_time], time_format: Optional[str] = 
 def parse_time_input(time_str: str, time_format: str = "24") -> datetime_time:
     """
     Parse a time string based on the configured format.
-    
+
     Args:
         time_str: Time string to parse (e.g., '14:30' or '02:30 PM')
         time_format: Expected format ('12' or '24')
-        
+
     Returns:
         datetime.time object
-        
+
     Raises:
         ValueError: If time string format is invalid
     """
@@ -360,10 +362,10 @@ def get_time_entries_for_period(
 def calculate_daily_overtime_for_entries(entries: List[TimeEntry]) -> Dict[date, float]:
     """
     Calculate daily overtime for a list of entries.
-    
+
     Args:
         entries: List of TimeEntry objects
-        
+
     Returns:
         Dictionary mapping date to overtime hours
     """
@@ -376,7 +378,7 @@ def calculate_daily_overtime_for_entries(entries: List[TimeEntry]) -> Dict[date,
     daily_overtime = {}
     for date_key, total_hours in daily_totals.items():
         daily_overtime[date_key] = calculate_daily_overtime(total_hours)
-        
+
     return daily_overtime
 
 
@@ -616,11 +618,11 @@ def export_time_entries_to_excel(
 def generate_calendar_data(year: int, month: int) -> Dict:
     """
     Generate calendar data for a given month with entry information.
-    
+
     Args:
         year: Year for the calendar
         month: Month for the calendar (1-12)
-    
+
     Returns:
         Dictionary containing:
             - weeks: List of weeks, each week is a list of day dicts
@@ -629,7 +631,7 @@ def generate_calendar_data(year: int, month: int) -> Dict:
             - prev_month: Dict with year and month for previous month
             - next_month: Dict with year and month for next month
     """
-    
+
     # Get month boundaries
     month_start = date(year, month, 1)
     if month == 12:
@@ -637,98 +639,101 @@ def generate_calendar_data(year: int, month: int) -> Dict:
     else:
         next_month_start = date(year, month + 1, 1)
         month_end = next_month_start - timedelta(days=1)
-    
+
     # Get all time entries for the month
     time_entries = TimeEntry.query.filter(
-        TimeEntry.date >= month_start,
-        TimeEntry.date <= month_end
+        TimeEntry.date >= month_start, TimeEntry.date <= month_end
     ).all()
-    
+
     # Get all leave days for the month
     leave_days = LeaveDay.query.filter(
-        LeaveDay.date >= month_start,
-        LeaveDay.date <= month_end
+        LeaveDay.date >= month_start, LeaveDay.date <= month_end
     ).all()
-    
+
     # Create dictionaries for quick lookup
     entries_by_date = {}
     for entry in time_entries:
         if entry.date not in entries_by_date:
             entries_by_date[entry.date] = []
         entries_by_date[entry.date].append(entry)
-    
+
     leaves_by_date = {}
     for leave in leave_days:
         leaves_by_date[leave.date] = leave
-    
+
     # Generate calendar weeks
     cal = calendar.monthcalendar(year, month)
     weeks = []
-    
+
     today = datetime.now().date()
-    
+
     for week in cal:
         week_days = []
         for day_num in week:
             if day_num == 0:
                 # Day from another month
-                week_days.append({
-                    'day': '',
-                    'is_current_month': False,
-                    'is_today': False,
-                    'has_entry': False,
-                    'has_leave': False,
-                    'leave_type': None,
-                    'total_hours': 0,
-                    'entry_count': 0,
-                    'date': None
-                })
+                week_days.append(
+                    {
+                        "day": "",
+                        "is_current_month": False,
+                        "is_today": False,
+                        "has_entry": False,
+                        "has_leave": False,
+                        "leave_type": None,
+                        "total_hours": 0,
+                        "entry_count": 0,
+                        "date": None,
+                    }
+                )
             else:
                 day_date = date(year, month, day_num)
                 has_entries = day_date in entries_by_date
                 has_leave = day_date in leaves_by_date
-                
+
                 total_hours = 0
                 entry_count = 0
                 if has_entries:
                     entry_count = len(entries_by_date[day_date])
-                    total_hours = sum(e.duration_hours for e in entries_by_date[day_date])
-                
+                    total_hours = sum(
+                        e.duration_hours for e in entries_by_date[day_date]
+                    )
+
                 leave_type = None
                 if has_leave:
                     leave_type = leaves_by_date[day_date].leave_type
-                
-                week_days.append({
-                    'day': day_num,
-                    'is_current_month': True,
-                    'is_today': day_date == today,
-                    'has_entry': has_entries,
-                    'has_leave': has_leave,
-                    'leave_type': leave_type,
-                    'total_hours': round(total_hours, 2),
-                    'entry_count': entry_count,
-                    'date': day_date.isoformat()
-                })
-        
+
+                week_days.append(
+                    {
+                        "day": day_num,
+                        "is_current_month": True,
+                        "is_today": day_date == today,
+                        "has_entry": has_entries,
+                        "has_leave": has_leave,
+                        "leave_type": leave_type,
+                        "total_hours": round(total_hours, 2),
+                        "entry_count": entry_count,
+                        "date": day_date.isoformat(),
+                    }
+                )
+
         weeks.append(week_days)
-    
+
     # Calculate previous and next month
     if month == 1:
-        prev_month = {'year': year - 1, 'month': 12}
+        prev_month = {"year": year - 1, "month": 12}
     else:
-        prev_month = {'year': year, 'month': month - 1}
-    
-    if month == 12:
-        next_month = {'year': year + 1, 'month': 1}
-    else:
-        next_month = {'year': year, 'month': month + 1}
-    
-    return {
-        'weeks': weeks,
-        'month_name': calendar.month_name[month],
-        'year': year,
-        'month': month,
-        'prev_month': prev_month,
-        'next_month': next_month
-    }
+        prev_month = {"year": year, "month": month - 1}
 
+    if month == 12:
+        next_month = {"year": year + 1, "month": 1}
+    else:
+        next_month = {"year": year, "month": month + 1}
+
+    return {
+        "weeks": weeks,
+        "month_name": calendar.month_name[month],
+        "year": year,
+        "month": month,
+        "prev_month": prev_month,
+        "next_month": next_month,
+    }
