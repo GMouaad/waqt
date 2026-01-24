@@ -35,7 +35,8 @@ def app():
         yield app
 
         # Reset module state
-        database_module.reset_engine()
+        database_module._engine = None
+        database_module._SessionFactory = None
 
         db.session.remove()
         db.drop_all()
