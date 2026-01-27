@@ -225,6 +225,17 @@ waqt ui
 - Linux/macOS: `./scripts/start.sh`
 - Windows: `.\scripts\start.ps1`
 
+### Troubleshooting
+
+If you encounter database errors after updating (e.g., `no such column` errors), run the migrations manually:
+```bash
+# From source installation:
+uv run python -m migrations.run_migrations
+
+# Or using pip:
+python -m migrations.run_migrations
+```
+
 ## CLI Usage (`waqt`)
 
 The `waqt` command-line tool provides a quick and convenient way to track time from your terminal.
