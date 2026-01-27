@@ -225,6 +225,17 @@ waqt ui
 - Linux/macOS: `./scripts/start.sh`
 - Windows: `.\scripts\start.ps1`
 
+### Troubleshooting
+
+If you encounter database errors after updating (e.g., `no such column` errors), run the migrations manually:
+```bash
+# From source installation:
+uv run python -m migrations.run_migrations
+
+# Or using pip:
+python -m migrations.run_migrations
+```
+
 ## CLI Usage (`waqt`)
 
 The `waqt` command-line tool provides a quick and convenient way to track time from your terminal.
@@ -339,6 +350,36 @@ waqt config reset weekly_hours
 - Values are validated before being saved
 - Non-default values are marked with an asterisk (*) in list output
 - **Custom Data Directory**: Set `WAQT_DATA_DIR` environment variable to override storage location
+
+#### Logging
+Waqt provides a unified logging system for debugging and monitoring:
+
+```bash
+# Enable debug logging via environment variable
+WAQT_LOG_LEVEL=DEBUG waqt summary
+
+# Enable verbose console output (CLI only)
+waqt --verbose start
+waqt -v summary
+```
+
+**Log Files:**
+Logs are stored in `<WAQT_DATA_DIR>/logs/` with interface-specific files:
+- `flask.log` - Web UI logs
+- `cli.log` - Command-line interface logs
+- `mcp.log` - MCP server logs
+- `app.log` - General application logs
+
+**Environment Variables:**
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `WAQT_LOG_LEVEL` | Log verbosity: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` | `INFO` |
+| `WAQT_DATA_DIR` | Base directory for data and logs | Platform default |
+
+**Features:**
+- Rotating file handlers (5MB max, 3 backups)
+- Interface-specific log files for easier debugging
+- `--verbose` flag for CLI console output
 
 #### Check for Updates
 Check if a newer version of waqt is available:

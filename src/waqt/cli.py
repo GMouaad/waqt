@@ -41,28 +41,40 @@ from .updater import (
     download_and_install_update,
     is_frozen,
 )
-
+from .logging import get_cli_logger
 
 # Flag to track if database has been initialized this session
 _db_initialized = False
+
+# Global logger (initialized with verbose option)
+_cli_logger = None
 
 
 def ensure_db_initialized():
     """Ensure database is initialized before any command runs."""
     global _db_initialized
     if not _db_initialized:
+        if _cli_logger:
+            _cli_logger.debug("Initializing database")
         initialize_database()
         _db_initialized = True
 
 
 @click.group()
 @click.version_option(version=VERSION, prog_name="waqt")
-def cli():
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging output")
+@click.pass_context
+def cli(ctx, verbose):
     """Waqt - Time tracking CLI for waqt application.
 
     A command-line interface for tracking work hours, managing time entries,
     and generating reports.
     """
+    global _cli_logger
+    _cli_logger = get_cli_logger(verbose=verbose)
+    ctx.ensure_object(dict)
+    ctx.obj["logger"] = _cli_logger
+    _cli_logger.info("CLI started")
     ensure_db_initialized()
 
 

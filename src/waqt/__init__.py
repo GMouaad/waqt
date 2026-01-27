@@ -6,6 +6,7 @@ import os
 import sys
 
 from .database import Base, init_engine, get_database_path, run_migrations
+from .logging import get_flask_logger
 
 # Create Flask-SQLAlchemy instance that shares the Base metadata
 db = SQLAlchemy(model_class=Base)
@@ -14,6 +15,10 @@ db = SQLAlchemy(model_class=Base)
 def create_app(test_config=None):
     """Create and configure the Flask application."""
     app = Flask(__name__)
+
+    # Initialize logging
+    logger = get_flask_logger()
+    logger.info("Starting Flask application")
 
     # Configuration - Secret Key
     secret_key = os.environ.get("SECRET_KEY")

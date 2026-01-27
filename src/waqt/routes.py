@@ -45,6 +45,10 @@ from .config import (
     get_config_validation_bounds,
     get_config_select_options,
 )
+from .logging import get_flask_logger
+
+# Initialize logger for routes
+logger = get_flask_logger()
 
 HEX_COLOR_REGEX = r"^#(?:[0-9a-fA-F]{3}){1,2}$"
 
@@ -976,9 +980,7 @@ def _handle_export_request(export_format):
         return redirect(url_for("main.reports"))
     except Exception as e:
         # Log unexpected errors for debugging
-        import logging
-
-        logging.error(
+        logger.error(
             f"Unexpected error during {export_format.upper()} export: {str(e)}",
             exc_info=True,
         )
