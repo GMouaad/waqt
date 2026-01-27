@@ -230,10 +230,10 @@ waqt ui
 If you encounter database errors after updating (e.g., `no such column` errors), run the migrations manually:
 ```bash
 # From source installation:
-uv run python -m migrations.run_migrations
+uv run alembic upgrade head
 
-# Or using pip:
-python -m migrations.run_migrations
+# Or check migration status:
+uv run alembic current
 ```
 
 ## CLI Usage (`waqt`)

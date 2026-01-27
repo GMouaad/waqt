@@ -159,7 +159,7 @@ def create_tables() -> None:
 
 def run_migrations(db_path: Optional[str] = None) -> None:
     """
-    Run database migrations.
+    Run Alembic database migrations.
 
     Args:
         db_path: Path to the database file. If None, uses default.
@@ -168,21 +168,44 @@ def run_migrations(db_path: Optional[str] = None) -> None:
         db_path = get_database_path()
 
     try:
-        # Add project root to sys.path to import migrations
+        from alembic.config import Config
+        from alembic import command
+
+        # Find alembic.ini - check multiple locations
         project_root = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "..")
         )
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
 
-        from migrations.run_migrations import run_migrations as _run_migrations
+        # Check for alembic.ini in project root
+        alembic_ini = os.path.join(project_root, "alembic.ini")
 
-        _run_migrations(db_path)
+        # For frozen executables, check relative to executable
+        if not os.path.exists(alembic_ini) and getattr(sys, "frozen", False):
+            exe_dir = os.path.dirname(sys.executable)
+            alembic_ini = os.path.join(exe_dir, "alembic.ini")
+
+        if not os.path.exists(alembic_ini):
+            # Alembic not available (e.g., frozen build without alembic)
+            # Fall back to create_tables which handles basic schema
+            print("Note: Alembic config not found, using basic table creation")
+            return
+
+        # Configure Alembic
+        alembic_cfg = Config(alembic_ini)
+        alembic_cfg.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
+
+        # Set the script location relative to alembic.ini
+        alembic_dir = os.path.join(os.path.dirname(alembic_ini), "alembic")
+        alembic_cfg.set_main_option("script_location", alembic_dir)
+
+        # Run migrations to head
+        command.upgrade(alembic_cfg, "head")
+
     except ImportError:
-        # Migrations folder missing, skip
-        pass
+        # Alembic not installed, skip migrations
+        print("Note: Alembic not installed, skipping migrations")
     except Exception as e:
-        print(f"Warning: Failed to run migrations: {e}")
+        print(f"Warning: Failed to run Alembic migrations: {e}")
 
 
 def initialize_database() -> None:
