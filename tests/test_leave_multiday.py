@@ -1,7 +1,7 @@
 "Tests for multi-day leave request functionality."
 
 import pytest
-from datetime import date, timedelta
+from datetime import date
 from src.waqt import create_app, db
 from src.waqt.models import LeaveDay
 from src.waqt.utils import (
@@ -216,10 +216,10 @@ class TestMultiDayLeaveBackend:
             assert len(leave_days) == 5
 
             # Verify data
-            dates = sorted([l.date for l in leave_days])
+            dates = sorted([leave.date for leave in leave_days])
             assert dates[0] == date(2026, 1, 12)  # Monday
             assert dates[-1] == date(2026, 1, 16)  # Friday
-            assert all(l.leave_type == "vacation" for l in leave_days)
+            assert all(leave.leave_type == "vacation" for leave in leave_days)
 
     def test_create_multi_day_leave_excludes_weekends(self, client, app):
         """Test that multi-day leave excludes weekends."""
@@ -242,7 +242,7 @@ class TestMultiDayLeaveBackend:
             leave_days = LeaveDay.query.all()
             assert len(leave_days) == 2
 
-            dates = sorted([l.date for l in leave_days])
+            dates = sorted([leave.date for leave in leave_days])
             assert dates[0] == date(2026, 1, 16)  # Friday
             assert dates[1] == date(2026, 1, 19)  # Monday
 

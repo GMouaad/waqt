@@ -18,7 +18,6 @@ from .utils import (
     format_hours,
     export_time_entries_to_csv,
     export_time_entries_to_json,
-    get_time_entries_for_period,
     format_time,
     get_working_days_in_range,
     calculate_leave_hours,
@@ -146,7 +145,7 @@ def start(
         if not result["success"]:
             return {"status": "error", "message": result["message"]}
 
-        entry = result["entry"]
+        _entry = result["entry"]  # noqa: F841 - extracted for clarity
 
         return {
             "status": "success",
@@ -361,7 +360,10 @@ def edit_entry(
         if not any([start, end, description]):
             return {
                 "status": "error",
-                "message": "At least one field (start, end, or description) must be provided to update.",
+                "message": (
+                    "At least one field (start, end, or description) "
+                    "must be provided to update."
+                ),
             }
 
         # Prepare updates
@@ -783,7 +785,10 @@ def export_entries(
         if export_format.lower() not in ["csv", "json"]:
             return {
                 "status": "error",
-                "message": f"Unsupported format '{export_format}'. Only 'csv' and 'json' are supported.",
+                "message": (
+                    f"Unsupported format '{export_format}'. "
+                    "Only 'csv' and 'json' are supported."
+                ),
             }
 
         # Validate period

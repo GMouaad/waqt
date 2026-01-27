@@ -11,12 +11,10 @@ from .utils import (
     get_month_bounds,
     calculate_weekly_stats,
     calculate_monthly_stats,
-    calculate_duration,
     format_hours,
     export_time_entries_to_csv,
     export_time_entries_to_json,
     export_time_entries_to_excel,
-    get_time_entries_for_period,
     format_time,
     get_working_days_in_range,
     calculate_leave_hours,
@@ -168,7 +166,8 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
             except ValueError:
                 click.echo(
                     click.style(
-                        f"Error: Invalid pause value '{pause}'. Use 'default', 'none', or a positive integer.",
+                        f"Error: Invalid pause value '{pause}'. "
+                        "Use 'default', 'none', or a positive integer.",
                         fg="red",
                     )
                 )
@@ -472,7 +471,8 @@ def edit_entry(
                 )
             click.echo()
             click.echo(
-                "Please resolve multiple entries in UI or use ID-based editing (not available in CLI yet)."
+                "Please resolve multiple entries in UI or use ID-based editing "
+                "(not available in CLI yet)."
             )
 
             if start:
@@ -1175,7 +1175,7 @@ def leave_request(start_date: str, end_date: str, leave_type: str, description: 
 
             click.echo(
                 click.style(
-                    f"✓ Leave request created successfully!",
+                    "✓ Leave request created successfully!",
                     fg="green",
                     bold=True,
                 )

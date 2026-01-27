@@ -119,12 +119,13 @@ def seed_database(app=None):
         for i in range(14):  # Look back 2 weeks
             date_obj = today - timedelta(days=i)
 
-            # Skip weekends (simple check, though app handles it, usually we don't log work on weekends for seed)
+            # Skip weekends (simple check, though app handles it,
+            # usually we don't log work on weekends for seed)
             if date_obj.weekday() >= 5:
                 continue
 
             # Skip if it matches our seeded leave dates
-            if any(l["date"] == date_obj for l in leave_data):
+            if any(leave["date"] == date_obj for leave in leave_data):
                 continue
 
             # Create a standard day: 9:00 - 17:00 with a break

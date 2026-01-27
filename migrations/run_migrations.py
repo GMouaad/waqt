@@ -1,6 +1,5 @@
 import sqlite3
 import os
-import sys
 
 
 def get_db_path():
@@ -79,8 +78,8 @@ def run_migrations(db_path=None):
                 ],
                 "check": "SELECT is_active FROM time_entries LIMIT 1",
                 "post_sql": """
-                    UPDATE time_entries 
-                    SET is_active = 1 
+                    UPDATE time_entries
+                    SET is_active = 1
                     WHERE duration_hours = 0.0 AND start_time = end_time
                 """,
             },
@@ -122,7 +121,7 @@ def run_migrations(db_path=None):
                             pass
                         elif "no such table" in str(e):
                             print(
-                                f"    ❌ Error: Table not found. Is the database initialized?"
+                                "    ❌ Error: Table not found. Is the database initialized?"
                             )
                             break
                         else:
@@ -132,7 +131,7 @@ def run_migrations(db_path=None):
                 if "post_sql" in migration:
                     cursor.execute(migration["post_sql"])
 
-                print(f"    ✅ Applied successfully.")
+                print("    ✅ Applied successfully.")
 
             except Exception as e:
                 print(f"    ❌ Migration '{migration['name']}' failed: {e}")

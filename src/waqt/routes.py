@@ -15,7 +15,6 @@ from datetime import datetime, timedelta
 from . import db
 from .models import TimeEntry, LeaveDay, Settings, Category
 from .utils import (
-    calculate_duration,
     calculate_weekly_stats,
     calculate_monthly_stats,
     get_week_bounds,
@@ -443,7 +442,7 @@ def get_day_details(date_str):
                 "has_leave": leave is not None,
             }
         )
-    except Exception as e:
+    except Exception:  # noqa: F841
         return jsonify({"success": False, "message": "Database error occurred"}), 500
 
 

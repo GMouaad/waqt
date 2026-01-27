@@ -3,7 +3,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import os
-import sys
 
 from .database import Base, init_engine, get_database_path, run_migrations
 from .logging import get_flask_logger
@@ -35,7 +34,8 @@ def create_app(test_config=None):
         # Warning will be visible in development
         if not test_config:
             print(
-                "WARNING: Using default insecure SECRET_KEY. This is intended for development only. "
+                "WARNING: Using default insecure SECRET_KEY. "
+                "This is intended for development only. "
                 "Set the SECRET_KEY environment variable for production deployments."
             )
     app.config["SECRET_KEY"] = secret_key

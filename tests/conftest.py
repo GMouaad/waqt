@@ -3,7 +3,6 @@
 import pytest
 import os
 import tempfile
-from pathlib import Path
 
 # Try to import playwright, but don't fail if it's not installed
 try:
