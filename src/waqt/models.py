@@ -4,7 +4,6 @@ These models use standalone SQLAlchemy (via database.py Base) and are
 compatible with both Flask-SQLAlchemy and direct SQLAlchemy usage.
 """
 
-import logging
 from datetime import datetime, timezone
 from sqlalchemy import (
     Column,
@@ -22,8 +21,9 @@ from sqlalchemy.orm import relationship, Session
 from typing import Optional, Dict, Any
 
 from .database import Base
+from .logging import get_app_logger
 
-logger = logging.getLogger(__name__)
+logger = get_app_logger()
 
 
 class Category(Base):
