@@ -109,7 +109,6 @@ def get_engine() -> Engine:
     Returns:
         The SQLAlchemy Engine instance.
     """
-    global _engine
     if _engine is None:
         init_engine()
     return _engine
@@ -122,7 +121,6 @@ def get_session_factory() -> sessionmaker:
     Returns:
         The sessionmaker instance.
     """
-    global _SessionFactory
     if _SessionFactory is None:
         init_engine()
     return _SessionFactory
