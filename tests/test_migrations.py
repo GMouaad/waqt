@@ -1,4 +1,4 @@
-"""Tests for database migrations."""
+"""Tests for Alembic database migrations."""
 
 import pytest
 import sqlite3
@@ -42,9 +42,7 @@ def create_old_schema_db(db_path: str) -> None:
 
 
 def test_migration_adds_category_id_column():
-    """Test that migration adds category_id column to existing database."""
-    import sys
-
+    """Test that Alembic migration adds category_id column to existing database."""
     # Create a temporary database with old schema
     db_fd, db_path = tempfile.mkstemp(suffix=".db")
 
@@ -60,13 +58,8 @@ def test_migration_adds_category_id_column():
         assert "no such column" in str(exc_info.value)
         conn.close()
 
-        # Add migrations folder to path temporarily
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
-
-        # Run migrations
-        from migrations.run_migrations import run_migrations
+        # Run Alembic migrations using the database module
+        from waqt.database import run_migrations
 
         run_migrations(db_path)
 
@@ -86,6 +79,12 @@ def test_migration_adds_category_id_column():
         )
         assert cursor.fetchone() is not None
 
+        # Verify alembic_version table was created (migration tracking)
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='alembic_version'"
+        )
+        assert cursor.fetchone() is not None
+
         conn.close()
 
     finally:
@@ -94,19 +93,13 @@ def test_migration_adds_category_id_column():
 
 
 def test_migration_is_idempotent():
-    """Test that running migrations twice doesn't cause errors."""
-    import sys
-
+    """Test that running Alembic migrations twice doesn't cause errors."""
     db_fd, db_path = tempfile.mkstemp(suffix=".db")
 
     try:
         create_old_schema_db(db_path)
 
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
-
-        from migrations.run_migrations import run_migrations
+        from waqt.database import run_migrations
 
         # Run migrations twice - should not raise any errors
         run_migrations(db_path)
