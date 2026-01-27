@@ -98,12 +98,7 @@ def run_migrations(db_path=None):
                     )""",
                     "ALTER TABLE time_entries ADD COLUMN category_id INTEGER REFERENCES categories(id)",
                 ],
-                "check": """
-                    SELECT time_entries.category_id
-                    FROM time_entries
-                    JOIN categories ON time_entries.category_id = categories.id
-                    LIMIT 1
-                """,
+                "check": "SELECT category_id FROM time_entries LIMIT 1",
             },
         ]
 
