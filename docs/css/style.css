@@ -656,3 +656,344 @@ footer {
     font-size: 2rem;
     margin-bottom: 3rem;
 }
+
+/* ============================================
+   Documentation Content Styles
+   ============================================ */
+
+.documentation-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem 4rem;
+}
+
+/* Back link styling */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: var(--primary-color);
+}
+
+/* Documentation headings */
+.documentation-content h2 {
+    font-size: 2rem;
+    text-align: left;
+    margin: 4rem 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+    transform: none;
+    left: auto;
+    position: relative;
+    display: block;
+}
+
+.documentation-content h2:first-of-type {
+    margin-top: 2rem;
+}
+
+.documentation-content h3 {
+    font-size: 1.5rem;
+    margin: 2.5rem 0 1rem 0;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.documentation-content h4 {
+    font-size: 1.2rem;
+    margin: 2rem 0 0.75rem 0;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* Paragraphs and text */
+.documentation-content > p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    line-height: 1.8;
+    margin-bottom: 1.25rem;
+}
+
+.documentation-content strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.documentation-content em {
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+/* Links */
+.documentation-content a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.documentation-content a:hover {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+/* Horizontal rules */
+.documentation-content hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    margin: 3rem 0;
+}
+
+/* Table of Contents */
+.documentation-content > ol:first-of-type {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem 1.5rem 1.5rem 2.5rem;
+    list-style-position: inside;
+    margin: 1.5rem 0 2rem;
+}
+
+.documentation-content > ol:first-of-type li {
+    padding: 0.5rem 0;
+    color: var(--text-muted);
+}
+
+.documentation-content > ol:first-of-type li a {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.documentation-content > ol:first-of-type li a:hover {
+    color: var(--primary-color);
+}
+
+/* Unordered lists */
+.documentation-content ul {
+    list-style: none;
+    margin: 1rem 0 1.5rem 0;
+    padding-left: 0;
+}
+
+.documentation-content ul li {
+    position: relative;
+    padding: 0.5rem 0 0.5rem 1.75rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+
+.documentation-content ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    opacity: 0.7;
+}
+
+/* Nested lists */
+.documentation-content ul ul {
+    margin: 0.5rem 0 0.5rem 0;
+}
+
+.documentation-content ul ul li::before {
+    width: 6px;
+    height: 6px;
+    background: var(--text-dim);
+}
+
+/* Ordered lists (not TOC) */
+.documentation-content ol:not(:first-of-type) {
+    list-style: none;
+    counter-reset: step-counter;
+    margin: 1rem 0 1.5rem 0;
+    padding-left: 0;
+}
+
+.documentation-content ol:not(:first-of-type) li {
+    position: relative;
+    padding: 0.5rem 0 0.5rem 2.5rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    counter-increment: step-counter;
+}
+
+.documentation-content ol:not(:first-of-type) li::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    background: var(--secondary-color);
+    color: var(--bg-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Code blocks in docs */
+.documentation-content pre {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--secondary-color);
+    padding: 1.25rem 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    color: #e6edf3;
+    font-size: 0.9rem;
+    margin: 1.25rem 0 1.75rem;
+    line-height: 1.6;
+}
+
+.documentation-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+}
+
+/* Inline code */
+.documentation-content code {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--primary-color);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: 'Space Mono', monospace;
+}
+
+/* Tables */
+.documentation-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0 2rem;
+    background: var(--surface-color);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.documentation-content thead {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(0, 212, 255, 0.1) 100%);
+}
+
+.documentation-content th {
+    text-align: left;
+    padding: 1rem 1.25rem;
+    color: var(--text-color);
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.documentation-content td {
+    padding: 1rem 1.25rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+.documentation-content tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.documentation-content tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Info boxes / callouts */
+.documentation-content .info-box,
+.documentation-content .warning-box,
+.documentation-content .tip-box {
+    padding: 1.25rem 1.5rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    border-left: 4px solid;
+}
+
+.documentation-content .info-box {
+    background: rgba(59, 130, 246, 0.1);
+    border-left-color: var(--secondary-color);
+}
+
+.documentation-content .warning-box {
+    background: rgba(245, 158, 11, 0.1);
+    border-left-color: var(--warning);
+}
+
+.documentation-content .tip-box {
+    background: rgba(16, 185, 129, 0.1);
+    border-left-color: var(--success);
+}
+
+/* Command options styling */
+.documentation-content ul li code:first-child {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Section cards for major features */
+.doc-section-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    transition: border-color 0.2s;
+}
+
+.doc-section-card:hover {
+    border-color: var(--text-dim);
+}
+
+.doc-section-card h4 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+/* Responsive adjustments for docs */
+@media (max-width: 768px) {
+    .documentation-content {
+        padding: 2rem 1rem;
+    }
+    
+    .documentation-content h2 {
+        font-size: 1.6rem;
+    }
+    
+    .documentation-content h3 {
+        font-size: 1.3rem;
+    }
+    
+    .documentation-content pre {
+        font-size: 0.8rem;
+        padding: 1rem;
+    }
+    
+    .documentation-content table {
+        font-size: 0.85rem;
+    }
+    
+    .documentation-content th,
+    .documentation-content td {
+        padding: 0.75rem;
+    }
+}
