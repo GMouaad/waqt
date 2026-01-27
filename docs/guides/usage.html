@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Usage Guide - Waqt Documentation</title>
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <a href="../index.html" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                <a href="../index.html"
+                    style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
                     <i class="fas fa-clock"></i>
                     <span>Waqt</span>
                 </a>
@@ -29,7 +36,8 @@
                 <li><a href="../installation.html">Installation</a></li>
                 <li><a href="../usage.html">Usage</a></li>
                 <li><a href="../documentation.html" class="active">Documentation</a></li>
-                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i
+                            class="fab fa-github"></i> GitHub</a></li>
             </ul>
         </div>
     </nav>
@@ -37,13 +45,15 @@
     <div class="page-header">
         <div class="container">
             <h1>Usage Guide</h1>
-            <a href="../documentation.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Documentation</a>
+            <a href="../documentation.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to
+                Documentation</a>
         </div>
     </div>
 
     <section class="content-section">
         <div class="container documentation-content">
-            <p>This guide explains how to use the Waqt application to manage your work hours, overtime, and leave days.</p>
+            <p>This guide explains how to use the Waqt application to manage your work hours, overtime, and leave days.
+            </p>
 
             <h2 id="table-of-contents">Table of Contents</h2>
             <ol>
@@ -55,6 +65,7 @@
                 <li><a href="#tips-and-best-practices">Tips and Best Practices</a></li>
                 <li><a href="#advanced-usage">Advanced Usage</a></li>
                 <li><a href="#configuration">Configuration</a></li>
+                <li><a href="#logging">Logging</a></li>
                 <li><a href="#troubleshooting">Troubleshooting</a></li>
             </ol>
 
@@ -63,16 +74,17 @@
             <h2 id="running-the-application">Running the Application</h2>
 
             <h3>Starting the Server</h3>
-            <p>If you haven't installed the application yet, see the <a href="installation.html">Installation Guide</a>.</p>
+            <p>If you haven't installed the application yet, see the <a href="installation.html">Installation Guide</a>.
+            </p>
 
             <p>If you installed via <code>git clone</code>, you can use the helper scripts:</p>
-            
+
             <pre><code># Linux/macOS
 ./scripts/start.sh
 
 # Windows (PowerShell)
 .\scripts\start.ps1</code></pre>
-            
+
             <p>Or manually with Python:</p>
 
             <p><strong>Manual start:</strong></p>
@@ -112,15 +124,18 @@
 
             <h3>Pausing and Resuming</h3>
             <ul>
-                <li><strong>Pause</strong>: Click <strong>"⏸ Pause"</strong> if you need to take a break. This stops the current entry in the database and updates the status indicator to orange.</li>
-                <li><strong>Resume</strong>: Click <strong>"▶ Resume"</strong> to start a new entry. The timer will continue from where it left off visually (by starting a new session).</li>
+                <li><strong>Pause</strong>: Click <strong>"⏸ Pause"</strong> if you need to take a break. This stops the
+                    current entry in the database and updates the status indicator to orange.</li>
+                <li><strong>Resume</strong>: Click <strong>"▶ Resume"</strong> to start a new entry. The timer will
+                    continue from where it left off visually (by starting a new session).</li>
             </ul>
 
             <h3>Stopping the Timer</h3>
             <ul>
                 <li>Click <strong>"■ Stop"</strong> when you are finished with your work session.</li>
                 <li>The entry will be saved to the database.</li>
-                <li>The dashboard will automatically refresh to show your new entry in the "Recent Time Entries" table.</li>
+                <li>The dashboard will automatically refresh to show your new entry in the "Recent Time Entries" table.
+                </li>
             </ul>
 
             <h2 id="dashboard-overview">Dashboard Overview</h2>
@@ -160,7 +175,8 @@
             <h2 id="tracking-work-hours">Tracking Work Hours</h2>
 
             <h3>Using the Timer (Recommended)</h3>
-            <p>The easiest way to track time is using the <strong>Dashboard Timer</strong>. It automatically records your start and end times with a single click.</p>
+            <p>The easiest way to track time is using the <strong>Dashboard Timer</strong>. It automatically records
+                your start and end times with a single click.</p>
 
             <h3>Adding a Time Entry Manually</h3>
             <ol>
@@ -172,15 +188,18 @@
                         <li><strong>End Time</strong>: When you finished working (e.g., 17:00 or 5:00 PM)</li>
                         <li><strong>Description</strong>: What you worked on</li>
                     </ul>
-                    <em>Note: Time inputs automatically adapt to your configured <code>time_format</code> setting (12h or 24h).</em>
+                    <em>Note: Time inputs automatically adapt to your configured <code>time_format</code> setting (12h
+                        or 24h).</em>
                 </li>
                 <li>Click <strong>"Save Entry"</strong></li>
                 <li>The entry will appear in your recent entries list</li>
             </ol>
-            <p><strong>Note</strong>: The system enforces one entry per day. If you try to add another entry for a date that already has one, you'll receive an error message asking you to edit the existing entry instead.</p>
+            <p><strong>Note</strong>: The system enforces one entry per day. If you try to add another entry for a date
+                that already has one, you'll receive an error message asking you to edit the existing entry instead.</p>
 
             <h3>Adding a Time Entry via CLI</h3>
-            <p>You can also add completed time entries directly from the command line using the <code>waqt add</code> command. This is useful for backfilling entries or when you prefer working from the terminal.</p>
+            <p>You can also add completed time entries directly from the command line using the <code>waqt add</code>
+                command. This is useful for backfilling entries or when you prefer working from the terminal.</p>
 
             <p><strong>Basic Usage:</strong></p>
             <pre><code># Add an entry for today with default pause (45 minutes)
@@ -193,7 +212,10 @@ waqt add --date 2026-01-15 --start 09:00 --end 17:30 --description "Bug fixes"
 waqt add -s 09:00 -e 17:00 -desc "Code review"</code></pre>
 
             <h4>Pause Handling</h4>
-            <p>By default, the <code>add</code> command automatically deducts a pause/break from your work session. The default pause duration is <strong>45 minutes</strong> (configurable via <code>waqt config set pause_duration_minutes &lt;value&gt;</code>).</p>
+            <p>By default, the <code>add</code> command automatically deducts a pause/break from your work session. The
+                default pause duration is <strong>45 minutes</strong> (configurable via
+                <code>waqt config set pause_duration_minutes &lt;value&gt;</code>).
+            </p>
 
             <p><strong>Default behavior (with pause):</strong></p>
             <pre><code># Automatically deducts 45 minutes
@@ -223,7 +245,8 @@ waqt add --start 09:00 --end 17:00 --pause 60
                 <li><code>--description</code> or <code>-desc</code>: Work description (default: "Work session")</li>
                 <li><code>--pause</code> or <code>-p</code>: Pause mode:
                     <ul>
-                        <li><code>default</code>: Use configured default pause (45 min, or custom value) - <strong>this is the default</strong></li>
+                        <li><code>default</code>: Use configured default pause (45 min, or custom value) - <strong>this
+                                is the default</strong></li>
                         <li><code>none</code>: No pause deduction</li>
                         <li><code>&lt;number&gt;</code>: Custom pause in minutes (e.g., 30, 60)</li>
                     </ul>
@@ -243,7 +266,9 @@ waqt add -s 09:00 -e 18:00 --pause 30 -desc "Long work session"</code></pre>
             <p><strong>Important Notes:</strong></p>
             <ul>
                 <li>The default pause (45 minutes) is automatically applied unless you specify otherwise</li>
-                <li>You can configure the default pause duration: <code>waqt config set pause_duration_minutes &lt;value&gt;</code></li>
+                <li>You can configure the default pause duration:
+                    <code>waqt config set pause_duration_minutes &lt;value&gt;</code>
+                </li>
                 <li>Only one entry per day is allowed. Use <code>waqt edit-entry</code> to modify existing entries</li>
                 <li>End time must be after start time</li>
                 <li>The system handles midnight crossing (e.g., 23:00 to 01:00 next day)</li>
@@ -280,15 +305,21 @@ waqt edit-entry -d 2026-01-08 -s 08:00 -e 18:00 --desc "Full day development wor
 
             <p><strong>Important Notes:</strong></p>
             <ul>
-                <li>You cannot edit an active timer. Stop the timer first using the <strong>"Stop"</strong> button or <code>waqt end</code> command</li>
-                <li>The date field cannot be changed. If you need to move an entry to a different date, delete it and create a new one</li>
+                <li>You cannot edit an active timer. Stop the timer first using the <strong>"Stop"</strong> button or
+                    <code>waqt end</code> command
+                </li>
+                <li>The date field cannot be changed. If you need to move an entry to a different date, delete it and
+                    create a new one</li>
                 <li>Duration is automatically recalculated when you change start or end times</li>
-                <li>For legacy cases where multiple entries exist for one day, the CLI will prompt you to specify which entry to edit using the <code>--start</code> parameter for selection</li>
+                <li>For legacy cases where multiple entries exist for one day, the CLI will prompt you to specify which
+                    entry to edit using the <code>--start</code> parameter for selection</li>
             </ul>
 
             <p><strong>Command Options:</strong></p>
             <ul>
-                <li><code>--date</code> or <code>-d</code>: Date of the entry to edit (YYYY-MM-DD format, <strong>required</strong>)</li>
+                <li><code>--date</code> or <code>-d</code>: Date of the entry to edit (YYYY-MM-DD format,
+                    <strong>required</strong>)
+                </li>
                 <li><code>--start</code> or <code>-s</code>: New start time (HH:MM format)</li>
                 <li><code>--end</code> or <code>-e</code>: New end time (HH:MM format)</li>
                 <li><code>--description</code> or <code>--desc</code>: New description text</li>
@@ -296,14 +327,16 @@ waqt edit-entry -d 2026-01-08 -s 08:00 -e 18:00 --desc "Full day development wor
             </ul>
 
             <h2 id="managing-leave-days">Managing Leave Days</h2>
-            <p>The Leave Management feature allows you to track vacation days and sick leave. You can request single-day or multi-day leave, and the system automatically excludes weekends when calculating working hours.</p>
+            <p>The Leave Management feature allows you to track vacation days and sick leave. You can request single-day
+                or multi-day leave, and the system automatically excludes weekends when calculating working hours.</p>
 
             <h3>Adding Single-Day Leave</h3>
             <p><strong>Via UI:</strong></p>
             <ol>
                 <li>Navigate to <strong>Leave</strong> in the menu</li>
                 <li>Select <strong>Leave Type</strong> (Vacation or Sick Leave)</li>
-                <li>Choose a <strong>Start Date</strong> and <strong>End Date</strong> (set both to the same day for single-day leave)</li>
+                <li>Choose a <strong>Start Date</strong> and <strong>End Date</strong> (set both to the same day for
+                    single-day leave)</li>
                 <li>Add an optional <strong>Description</strong></li>
                 <li>Review the <strong>Leave Preview</strong> showing working hours</li>
                 <li>Click <strong>"Add Leave"</strong></li>
@@ -401,7 +434,8 @@ waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical
                 <li>Click the red <strong>"Delete"</strong> button</li>
                 <li>Confirm the deletion</li>
             </ol>
-            <p><strong>Note:</strong> When you delete a leave day, the counters are automatically updated to reflect the change.</p>
+            <p><strong>Note:</strong> When you delete a leave day, the counters are automatically updated to reflect the
+                change.</p>
 
             <h3>Leave and Reports</h3>
             <p>Leave days are included in monthly reports but not in weekly reports:</p>
@@ -561,13 +595,17 @@ waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical
             </ol>
 
             <h3 id="data-export">Data Export</h3>
-            <p>Waqt supports exporting your time entry data in multiple formats for external analysis, reporting, or backup purposes.</p>
+            <p>Waqt supports exporting your time entry data in multiple formats for external analysis, reporting, or
+                backup purposes.</p>
 
             <h4>Supported Formats</h4>
             <ul>
-                <li><strong>CSV (Comma Separated Values)</strong>: Best for general spreadsheet use and importing into other tools.</li>
-                <li><strong>JSON (JavaScript Object Notation)</strong>: Ideal for programmatic processing and data interchange.</li>
-                <li><strong>Excel (XLSX)</strong>: A formatted spreadsheet with auto-adjusted column widths and summary statistics.</li>
+                <li><strong>CSV (Comma Separated Values)</strong>: Best for general spreadsheet use and importing into
+                    other tools.</li>
+                <li><strong>JSON (JavaScript Object Notation)</strong>: Ideal for programmatic processing and data
+                    interchange.</li>
+                <li><strong>Excel (XLSX)</strong>: A formatted spreadsheet with auto-adjusted column widths and summary
+                    statistics.</li>
             </ul>
 
             <h4>Exporting via Web Interface</h4>
@@ -585,7 +623,9 @@ waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical
             </ol>
 
             <h4>Exporting via CLI</h4>
-            <p>You can export data from the command line using the <code>waqt export</code> command. The <code>--format</code> option allows you to specify the output format.</p>
+            <p>You can export data from the command line using the <code>waqt export</code> command. The
+                <code>--format</code> option allows you to specify the output format.
+            </p>
 
             <pre><code># Export to CSV (default)
 waqt export --period week --output weekly_report.csv
@@ -598,9 +638,15 @@ waqt export --period all --format excel --output full_backup.xlsx</code></pre>
 
             <p><strong>Command Options:</strong></p>
             <ul>
-                <li><code>--format</code> or <code>-f</code>: Specify format (<code>csv</code>, <code>json</code>, or <code>excel</code>). Default is <code>csv</code>.</li>
-                <li><code>--period</code> or <code>-p</code>: Range to export (<code>week</code>, <code>month</code>, or <code>all</code>).</li>
-                <li><code>--date</code> or <code>-d</code>: Reference date for the period (e.g., <code>2024-01-15</code>).</li>
+                <li><code>--format</code> or <code>-f</code>: Specify format (<code>csv</code>, <code>json</code>, or
+                    <code>excel</code>). Default is <code>csv</code>.
+                </li>
+                <li><code>--period</code> or <code>-p</code>: Range to export (<code>week</code>, <code>month</code>, or
+                    <code>all</code>).
+                </li>
+                <li><code>--date</code> or <code>-d</code>: Reference date for the period (e.g.,
+                    <code>2024-01-15</code>).
+                </li>
                 <li><code>--output</code> or <code>-o</code>: Output file path.</li>
             </ul>
 
@@ -628,7 +674,8 @@ from waqt.models import TimeEntry
 from datetime import datetime, time</code></pre>
 
             <h2 id="configuration">Configuration</h2>
-            <p>The application supports various configuration options to customize its behavior. All settings are stored in the database and can be managed using the CLI.</p>
+            <p>The application supports various configuration options to customize its behavior. All settings are stored
+                in the database and can be managed using the CLI.</p>
 
             <h3>Viewing Configuration</h3>
             <p>To see all available configuration options:</p>
@@ -640,25 +687,31 @@ from datetime import datetime, time</code></pre>
             <h3>Available Settings</h3>
             <h4>Standard Work Hours</h4>
             <ul>
-                <li><strong><code>standard_hours_per_day</code></strong>: Number of hours considered standard work per day (default: 8)</li>
+                <li><strong><code>standard_hours_per_day</code></strong>: Number of hours considered standard work per
+                    day (default: 8)</li>
                 <li><strong><code>weekly_hours</code></strong>: Expected weekly working hours (default: 40)</li>
             </ul>
 
             <h4>Display Settings</h4>
             <ul>
-                <li><strong><code>time_format</code></strong>: Time display format. Options: <code>12</code> for 12-hour format (AM/PM) or <code>24</code> for 24-hour format (default: 24).</li>
+                <li><strong><code>time_format</code></strong>: Time display format. Options: <code>12</code> for 12-hour
+                    format (AM/PM) or <code>24</code> for 24-hour format (default: 24).</li>
             </ul>
 
             <h4>Timer Settings</h4>
             <ul>
-                <li><strong><code>pause_duration_minutes</code></strong>: Default pause/break duration in minutes (default: 45)</li>
-                <li><strong><code>auto_end</code></strong>: Feature flag to auto-end work session after 8h 45m (default: false)</li>
+                <li><strong><code>pause_duration_minutes</code></strong>: Default pause/break duration in minutes
+                    (default: 45)</li>
+                <li><strong><code>auto_end</code></strong>: Feature flag to auto-end work session after 8h 45m (default:
+                    false)</li>
             </ul>
 
             <h4>Session Alert Settings</h4>
             <ul>
-                <li><strong><code>alert_on_max_work_session</code></strong>: Enable alerts when work sessions exceed 8 hours and approach the maximum limit (default: false)</li>
-                <li><strong><code>max_work_session_hours</code></strong>: Maximum work session hours threshold for alerts (default: 10)</li>
+                <li><strong><code>alert_on_max_work_session</code></strong>: Enable alerts when work sessions exceed 8
+                    hours and approach the maximum limit (default: false)</li>
+                <li><strong><code>max_work_session_hours</code></strong>: Maximum work session hours threshold for
+                    alerts (default: 10)</li>
             </ul>
 
             <h3>Modifying Settings</h3>
@@ -680,7 +733,8 @@ waqt config set weekly_hours 35</code></pre>
             <pre><code>waqt config reset &lt;setting_name&gt;</code></pre>
 
             <h3>Session Alert Feature</h3>
-            <p>The session alert feature helps prevent excessive work sessions by showing a warning banner in the UI when:</p>
+            <p>The session alert feature helps prevent excessive work sessions by showing a warning banner in the UI
+                when:</p>
             <ol>
                 <li>The feature is enabled (<code>alert_on_max_work_session</code> is <code>true</code>)</li>
                 <li>An active timer has been running for more than 8 hours</li>
@@ -696,7 +750,71 @@ waqt config set weekly_hours 35</code></pre>
                 <li>Pausing the timer hides the alert</li>
             </ul>
 
-            <p><strong>Use case:</strong> In some countries, labor laws prohibit working more than 10 hours in a single session. This feature helps users stay compliant by providing timely reminders.</p>
+            <p><strong>Use case:</strong> In some countries, labor laws prohibit working more than 10 hours in a single
+                session. This feature helps users stay compliant by providing timely reminders.</p>
+
+            <h3 id="logging">Logging</h3>
+            <p>Waqt includes a unified logging system for debugging and monitoring. Logs are stored in
+                interface-specific files with automatic rotation to prevent disk space issues.</p>
+
+            <h4>Enabling Debug Logging</h4>
+            <p>Set the <code>WAQT_LOG_LEVEL</code> environment variable to control log verbosity:</p>
+            <pre><code># Enable debug logging (most verbose)
+WAQT_LOG_LEVEL=DEBUG waqt summary
+
+# Enable warning level only
+WAQT_LOG_LEVEL=WARNING waqt ui</code></pre>
+
+            <h4>CLI Verbose Mode</h4>
+            <p>For CLI commands, use the <code>--verbose</code> flag to output logs to the console:</p>
+            <pre><code># Enable console logging for a command
+waqt --verbose start
+waqt -v summary</code></pre>
+
+            <h4>Log Files</h4>
+            <p>Logs are stored in the <code>&lt;WAQT_DATA_DIR&gt;/logs/</code> directory with interface-specific files:
+            </p>
+            <ul>
+                <li><strong><code>flask.log</code></strong>: Web UI server logs</li>
+                <li><strong><code>cli.log</code></strong>: Command-line interface logs</li>
+                <li><strong><code>mcp.log</code></strong>: MCP server logs</li>
+                <li><strong><code>app.log</code></strong>: General application logs</li>
+            </ul>
+
+            <h4>Environment Variables</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Description</th>
+                        <th>Default</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>WAQT_LOG_LEVEL</code></td>
+                        <td>Log verbosity: <code>DEBUG</code>, <code>INFO</code>, <code>WARNING</code>,
+                            <code>ERROR</code>, <code>CRITICAL</code>
+                        </td>
+                        <td><code>INFO</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>WAQT_DATA_DIR</code></td>
+                        <td>Base directory for data and logs</td>
+                        <td>Platform default</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Logging Features</h4>
+            <ul>
+                <li><strong>Rotating file handlers</strong>: Log files are automatically rotated at 5MB with 3 backups
+                    kept</li>
+                <li><strong>Interface-specific logs</strong>: Separate log files make it easy to debug specific
+                    components</li>
+                <li><strong>Configurable log level</strong>: Adjust verbosity without code changes</li>
+                <li><strong>Console output</strong>: CLI <code>--verbose</code> flag for real-time debugging</li>
+            </ul>
 
             <h2 id="troubleshooting">Troubleshooting</h2>
 
@@ -734,8 +852,10 @@ waqt config set weekly_hours 35</code></pre>
             <ol>
                 <li>Check this usage guide thoroughly</li>
                 <li>Review the <a href="installation.html">Installation Guide</a> for setup issues</li>
-                <li>See the project <a href="https://github.com/GMouaad/waqt/blob/main/README.md" target="_blank">README</a> for quick reference</li>
-                <li>Open an issue on GitHub: <a href="https://github.com/GMouaad/waqt/issues" target="_blank">https://github.com/GMouaad/waqt/issues</a></li>
+                <li>See the project <a href="https://github.com/GMouaad/waqt/blob/main/README.md"
+                        target="_blank">README</a> for quick reference</li>
+                <li>Open an issue on GitHub: <a href="https://github.com/GMouaad/waqt/issues"
+                        target="_blank">https://github.com/GMouaad/waqt/issues</a></li>
             </ol>
 
             <h2 id="whats-next">What's Next?</h2>
@@ -756,12 +876,15 @@ waqt config set weekly_hours 35</code></pre>
             <p>&copy; <span id="copyright-year">2024</span> Waqt Contributors. Licensed under the MIT License.</p>
             <p>Made with ❤️ by the Waqt Contributors</p>
             <div class="footer-links">
-                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
-                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"
+                    aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer"
+                    aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
             </div>
         </div>
     </footer>
 
     <script src="../js/main.js"></script>
 </body>
+
 </html>

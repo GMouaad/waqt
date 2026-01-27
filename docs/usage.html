@@ -1,21 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Usage - Waqt</title>
     <meta name="description" content="Usage guide for Waqt time tracking application">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <a href="index.html" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                <a href="index.html"
+                    style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
                     <i class="fas fa-clock"></i>
                     <span>Waqt</span>
                 </a>
@@ -30,7 +37,8 @@
                 <li><a href="installation.html">Installation</a></li>
                 <li><a href="usage.html" class="active">Usage</a></li>
                 <li><a href="documentation.html">Documentation</a></li>
-                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i
+                            class="fab fa-github"></i> GitHub</a></li>
             </ul>
         </div>
     </nav>
@@ -50,13 +58,14 @@
                     <p>Navigate to <code>http://localhost:5555</code> after running <code>waqt</code></p>
                     <ul>
                         <li>Dashboard Timer: One-click start/stop/pause/resume</li>
-                        <li>Calendar Overview: Monthly view with color-coded days for work entries, leave, and missing entries</li>
+                        <li>Calendar Overview: Monthly view with color-coded days for work entries, leave, and missing
+                            entries</li>
                         <li>Time Entry Management: Add, view, and delete entries</li>
                         <li>Reports: Weekly and monthly summaries</li>
                         <li>Leave Management: Track vacation and sick days with multi-day selection</li>
                     </ul>
                 </div>
-                
+
                 <div class="usage-card">
                     <h3><i class="fas fa-terminal"></i> CLI Commands</h3>
                     <pre><code># Start tracking time
@@ -97,19 +106,23 @@ waqt config set weekly_hours 40</code></pre>
 
             <div class="feature-highlight">
                 <h3><i class="fas fa-calendar-check"></i> Multi-Day Leave Management</h3>
-                <p>Request leave spanning multiple days with automatic weekend exclusion and working hours calculation.</p>
-                
+                <p>Request leave spanning multiple days with automatic weekend exclusion and working hours calculation.
+                </p>
+
                 <div class="feature-details">
                     <div class="feature-section">
                         <h4><i class="fas fa-laptop"></i> Web Interface</h4>
                         <ul>
                             <li><strong>Date Range Selection:</strong> Choose start and end dates for your leave</li>
-                            <li><strong>Live Preview:</strong> See total days, working days, and excluded weekends in real-time</li>
-                            <li><strong>Automatic Calculation:</strong> Working hours calculated based on your configured hours per day</li>
-                            <li><strong>Weekend Exclusion:</strong> Saturdays and Sundays are automatically excluded from leave records</li>
+                            <li><strong>Live Preview:</strong> See total days, working days, and excluded weekends in
+                                real-time</li>
+                            <li><strong>Automatic Calculation:</strong> Working hours calculated based on your
+                                configured hours per day</li>
+                            <li><strong>Weekend Exclusion:</strong> Saturdays and Sundays are automatically excluded
+                                from leave records</li>
                         </ul>
                     </div>
-                    
+
                     <div class="feature-section">
                         <h4><i class="fas fa-terminal"></i> Command Line</h4>
                         <pre><code># Request vacation for a full week (Mon-Sun → creates 5 records for Mon-Fri)
@@ -121,14 +134,17 @@ waqt leave-request --from 2026-01-20 --to 2026-01-24 --type sick --desc "Medical
 # Single day leave (backward compatible)
 waqt leave-request --from 2026-01-15 --to 2026-01-15</code></pre>
                     </div>
-                    
+
                     <div class="feature-section">
                         <h4><i class="fas fa-info-circle"></i> How It Works</h4>
                         <ul>
                             <li><strong>Working Days Only:</strong> Only Monday-Friday are counted as working days</li>
-                            <li><strong>Weekend Detection:</strong> Saturdays and Sundays are automatically detected and excluded</li>
-                            <li><strong>Clear Feedback:</strong> See exactly which days will be recorded before confirming</li>
-                            <li><strong>Example:</strong> Jan 12-19 (Mon-Sun) = 6 working days, 2 weekends excluded, 48 hours</li>
+                            <li><strong>Weekend Detection:</strong> Saturdays and Sundays are automatically detected and
+                                excluded</li>
+                            <li><strong>Clear Feedback:</strong> See exactly which days will be recorded before
+                                confirming</li>
+                            <li><strong>Example:</strong> Jan 12-19 (Mon-Sun) = 6 working days, 2 weekends excluded, 48
+                                hours</li>
                         </ul>
                     </div>
                 </div>
@@ -137,26 +153,30 @@ waqt leave-request --from 2026-01-15 --to 2026-01-15</code></pre>
             <div class="feature-highlight">
                 <h3><i class="fas fa-tags"></i> Category Management</h3>
                 <p>Organize your time entries with custom categories for projects, clients, or activity types.</p>
-                
+
                 <div class="feature-details">
                     <div class="feature-section">
                         <h4><i class="fas fa-laptop"></i> Web Interface</h4>
                         <ul>
-                            <li><strong>Manage Categories:</strong> Create, edit, and delete categories via the new "Categories" page.</li>
-                            <li><strong>Assign Categories:</strong> Select a category when adding or editing a time entry.</li>
-                            <li><strong>Reporting:</strong> View a breakdown of hours by category in the Reports section.</li>
+                            <li><strong>Manage Categories:</strong> Create, edit, and delete categories via the new
+                                "Categories" page.</li>
+                            <li><strong>Assign Categories:</strong> Select a category when adding or editing a time
+                                entry.</li>
+                            <li><strong>Reporting:</strong> View a breakdown of hours by category in the Reports
+                                section.</li>
                         </ul>
                     </div>
-                    
+
                     <div class="feature-section">
                         <h4><i class="fas fa-terminal"></i> Command Line (Coming Soon)</h4>
                         <p>CLI support for category management is planned for a future update.</p>
                     </div>
-                    
+
                     <div class="feature-section">
                         <h4><i class="fas fa-info-circle"></i> Features</h4>
                         <ul>
-                            <li><strong>Custom Colors:</strong> Assign colors to categories for visual distinction in reports.</li>
+                            <li><strong>Custom Colors:</strong> Assign colors to categories for visual distinction in
+                                reports.</li>
                             <li><strong>Codes:</strong> Use short codes for quick reference.</li>
                             <li><strong>Validation:</strong> Prevents deletion of categories currently in use.</li>
                         </ul>
@@ -167,17 +187,20 @@ waqt leave-request --from 2026-01-15 --to 2026-01-15</code></pre>
             <div class="feature-highlight">
                 <h3><i class="fas fa-file-export"></i> Data Export</h3>
                 <p>Export your time tracking data in multiple formats for reporting, analysis, or backup.</p>
-                
+
                 <div class="feature-details">
                     <div class="feature-section">
                         <h4><i class="fas fa-laptop"></i> Web Interface</h4>
                         <ul>
-                            <li><strong>Formats:</strong> Export to CSV, JSON, or Excel directly from the Reports page.</li>
-                            <li><strong>Context-Aware:</strong> Exports data for the currently selected week or month view.</li>
-                            <li><strong>Excel Features:</strong> Excel exports include formatted sheets with auto-adjusted columns and summary statistics.</li>
+                            <li><strong>Formats:</strong> Export to CSV, JSON, or Excel directly from the Reports page.
+                            </li>
+                            <li><strong>Context-Aware:</strong> Exports data for the currently selected week or month
+                                view.</li>
+                            <li><strong>Excel Features:</strong> Excel exports include formatted sheets with
+                                auto-adjusted columns and summary statistics.</li>
                         </ul>
                     </div>
-                    
+
                     <div class="feature-section">
                         <h4><i class="fas fa-terminal"></i> Command Line</h4>
                         <pre><code># Standard CSV export
@@ -212,15 +235,19 @@ waqt export --period all --format excel --output full_history.xlsx</code></pre>
 
     <footer>
         <div class="container">
-            <p>&copy; <span id="copyright-year">2024</span> Waqt Contributors. Licensed under the MIT License.</p>
-            <p>Made with ❤️ by the Waqt Contributors</p>
+            <p>&copy; <span id="copyright-year">2026</span> Waqt Contributors. Licensed under the MIT License.</p>
+            <p>Made with ❤️ by <a href="https://github.com/GMouaad/waqt" target="_blank"
+                    rel="noopener noreferrer">GMouaad</a> and the Waqt Contributors</p>
             <div class="footer-links">
-                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
-                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"
+                    aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer"
+                    aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
             </div>
         </div>
     </footer>
 
     <script src="js/main.js"></script>
 </body>
+
 </html>

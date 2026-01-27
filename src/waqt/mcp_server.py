@@ -37,6 +37,10 @@ from .config import (
     validate_config_value,
     normalize_bool_value,
 )
+from .logging import get_mcp_logger
+
+# Initialize logger for MCP server
+logger = get_mcp_logger()
 
 
 # Initialize FastMCP server
@@ -75,6 +79,7 @@ def ensure_db_initialized():
     """Ensure database is initialized before any tool runs."""
     global _db_initialized
     if not _db_initialized:
+        logger.debug("Initializing database for MCP server")
         initialize_database()
         _db_initialized = True
 
@@ -995,6 +1000,8 @@ def main():
     with MCP clients.
     """
     import asyncio
+
+    logger.info("Starting MCP server")
 
     # Initialize database before starting server
     ensure_db_initialized()
