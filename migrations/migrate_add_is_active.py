@@ -38,8 +38,8 @@ def migrate():
         print("Backfilling is_active status for potentially running timers...")
         cursor.execute(
             """
-            UPDATE time_entries 
-            SET is_active = 1 
+            UPDATE time_entries
+            SET is_active = 1
             WHERE duration_hours = 0.0 AND start_time = end_time
         """
         )

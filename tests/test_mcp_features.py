@@ -1,7 +1,7 @@
 """Unit tests for the new MCP server features."""
 
 import pytest
-from datetime import date, time, timedelta
+from datetime import date, time
 
 
 @pytest.fixture
@@ -48,7 +48,6 @@ def app():
 def test_edit_entry_basic(app):
     """Test editing a single entry."""
     from src.waqt.models import TimeEntry
-    from src.waqt import db
     from src.waqt.mcp_server import edit_entry
     from src.waqt import database as database_module
 
@@ -216,7 +215,7 @@ def test_leave_request_basic(app):
         with database_module.get_session() as session:
             leaves = session.query(LeaveDay).all()
             assert len(leaves) == 5
-            assert all(l.leave_type == "vacation" for l in leaves)
+            assert all(leave.leave_type == "vacation" for leave in leaves)
 
 
 def test_leave_request_weekend_exclusion(app):
@@ -241,7 +240,7 @@ def test_leave_request_weekend_exclusion(app):
         with database_module.get_session() as session:
             leaves = session.query(LeaveDay).all()
             assert len(leaves) == 2
-            dates = sorted([l.date for l in leaves])
+            dates = sorted([leave.date for leave in leaves])
             assert dates[0] == date(2024, 1, 19)
             assert dates[1] == date(2024, 1, 22)
 

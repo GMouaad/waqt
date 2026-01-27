@@ -1,6 +1,5 @@
 import pytest
-from datetime import datetime, time, timedelta
-import time as time_module
+from datetime import datetime, timedelta
 
 
 @pytest.fixture

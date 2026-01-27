@@ -27,7 +27,9 @@ CONFIG_DESCRIPTIONS = {
     "weekly_hours": "Expected weekly working hours (default: 40)",
     "pause_duration_minutes": "Default pause/break duration in minutes (default: 45)",
     "auto_end": "Feature flag: Auto-end work session after 8h 45m (default: false)",
-    "alert_on_max_work_session": "Feature flag: Alert when session exceeds 8 hours and approaches max limit (default: false)",
+    "alert_on_max_work_session": (
+        "Feature flag: Alert when session exceeds 8 hours and approaches max limit (default: false)"
+    ),
     "max_work_session_hours": "Maximum work session hours threshold for alerts (default: 10)",
     "time_format": "Time display format: 24-hour (HH:MM) or 12-hour (hh:MM AM/PM) (default: 24)",
 }

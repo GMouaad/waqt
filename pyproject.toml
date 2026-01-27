@@ -38,7 +38,7 @@ dev = [
     "pytest==9.0.2",
     "pytest-cov==7.0.0",
     "pytest-playwright==0.7.2",
-    "flake8==7.0.0",
+    "flake8==7.3.0",
     "black==26.1.0",
 ]
 build = [
@@ -97,4 +97,17 @@ exclude_lines = [
     "raise AssertionError",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
+]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".venv",
+    "venv",
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".eggs",
 ]

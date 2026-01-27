@@ -579,7 +579,6 @@ def test_edit_entry_command_multiple_entries(runner, app, cli):
 def test_add_command_basic(runner, app, cli):
     """Test basic add command functionality with default pause."""
     from src.waqt.models import TimeEntry, Settings
-    from src.waqt import db
 
     test_date = date(2024, 1, 15)
 

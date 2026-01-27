@@ -56,7 +56,10 @@ def add_time_entry(
     if pause_mode not in valid_pause_modes:
         return {
             "success": False,
-            "message": f"Invalid pause mode '{pause_mode}'. Must be one of: {', '.join(valid_pause_modes)}.",
+            "message": (
+                f"Invalid pause mode '{pause_mode}'. "
+                f"Must be one of: {', '.join(valid_pause_modes)}."
+            ),
         }
 
     if pause_mode == "custom" and pause_minutes < 0:
@@ -95,7 +98,10 @@ def add_time_entry(
     if existing_entries:
         return {
             "success": False,
-            "message": f"An entry already exists for {entry_date}. Only one entry per day is allowed.",
+            "message": (
+                f"An entry already exists for {entry_date}. "
+                "Only one entry per day is allowed."
+            ),
         }
 
     entry = TimeEntry(

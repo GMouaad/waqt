@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, time
+from datetime import datetime
 from src.waqt.models import TimeEntry
 from src.waqt.routes import get_open_entry
 from src.waqt import create_app, db
