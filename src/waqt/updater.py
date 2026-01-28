@@ -139,9 +139,9 @@ def get_asset_name(os_name: str, arch: str) -> str:
         arch: Architecture (amd64, arm64)
 
     Returns:
-        Asset name like "waqtracker-linux-amd64.zip"
+        Asset name like "waqt-linux-amd64.zip"
     """
-    return f"waqtracker-{os_name}-{arch}.zip"
+    return f"waqt-{os_name}-{arch}.zip"
 
 
 def check_for_updates(
@@ -175,7 +175,7 @@ def check_for_updates(
             api_url,
             headers={
                 "Accept": "application/vnd.github+json",
-                "User-Agent": f"waqtracker/{VERSION}",
+                "User-Agent": f"waqt/{VERSION}",
             },
         )
 
@@ -296,9 +296,9 @@ def download_and_install_update(release_info: Dict[str, str]) -> bool:
 
         # Find the executable in the extracted files
         if os_name == "windows":
-            new_exe_name = "waqtracker.exe"
+            new_exe_name = "waqt.exe"
         else:
-            new_exe_name = "waqtracker"
+            new_exe_name = "waqt"
 
         new_exe_path = extract_path / new_exe_name
 

@@ -144,9 +144,9 @@ class TestPlatformDetection:
         """Test asset name generation."""
         from src.waqt.updater import get_asset_name
 
-        assert get_asset_name("linux", "amd64") == "waqtracker-linux-amd64.zip"
-        assert get_asset_name("macos", "arm64") == "waqtracker-macos-arm64.zip"
-        assert get_asset_name("windows", "amd64") == "waqtracker-windows-amd64.zip"
+        assert get_asset_name("linux", "amd64") == "waqt-linux-amd64.zip"
+        assert get_asset_name("macos", "arm64") == "waqt-macos-arm64.zip"
+        assert get_asset_name("windows", "amd64") == "waqt-windows-amd64.zip"
 
 
 class TestUpdateChecking:
