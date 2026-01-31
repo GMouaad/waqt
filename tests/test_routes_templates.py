@@ -1,8 +1,5 @@
 import pytest
 from datetime import time, date
-import waqt
-
-print(f"DEBUG: waqt package file: {waqt.__file__}")
 from waqt.models import Template, TimeEntry
 
 

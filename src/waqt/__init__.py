@@ -85,6 +85,13 @@ def create_app(test_config=None):
         actual_db_path = database_url.replace("sqlite:///", "")
         run_migrations(actual_db_path)
 
+        # In test mode, dispose the migration engine to clean up connections
+        if test_config:
+            from .database import _engine
+
+            if _engine is not None:
+                _engine.dispose()
+
         # Seed default settings if they don't exist
         from .models import Settings
 
