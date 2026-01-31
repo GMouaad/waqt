@@ -34,9 +34,7 @@ from .services import (
     create_leave_requests,
     create_template,
     list_templates,
-    get_template,
     delete_template,
-    update_template,
 )
 from .config import (
     CONFIG_DEFAULTS,
@@ -567,8 +565,6 @@ def time_entry():
             if request.form.get("save_as_template") == "on":
                 template_name = request.form.get("new_template_name", "").strip()
                 if template_name:
-                    # Calculate duration
-                    duration_minutes = None
                     # We have start_time and end_time objects
 
                     create_template_result = create_template(
@@ -585,7 +581,8 @@ def time_entry():
                         flash(f"Template '{template_name}' saved.", "success")
                     else:
                         flash(
-                            f"Warning: Could not save template: {create_template_result['message']}",
+                            "Warning: Could not save template: "
+                            f"{create_template_result['message']}",
                             "warning",
                         )
 
@@ -1042,12 +1039,6 @@ def export_excel():
 def import_data():
     """Import time entries from uploaded file (POST only, accessed via reports modal)."""
     from .services import import_time_entries
-    from .utils import (
-        detect_import_format,
-        parse_time_entries_from_json,
-        parse_time_entries_from_csv,
-        parse_time_entries_from_excel,
-    )
     import tempfile
     import os
 
@@ -1332,12 +1323,7 @@ def create_template_route():
         else:
             flash(f"Error: {result['message']}", "error")
 
-        db.session.commit()  # Ensure commit happens if service didn't (service usually doesn't commit if passed session? wait, service implementation commits? let's check. create_template calls session.add but maybe not commit? I should check service)
-        # Service implementation:
-        #  session.add(template)
-        #  try: session.commit() ...
-        # So it handles commit. Good.
-
+        # Service handles commit
     except Exception as e:
         db.session.rollback()
         flash(f"Error creating template: {str(e)}", "error")

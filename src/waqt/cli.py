@@ -25,6 +25,12 @@ from .services import (
     update_time_entry,
     add_time_entry,
     create_leave_requests,
+    create_template,
+    list_templates,
+    get_template,
+    update_template,
+    delete_template,
+    apply_template,
 )
 from ._version import VERSION, GIT_SHA
 from .config import (
@@ -1737,7 +1743,8 @@ def template_create(
                 category_id = cat.id
             else:
                 click.echo(
-                    f"Warning: Category '{category_name}' not found. Creating template without category."
+                    f"Warning: Category '{category_name}' not found. "
+                    "Creating template without category."
                 )
 
         result = create_template(

@@ -10,6 +10,7 @@ the `database.get_session()` context manager.
 
 from datetime import datetime, date, time, timedelta
 from typing import Optional, Dict, Any, List
+import logging
 from sqlalchemy.orm import Session
 
 from .models import TimeEntry, LeaveDay, Settings, Category, Template
@@ -25,6 +26,8 @@ from .utils import (
     normalize_date_string,
     normalize_time_string,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def add_time_entry(
@@ -943,7 +946,7 @@ def apply_template(
         else:
             # Get default template
             template = (
-                session.query(Template).filter(Template.is_default == True).first()
+                session.query(Template).filter(Template.is_default.is_(True)).first()
             )
             if not template:
                 return {
@@ -958,16 +961,13 @@ def apply_template(
 
         # Calculate end time
         if template.end_time:
-            # If using fixed end time, but start time was overridden, check if we should preserve duration or end time
-            # For simplicity, if end_time is set in template, we try to respect it unless duration logic is preferred
-            # But the requirement says: "If both duration_minutes and end_time are set, prefer end_time"
-            # However, if user overrides start_time, usually they want to shift the block or keep end time?
-            # Let's say we use template's calculation logic.
+            # If end_time is set in template, we try to respect it.
+            # However, if user overrides start_time, we might want to shift block.
+            # Using template's calculation logic.
             end_time = template.get_end_time(start_time_ref=start_time)
         elif template.duration_minutes:
             # Calculate from duration
-            # We need to manually calculate here because template.get_end_time might use its own start_time
-            # actually get_end_time allows passing a ref start time.
+            # We calculate end time from duration manually here
             end_time = template.get_end_time(start_time_ref=start_time)
         else:
             return {
@@ -1008,7 +1008,7 @@ def apply_template(
 
 def _clear_default_template(session: Session):
     """Unset is_default for all templates."""
-    session.query(Template).filter(Template.is_default == True).update(
+    session.query(Template).filter(Template.is_default.is_(True)).update(
         {"is_default": False}
     )
     session.commit()

@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from mcp.server.fastmcp import FastMCP
 
 from .database import get_session, initialize_database
-from .models import TimeEntry, LeaveDay, Settings
+from .models import TimeEntry, LeaveDay, Settings, Category
 from .utils import (
     get_week_bounds,
     get_month_bounds,

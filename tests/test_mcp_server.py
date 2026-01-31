@@ -735,9 +735,12 @@ def test_import_entries_csv_basic(app):
     from src.waqt.models import TimeEntry
 
     with app.app_context():
-        csv_content = """Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM),Description,Category,Overtime,Created At
-2026-10-02,Friday,08:00,16:00,8.00,8:00,CSV imported via MCP,,0.00,2026-10-02T08:00:00
-"""
+        csv_content = (
+            "Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM),"
+            "Description,Category,Overtime,Created At\n"
+            "2026-10-02,Friday,08:00,16:00,8.00,8:00,CSV imported via MCP,,0.00,"
+            "2026-10-02T08:00:00\n"
+        )
 
         result = import_entries(content=csv_content, import_format="csv")
 
@@ -781,7 +784,7 @@ def test_import_entries_dry_run(app):
 def test_import_entries_with_category(app):
     """Test import creates categories automatically via MCP."""
     from src.waqt.mcp_server import import_entries
-    from src.waqt.models import TimeEntry, Category
+    from src.waqt.models import Category
 
     with app.app_context():
         json_content = """{

@@ -1,12 +1,10 @@
-import pytest
-from datetime import datetime, time, date, timedelta
-from waqt.models import Template, TimeEntry, Category
+from datetime import time, date
+from waqt.models import Template, TimeEntry
 from waqt.services import (
     create_template,
     list_templates,
     get_template,
     delete_template,
-    update_template,
     apply_template,
 )
 

@@ -2,9 +2,8 @@
 
 import pytest
 import json
-import os
 from datetime import date, time
-from tempfile import NamedTemporaryFile
+
 
 from waqt.utils import (
     detect_import_format,
@@ -279,9 +278,12 @@ class TestParseTimeEntriesFromCsv:
     """Tests for CSV parsing."""
 
     def test_parse_basic_csv(self):
-        content = """Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM),Description,Category,Overtime,Created At
-2026-01-15,Wednesday,09:00,17:00,8.00,8:00,Work session,Development,0.00,2026-01-15T09:00:00
-"""
+        content = (
+            "Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM)"
+            ",Description,Category,Overtime,Created At\n"
+            "2026-01-15,Wednesday,09:00,17:00,8.00,8:00,Work session,Development,0.00,"
+            "2026-01-15T09:00:00\n"
+        )
         result = parse_time_entries_from_csv(content)
         assert len(result["entries"]) == 1
         assert result["entries"][0]["date"] == "2026-01-15"
@@ -289,27 +291,34 @@ class TestParseTimeEntriesFromCsv:
 
     def test_parse_csv_without_category(self):
         """CSV without Category column should still work."""
-        content = """Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM),Description,Overtime,Created At
-2026-01-15,Wednesday,09:00,17:00,8.00,8:00,Work session,0.00,2026-01-15T09:00:00
-"""
+        content = (
+            "Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM)"
+            ",Description,Overtime,Created At\n"
+            "2026-01-15,Wednesday,09:00,17:00,8.00,8:00,Work session,0.00,"
+            "2026-01-15T09:00:00\n"
+        )
         result = parse_time_entries_from_csv(content)
         assert len(result["entries"]) == 1
         assert "category" not in result["entries"][0]
 
     def test_skips_summary_rows(self):
-        content = """Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM),Description,Overtime,Created At
-2026-01-15,Wednesday,09:00,17:00,8.00,8:00,Work session,0.00,2026-01-15T09:00:00
-
-Summary Statistics
-Period,2026-01-15 to 2026-01-15
-Total Entries,1
-"""
+        content = (
+            "Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM)"
+            ",Description,Overtime,Created At\n"
+            "2026-01-15,Wednesday,09:00,17:00,8.00,8:00,Work session,0.00,"
+            "2026-01-15T09:00:00\n\n"
+            "Summary Statistics\n"
+            "Period,2026-01-15 to 2026-01-15\n"
+            "Total Entries,1\n"
+        )
         result = parse_time_entries_from_csv(content)
         assert len(result["entries"]) == 1
 
     def test_empty_csv_raises(self):
-        content = """Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM),Description,Overtime,Created At
-"""
+        content = (
+            "Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM)"
+            ",Description,Overtime,Created At\n"
+        )
         with pytest.raises(ValueError, match="no valid time entries"):
             parse_time_entries_from_csv(content)
 
