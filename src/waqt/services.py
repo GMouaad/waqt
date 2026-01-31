@@ -12,7 +12,7 @@ from datetime import datetime, date, time, timedelta
 from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 
-from .models import TimeEntry, LeaveDay, Settings, Category
+from .models import TimeEntry, LeaveDay, Settings, Category, Template
 from .utils import (
     calculate_duration,
     get_working_days_in_range,
@@ -751,3 +751,264 @@ def import_time_entries(
             result["warnings"].append("No new entries to import")
 
     return result
+
+
+# =============================================================================
+# Template Functions
+# =============================================================================
+
+
+def create_template(
+    session: Session,
+    name: str,
+    start_time: time,
+    end_time: Optional[time] = None,
+    duration_minutes: Optional[int] = None,
+    pause_mode: str = "default",
+    pause_minutes: int = 0,
+    category_id: Optional[int] = None,
+    description: str = "Work session",
+    is_default: bool = False,
+) -> Dict[str, Any]:
+    """
+    Create a new time entry template.
+
+    Args:
+        session: SQLAlchemy session
+        name: Template name (must be unique)
+        start_time: Start time
+        end_time: End time (optional if duration set)
+        duration_minutes: Duration in minutes (optional if end_time set)
+        pause_mode: Pause behavior ('default', 'custom', 'none')
+        pause_minutes: Custom pause duration in minutes
+        category_id: Category ID
+        description: Template description
+        is_default: Set as default template
+
+    Returns:
+        Dictionary with status and created template details
+    """
+    try:
+        # validate inputs
+        if not end_time and not duration_minutes:
+            return {
+                "success": False,
+                "message": "Either end_time or duration_minutes must be provided",
+            }
+
+        # Check uniqueness
+        existing = session.query(Template).filter(Template.name == name).first()
+        if existing:
+            return {
+                "success": False,
+                "message": f"Template with name '{name}' already exists",
+            }
+
+        # Handle default preference
+        if is_default:
+            _clear_default_template(session)
+
+        # Create template
+        template = Template(
+            name=name,
+            start_time=start_time,
+            end_time=end_time,
+            duration_minutes=duration_minutes,
+            pause_mode=pause_mode,
+            pause_minutes=pause_minutes,
+            category_id=category_id,
+            description=description,
+            is_default=is_default,
+        )
+        session.add(template)
+        session.commit()
+
+        return {
+            "success": True,
+            "message": f"Template '{name}' created successfully",
+            "template": template.to_dict(),
+        }
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error creating template: {e}")
+        return {"success": False, "message": f"Error creating template: {str(e)}"}
+
+
+def get_template(session: Session, name: str) -> Optional[Template]:
+    """Get a template by name."""
+    return session.query(Template).filter(Template.name == name).first()
+
+
+def get_template_by_id(session: Session, template_id: int) -> Optional[Template]:
+    """Get a template by ID."""
+    return session.query(Template).filter(Template.id == template_id).first()
+
+
+def list_templates(session: Session) -> List[Template]:
+    """List all templates ordered by name."""
+    return session.query(Template).order_by(Template.name).all()
+
+
+def update_template(session: Session, template_id: int, **kwargs) -> Dict[str, Any]:
+    """Update an existing template."""
+    try:
+        template = session.query(Template).filter(Template.id == template_id).first()
+        if not template:
+            return {"success": False, "message": "Template not found"}
+
+        if "name" in kwargs and kwargs["name"] != template.name:
+            # Check for naming conflict
+            existing = (
+                session.query(Template).filter(Template.name == kwargs["name"]).first()
+            )
+            if existing:
+                return {
+                    "success": False,
+                    "message": f"Template with name '{kwargs['name']}' already exists",
+                }
+            template.name = kwargs["name"]
+
+        if "is_default" in kwargs:
+            if kwargs["is_default"] and not template.is_default:
+                _clear_default_template(session)
+            template.is_default = kwargs["is_default"]
+
+        # Update other fields
+        fields = [
+            "start_time",
+            "end_time",
+            "duration_minutes",
+            "pause_mode",
+            "pause_minutes",
+            "category_id",
+            "description",
+        ]
+        for field in fields:
+            if field in kwargs:
+                setattr(template, field, kwargs[field])
+
+        session.commit()
+        return {
+            "success": True,
+            "message": "Template updated successfully",
+            "template": template.to_dict(),
+        }
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error updating template: {e}")
+        return {"success": False, "message": f"Error updating template: {str(e)}"}
+
+
+def delete_template(session: Session, template_id: int) -> Dict[str, Any]:
+    """Delete a template."""
+    try:
+        template = session.query(Template).filter(Template.id == template_id).first()
+        if not template:
+            return {"success": False, "message": "Template not found"}
+
+        session.delete(template)
+        session.commit()
+        return {"success": True, "message": "Template deleted successfully"}
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error deleting template: {e}")
+        return {"success": False, "message": f"Error deleting template: {str(e)}"}
+
+
+def apply_template(
+    session: Session,
+    template_name: Optional[str] = None,
+    target_date: Optional[date] = None,
+    **overrides,
+) -> Dict[str, Any]:
+    """
+    Apply a template to create a time entry for a specific date.
+
+    Args:
+        session: SQLAlchemy session
+        template_name: Name of template to apply (uses default if None)
+        target_date: Date to apply to (default: today)
+        **overrides: Optional overrides for start_time, description, etc.
+    """
+    try:
+        target_date = target_date or date.today()
+
+        if template_name:
+            template = get_template(session, template_name)
+            if not template:
+                return {
+                    "success": False,
+                    "message": f"Template '{template_name}' not found",
+                }
+        else:
+            # Get default template
+            template = (
+                session.query(Template).filter(Template.is_default == True).first()
+            )
+            if not template:
+                return {
+                    "success": False,
+                    "message": "No default template set and no name provided",
+                }
+
+        # Calculate parameters
+        start_time = overrides.get("start_time", template.start_time)
+        description = overrides.get("description", template.description)
+        category_id = overrides.get("category_id", template.category_id)
+
+        # Calculate end time
+        if template.end_time:
+            # If using fixed end time, but start time was overridden, check if we should preserve duration or end time
+            # For simplicity, if end_time is set in template, we try to respect it unless duration logic is preferred
+            # But the requirement says: "If both duration_minutes and end_time are set, prefer end_time"
+            # However, if user overrides start_time, usually they want to shift the block or keep end time?
+            # Let's say we use template's calculation logic.
+            end_time = template.get_end_time(start_time_ref=start_time)
+        elif template.duration_minutes:
+            # Calculate from duration
+            # We need to manually calculate here because template.get_end_time might use its own start_time
+            # actually get_end_time allows passing a ref start time.
+            end_time = template.get_end_time(start_time_ref=start_time)
+        else:
+            return {
+                "success": False,
+                "message": "Template is invalid (no end time or duration)",
+            }
+
+        # Check for duplicate
+        existing = _check_duplicate_entry(session, target_date, start_time, end_time)
+        if existing:
+            return {
+                "success": False,
+                "message": f"Time entry already exists for {target_date} overlapping this time",
+            }
+
+        # Call add_time_entry
+        result = add_time_entry(
+            session=session,
+            entry_date=target_date,
+            start_time=start_time,
+            end_time=end_time,
+            description=description,
+            category_id=category_id,
+            pause_mode=template.pause_mode,
+            pause_minutes=overrides.get("pause_minutes", template.pause_minutes),
+        )
+
+        if result["success"]:
+            result["message"] = f"Applied template '{template.name}' to {target_date}"
+
+        return result
+
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error applying template: {e}")
+        return {"success": False, "message": f"Error applying template: {str(e)}"}
+
+
+def _clear_default_template(session: Session):
+    """Unset is_default for all templates."""
+    session.query(Template).filter(Template.is_default == True).update(
+        {"is_default": False}
+    )
+    session.commit()

@@ -6,92 +6,143 @@
 <div class="form-page" data-testid="time-entry-page">
     <h2>Add Time Entry</h2>
     <p class="subtitle">Log your work hours and activities</p>
-    
+
     <div class="section">
         <form method="POST" action="{{ url_for('main.time_entry') }}" data-testid="time-entry-form">
-            <div class="form-group">
-                <label for="date">Date *</label>
-                <input type="date" id="date" name="date" data-testid="input-date" value="{{ today.isoformat() }}" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="category_id">Category</label>
-                <select id="category_id" name="category_id" class="form-control" data-testid="input-category">
-                    <option value="">-- No Category --</option>
-                    {% if categories %}
-                        {% for category in categories %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                        {% endfor %}
-                    {% endif %}
-                </select>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="start_time">Start Time *</label>
-                    {% if time_format == '12' %}
-                    <input type="text" id="start_time" name="start_time" data-testid="input-start-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
-                    {% else %}
-                    <input type="time" id="start_time" name="start_time" data-testid="input-start-time" required>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <label for="end_time">End Time *</label>
-                    {% if time_format == '12' %}
-                    <input type="text" id="end_time" name="end_time" data-testid="input-end-time" placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
-                    {% else %}
-                    <input type="time" id="end_time" name="end_time" data-testid="input-end-time" required>
-                    {% endif %}
-                </div>
-            </div>
+            <label for="date">Date *</label>
+            <input type="date" id="date" name="date" data-testid="input-date" value="{{ today.isoformat() }}" required>
+    </div>
 
-            <div class="form-group">
-                <label>Pause Deduction</label>
-                <div class="radio-group" id="pause-options">
-                    <label class="radio-option">
-                        <input type="radio" id="pause_default" name="pause_mode" value="default" checked onchange="toggleCustomPause(false)" data-default-pause="{{ default_pause }}">
-                        <span>Default ({{ default_pause }}m)</span>
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" id="pause_none" name="pause_mode" value="none" onchange="toggleCustomPause(false)">
-                        <span>No Pause (0m)</span>
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" id="pause_custom" name="pause_mode" value="custom" onchange="toggleCustomPause(true)">
-                        <span>Custom</span>
-                    </label>
-                </div>
-                <div id="custom_pause_container" style="display: none; margin-top: 1rem;">
-                    <label for="custom_pause_minutes" style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 0.5rem;">Pause Duration (minutes)</label>
-                    <input type="number" id="custom_pause_minutes" name="custom_pause_minutes" min="0" placeholder="e.g. 60" class="form-control" style="max-width: 200px;">
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="description">Description *</label>
-                <textarea id="description" name="description" data-testid="input-description" rows="4" required placeholder="What did you work on?"></textarea>
-            </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary" data-testid="btn-submit">Save Entry</button>
-                <a href="{{ url_for('main.index') }}" class="btn btn-secondary" data-testid="btn-cancel">Cancel</a>
-            </div>
-        </form>
+    {% if templates %}
+    <div class="form-group"
+        style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+        <label for="template_select">Load from Template</label>
+        <select id="template_select" class="form-control" onchange="loadTemplate(this)">
+            <option value="">-- Select a Template --</option>
+            {% for t in templates %}
+            <option value="{{ t.id }}" data-start="{{ t.start_time.strftime('%H:%M') }}"
+                data-end="{{ t.end_time.strftime('%H:%M') if t.end_time else '' }}"
+                data-duration="{{ t.duration_minutes or '' }}" data-pause-mode="{{ t.pause_mode }}"
+                data-pause="{{ t.pause_minutes }}" data-category="{{ t.category_id or '' }}"
+                data-description="{{ t.description }}">
+                {{ t.name }}
+            </option>
+            {% endfor %}
+        </select>
     </div>
-    
-    <div class="info-box">
-        <h3>💡 Tips</h3>
-        <ul>
-            <li>Standard work day is 8 hours</li>
-            <li>Hours over 8 per day are counted as overtime</li>
-            <li>Only one entry per day is allowed</li>
-            <li>Be descriptive in your activity notes for better tracking</li>
-        </ul>
+    {% endif %}
+
+    <div class="form-group">
+        <label for="category_id">Category</label>
+        <select id="category_id" name="category_id" class="form-control" data-testid="input-category">
+            <option value="">-- No Category --</option>
+            {% if categories %}
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+            {% endif %}
+        </select>
     </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="start_time">Start Time *</label>
+            {% if time_format == '12' %}
+            <input type="text" id="start_time" name="start_time" data-testid="input-start-time"
+                placeholder="hh:mm AM/PM" pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
+            {% else %}
+            <input type="time" id="start_time" name="start_time" data-testid="input-start-time" required>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="end_time">End Time *</label>
+            {% if time_format == '12' %}
+            <input type="text" id="end_time" name="end_time" data-testid="input-end-time" placeholder="hh:mm AM/PM"
+                pattern="((0?[1-9]|1[0-2]):[0-5][0-9] [AaPp][Mm])" required>
+            {% else %}
+            <input type="time" id="end_time" name="end_time" data-testid="input-end-time" required>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Pause Deduction</label>
+        <div class="radio-group" id="pause-options">
+            <label class="radio-option">
+                <input type="radio" id="pause_default" name="pause_mode" value="default" checked
+                    onchange="toggleCustomPause(false)" data-default-pause="{{ default_pause }}">
+                <span>Default ({{ default_pause }}m)</span>
+            </label>
+            <label class="radio-option">
+                <input type="radio" id="pause_none" name="pause_mode" value="none" onchange="toggleCustomPause(false)">
+                <span>No Pause (0m)</span>
+            </label>
+            <label class="radio-option">
+                <input type="radio" id="pause_custom" name="pause_mode" value="custom"
+                    onchange="toggleCustomPause(true)">
+                <span>Custom</span>
+            </label>
+        </div>
+        <div id="custom_pause_container" style="display: none; margin-top: 1rem;">
+            <label for="custom_pause_minutes"
+                style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 0.5rem;">Pause Duration
+                (minutes)</label>
+            <input type="number" id="custom_pause_minutes" name="custom_pause_minutes" min="0" placeholder="e.g. 60"
+                class="form-control" style="max-width: 200px;">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description *</label>
+        <textarea id="description" name="description" data-testid="input-description" rows="4" required
+            placeholder="What did you work on?"></textarea>
+    </div>
+
+    <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <label class="checkbox-option" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" name="save_as_template" id="save_as_template" onchange="toggleTemplateName(this.checked)">
+            <span>Save this entry as a template</span>
+        </label>
+    </div>
+
+    <div id="template_name_container" class="form-group" style="display: none; margin-left: 1.5rem;">
+        <label for="new_template_name">Template Name</label>
+        <input type="text" id="new_template_name" name="new_template_name" placeholder="e.g. Standard Work Day" class="form-control">
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary" data-testid="btn-submit">Save Entry</button>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary" data-testid="btn-cancel">Cancel</a>
+    </div>
+    </form>
+</div>
+
+<div class="info-box">
+    <h3>💡 Tips</h3>
+    <ul>
+        <li>Standard work day is 8 hours</li>
+        <li>Hours over 8 per day are counted as overtime</li>
+        <li>Only one entry per day is allowed</li>
+        <li>Be descriptive in your activity notes for better tracking</li>
+    </ul>
+</div>
 </div>
 
 <script>
+    function toggleTemplateName(show) {
+        const container = document.getElementById('template_name_container');
+        const input = document.getElementById('new_template_name');
+        if (show) {
+            container.style.display = 'block';
+            input.required = true;
+            input.focus();
+        } else {
+            container.style.display = 'none';
+            input.required = false;
+        }
+    }
+
     function toggleCustomPause(show) {
         const container = document.getElementById('custom_pause_container');
         const input = document.getElementById('custom_pause_minutes');
@@ -113,6 +164,70 @@
         if (pauseModeRadio) {
             pauseModeRadio.dispatchEvent(new Event('change', { bubbles: true }));
         }
+    }
+
+    function loadTemplate(select) {
+        const option = select.options[select.selectedIndex];
+        if (!option.value) return;
+
+        const start = option.getAttribute('data-start');
+        const end = option.getAttribute('data-end');
+        const duration = option.getAttribute('data-duration'); // minutes
+        const pauseMode = option.getAttribute('data-pause-mode');
+        const pause = option.getAttribute('data-pause');
+        const category = option.getAttribute('data-category');
+        const desc = option.getAttribute('data-description');
+
+        // Set form values
+        document.getElementById('start_time').value = start;
+        if (desc) document.getElementById('description').value = desc;
+        if (category) document.getElementById('category_id').value = category;
+        else document.getElementById('category_id').value = "";
+
+        // Handle End Time / Duration
+        // Since the form uses End Time input, we might need to calculate it if only duration is present
+        // But the input type="time" requires HH:MM.
+        // If template has specific end time, use it.
+        // If template has duration, calculate end time based on start time?
+        // Or if form supported duration input, it would be easier.
+        // Currently existing JS in main.js might calculate duration from start/end.
+        // But here we set values.
+
+        if (end) {
+            document.getElementById('end_time').value = end;
+        } else if (duration) {
+            // Calculate end time using simple math
+            // Requires start time to be set and parsed
+            const [h, m] = start.split(':').map(Number);
+            const durationMins = parseInt(duration);
+            
+            let totalMinutes = h * 60 + m + durationMins;
+            
+            // Handle 24h wrapping
+            let endH = Math.floor(totalMinutes / 60) % 24;
+            let endM = totalMinutes % 60;
+            
+            const endHStr = String(endH).padStart(2, '0');
+            const endMStr = String(endM).padStart(2, '0');
+            document.getElementById('end_time').value = `${endHStr}:${endMStr}`;
+        }
+
+        // Handle Pause
+        if (pauseMode === 'default') {
+            document.getElementById('pause_default').checked = true;
+            toggleCustomPause(false);
+        } else if (pauseMode === 'none') {
+            document.getElementById('pause_none').checked = true;
+            toggleCustomPause(false);
+        } else {
+            document.getElementById('pause_custom').checked = true;
+            toggleCustomPause(true);
+            document.getElementById('custom_pause_minutes').value = pause;
+        }
+
+        // Trigger generic change events for other listeners
+        document.getElementById('start_time').dispatchEvent(new Event('change', { bubbles: true }));
+        document.getElementById('end_time').dispatchEvent(new Event('change', { bubbles: true }));
     }
 </script>
 {% endblock %}

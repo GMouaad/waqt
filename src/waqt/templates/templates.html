@@ -1,0 +1,510 @@
+{% extends "base.html" %}
+
+{% block title %}Templates - Waqt{% endblock %}
+
+{% block content %}
+<style>
+    /* Page Layout */
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .subtitle {
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    /* Cards */
+    .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+    }
+
+    .card-body {
+        padding: 0;
+    }
+
+    /* Table Styling */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-table th {
+        background: var(--bg-secondary);
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tr:hover {
+        background-color: var(--bg-hover);
+    }
+
+    .template-name {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .time-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-color);
+        font-family: monospace;
+        font-size: 0.95rem;
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25em 0.6em;
+        font-size: 0.75em;
+        font-weight: 600;
+        line-height: 1;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    .badge-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .badge-secondary {
+        background-color: var(--bg-secondary);
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+    }
+
+    .badge-info {
+        background-color: #3b82f6;
+        color: white;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        margin-bottom: 2rem;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        display: none;
+        /* Ensure hidden by default */
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        /* Activate flex when active */
+        opacity: 0;
+    }
+
+    .modal-overlay.visible {
+        opacity: 1;
+    }
+
+    .modal-glass {
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--card-radius);
+        box-shadow: var(--shadow-lg);
+        width: 100%;
+        max-width: 500px;
+        margin: 1rem;
+        transform: scale(0.95) translateY(20px);
+        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-overlay.active .modal-glass {
+        transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        background: inherit;
+        /* Inherit glass effect */
+        z-index: 10;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+        color: var(--text-muted);
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-close:hover {
+        color: var(--text-color);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    /* Form Improvements */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .col-md-6 {
+        flex: 1;
+    }
+
+
+
+    /* Buttons */
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+    }
+
+    .text-muted {
+        color: var(--text-muted);
+    }
+</style>
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h2>Manage Templates</h2>
+            <p class="subtitle">Create reusable templates for frequent time entries</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal()">
+            <i class="fas fa-plus"></i> Create New Template
+        </button>
+    </div>
+</div>
+
+<div class="templates-container">
+    <div class="card">
+        <div class="card-body">
+            {% if templates %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Time / Duration</th>
+                        <th>Category</th>
+                        <th>Pause</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr>
+                        <td>
+                            <div class="template-name">
+                                <strong>{{ template.name }}</strong>
+                                {% if template.is_default %}
+                                <span class="badge badge-primary">Default</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted small">{{ template.description }}</div>
+                        </td>
+                        <td>
+                            <div class="time-info">
+                                <i class="far fa-clock"></i>
+                                {% if template.end_time %}
+                                {{ template.start_time.strftime('%H:%M') }} - {{ template.end_time.strftime('%H:%M') }}
+                                {% else %}
+                                {{ template.start_time.strftime('%H:%M') }} + {{ template.duration_minutes }}m
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if template.category %}
+                            <span class="badge category-badge"
+                                style="background-color: {{ template.category.color }}; color: white;">
+                                {{ template.category.code or template.category.name }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">–</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if template.pause_mode == 'default' %}
+                            <span class="badge badge-secondary">Default</span>
+                            {% elif template.pause_mode == 'none' %}
+                            <span class="badge badge-secondary">None</span>
+                            {% else %}
+                            <span class="badge badge-info">{{ template.pause_minutes }}m</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <form action="{{ url_for('main.delete_template_route', id=template.id) }}" method="POST"
+                                    onsubmit="return confirm('Delete template {{ template.name }}?');"
+                                    style="display:inline;">
+                                    <button type="submit" class="btn btn-icon btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                {% if not template.is_default %}
+                                <form action="{{ url_for('main.set_default_template_route', id=template.id) }}"
+                                    method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-icon btn-secondary" title="Make Default">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="far fa-file-alt"></i>
+                </div>
+                <h3>No templates yet</h3>
+                <p>Create your first template to speed up your workflow</p>
+                <button class="btn btn-primary" onclick="openModal()">Create Template</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Create Template Modal -->
+<div id="createModal" class="modal-overlay">
+    <div class="modal-glass">
+        <div class="modal-header">
+            <h3>Create New Template</h3>
+            <button class="btn-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('main.create_template_route') }}" id="createForm">
+                <div class="form-group">
+                    <label for="name">Name *</label>
+                    <input type="text" id="name" name="name" class="form-control" required
+                        placeholder="e.g. Standard Day">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="start_time">Start Time *</label>
+                        <input type="time" id="start_time" name="start_time" class="form-control" required>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="end_time">End Time</label>
+                        <input type="time" id="end_time" name="end_time" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <small class="form-text text-muted" style="margin-top: -0.5rem; margin-bottom: 1rem;">
+                        If end time is left empty, you can specify duration below.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="duration_minutes">Duration (minutes)</label>
+                    <input type="number" id="duration_minutes" name="duration_minutes" class="form-control"
+                        placeholder="e.g. 480 for 8h">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="pause_mode">Pause Mode</label>
+                        <select id="pause_mode" name="pause_mode" class="form-control" onchange="togglePauseInput()">
+                            <option value="default">Default</option>
+                            <option value="none">None</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6" id="pause_input_group" style="display: none;">
+                        <label for="pause_minutes">Pause (min)</label>
+                        <input type="number" id="pause_minutes" name="pause_minutes" class="form-control" value="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category_id">Category</label>
+                    <select id="category_id" name="category_id" class="form-control">
+                        <option value="">-- No Category --</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="3"
+                        placeholder="Default description for this template"></textarea>
+                </div>
+
+                <div class="form-group form-check">
+                    <input type="checkbox" id="is_default" name="is_default" class="form-check-input">
+                    <label class="form-check-label" for="is_default">Set as Default Template</label>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        const modal = document.getElementById('createModal');
+        modal.classList.add('active'); // CSS handles display:flex via active class
+
+        // Small timeout to ensure display:flex is applied before opacity transition
+        // However, since we changed CSS to set display:flex on active, we actually 
+        // need to handle the fade-in carefully if we want animation.
+        // With current CSS: 
+        // .active sets display:flex and opacity:1. 
+        // Transition property is on opacity.
+        // But browser won't transition if display changes from none to flex in same frame.
+        // We'll use a slight trick or just accept pop-in for now to guarantee no-flash, 
+        // OR we use the JS-driven display approach which is safer.
+
+        // Let's use the JS approach to be safe and get animation:
+        modal.style.display = 'flex';
+        // Force reflow
+        void modal.offsetWidth;
+        modal.classList.add('visible'); // We will use a new class for opacity
+
+        // Focus first input
+        setTimeout(() => document.getElementById('name').focus(), 100);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('createModal');
+        modal.classList.remove('visible');
+
+        // Wait for transition then hide
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.classList.remove('active'); // cleanup
+            document.getElementById('createForm').reset();
+            togglePauseInput();
+        }, 300);
+    }
+
+    function togglePauseInput() {
+        const mode = document.getElementById('pause_mode').value;
+        const group = document.getElementById('pause_input_group');
+        if (mode === 'custom') {
+            group.style.display = 'block';
+        } else {
+            group.style.display = 'none';
+        }
+    }
+
+    // Close modal if clicking outside
+    document.getElementById('createModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+</script>
+
+{% endblock %}

@@ -185,6 +185,55 @@ waqt leave-request --from 2026-01-15 --to 2026-01-15</code></pre>
             </div>
 
             <div class="feature-highlight">
+                <h3><i class="fas fa-copy"></i> Time Entry Templates</h3>
+                <p>Create reusable templates for frequently used time entries to speed up your workflow.</p>
+
+                <div class="feature-details">
+                    <div class="feature-section">
+                        <h4><i class="fas fa-laptop"></i> Web Interface</h4>
+                        <ul>
+                            <li><strong>Create Templates:</strong> Save common tasks as templates with pre-defined
+                                categories, descriptions, and durations.</li>
+                            <li><strong>Quick Entry:</strong> Use the "Load from Template" dropdown on the "Add Time"
+                                page.</li>
+                            <li><strong>Save as Template:</strong> Check "Save as new template" when creating an entry
+                                to save it for later.</li>
+                            <li><strong>Manage:</strong> View, delete, and set default templates derived from the
+                                Templates page.</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-section">
+                        <h4><i class="fas fa-terminal"></i> Command Line</h4>
+                        <pre><code># List available templates
+waqt template list
+
+# Create a template interactively
+waqt template create
+
+# Create template with arguments
+waqt template create --name "Daily Standup" --start "09:00" --duration 15
+
+# Apply a template to today
+waqt apply "Daily Standup"
+
+# Delete a template
+waqt template delete "Old Template"</code></pre>
+                    </div>
+
+                    <div class="feature-section">
+                        <h4><i class="fas fa-info-circle"></i> Benefits</h4>
+                        <ul>
+                            <li><strong>Consistency:</strong> Ensure task names and categories are always identical.
+                            </li>
+                            <li><strong>Speed:</strong> Log routine meetings and tasks in seconds.</li>
+                            <li><strong>Defaults:</strong> Set a default template to auto-populate the form.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-highlight">
                 <h3><i class="fas fa-file-export"></i> Data Export</h3>
                 <p>Export your time tracking data in multiple formats for reporting, analysis, or backup.</p>
 
