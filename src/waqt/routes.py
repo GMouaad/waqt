@@ -34,6 +34,7 @@ from .services import (
     create_leave_requests,
     create_template,
     list_templates,
+    update_template,
     delete_template,
 )
 from .config import (
@@ -1331,6 +1332,67 @@ def create_template_route():
     return redirect(url_for("main.templates"))
 
 
+@bp.route("/templates/<int:id>/edit", methods=["POST"])
+def edit_template_route(id):
+    """Edit a template."""
+    try:
+        # We need to get params from form
+        name = request.form.get("name", "").strip()
+        start_time_str = request.form.get("start_time")
+        end_time_str = request.form.get("end_time")
+        duration_str = request.form.get("duration_minutes")
+        pause_mode = request.form.get("pause_mode", "default")
+        pause_str = request.form.get("pause_minutes", "0")
+        category_id = request.form.get("category_id") or None
+        description = request.form.get("description", "").strip()
+        is_default = request.form.get("is_default") == "on"
+
+        if not name or not start_time_str:
+            flash("Name and Start Time are required.", "error")
+            return redirect(url_for("main.templates"))
+
+        try:
+            start_time = datetime.strptime(start_time_str, "%H:%M").time()
+            end_time = (
+                datetime.strptime(end_time_str, "%H:%M").time()
+                if end_time_str
+                else None
+            )
+        except ValueError:
+            flash("Invalid time format.", "error")
+            return redirect(url_for("main.templates"))
+
+        duration_minutes = int(duration_str) if duration_str else None
+        pause_minutes = int(pause_str) if pause_str else 0
+        if category_id:
+            category_id = int(category_id)
+
+        result = update_template(
+            db.session,
+            id,
+            name=name,
+            start_time=start_time,
+            end_time=end_time,
+            duration_minutes=duration_minutes,
+            pause_mode=pause_mode,
+            pause_minutes=pause_minutes,
+            category_id=category_id,
+            description=description,
+            is_default=is_default,
+        )
+
+        if result["success"]:
+            flash("Template updated successfully.", "success")
+        else:
+            flash(f"Error: {result['message']}", "error")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error editing template: {str(e)}", "error")
+
+    return redirect(url_for("main.templates"))
+
+
 @bp.route("/templates/<int:id>/delete", methods=["POST"])
 def delete_template_route(id):
     """Delete a template."""
@@ -1344,6 +1406,8 @@ def delete_template_route(id):
 
 @bp.route("/templates/<int:id>/default", methods=["POST"])
 def set_default_template_route(id):
+    with open("/tmp/route_debug.txt", "a") as f:
+        f.write(f"Entering set_default_template_route id={id}\n")
     """Set a template as default."""
     try:
         # Clear existing default

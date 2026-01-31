@@ -6,6 +6,7 @@ from waqt.services import (
     get_template,
     delete_template,
     apply_template,
+    update_template,
 )
 
 
@@ -141,3 +142,54 @@ def test_apply_template_overrides(db_session):
     entry = db_session.query(TimeEntry).filter_by(date=target_date).first()
     assert entry.start_time == time(10, 0)
     assert entry.description == "Overridden"
+
+
+def test_update_template(db_session):
+    create_template(
+        db_session, name="Old Name", start_time=time(9, 0), duration_minutes=60
+    )
+    t = get_template(db_session, "Old Name")
+
+    result = update_template(db_session, t.id, name="New Name", duration_minutes=90)
+    assert result["success"] is True
+
+    t_updated = get_template(db_session, "New Name")
+    assert t_updated is not None
+    assert t_updated.duration_minutes == 90
+    assert get_template(db_session, "Old Name") is None
+
+
+def test_update_template_name_conflict(db_session):
+    create_template(db_session, name="T1", start_time=time(9, 0), duration_minutes=60)
+    create_template(db_session, name="T2", start_time=time(10, 0), duration_minutes=60)
+
+    t1 = get_template(db_session, "T1")
+    result = update_template(db_session, t1.id, name="T2")
+
+    assert result["success"] is False
+    assert "already exists" in result["message"]
+
+
+def test_update_template_not_found(db_session):
+    result = update_template(db_session, 999, name="New Name")
+    assert result["success"] is False
+    assert "not found" in result["message"]
+
+
+def test_delete_template_not_found(db_session):
+    result = delete_template(db_session, 999)
+    assert result["success"] is False
+    assert "not found" in result["message"]
+
+
+def test_apply_template_not_found(db_session):
+    result = apply_template(db_session, "NonExistent", date(2025, 1, 1))
+    assert result["success"] is False
+    assert "not found" in result["message"]
+
+
+def test_apply_no_default_template(db_session):
+    # Ensure no default exists
+    result = apply_template(db_session, target_date=date(2025, 1, 1))
+    assert result["success"] is False
+    assert "No default template set" in result["message"]
