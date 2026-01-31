@@ -1005,6 +1005,119 @@ def export_excel():
     return _handle_export_request("excel")
 
 
+@bp.route("/import", methods=["POST"])
+def import_data():
+    """Import time entries from uploaded file (POST only, accessed via reports modal)."""
+    from .services import import_time_entries
+    from .utils import (
+        detect_import_format,
+        parse_time_entries_from_json,
+        parse_time_entries_from_csv,
+        parse_time_entries_from_excel,
+    )
+    import tempfile
+    import os
+
+    try:
+        # Check if file was uploaded
+        if "file" not in request.files:
+            flash("No file uploaded.", "error")
+            return redirect(url_for("main.reports"))
+
+        file = request.files["file"]
+        if file.filename == "":
+            flash("No file selected.", "error")
+            return redirect(url_for("main.reports"))
+
+        # Get options from form
+        import_format = request.form.get("format", "auto").lower()
+        on_conflict = request.form.get("on_conflict", "skip").lower()
+        dry_run = request.form.get("dry_run") == "on"
+        auto_create_categories = request.form.get("auto_create_categories") != "off"
+
+        # Validate file extension
+        filename = file.filename.lower()
+        allowed_extensions = {".csv", ".json", ".xlsx", ".xls"}
+        file_ext = os.path.splitext(filename)[1]
+
+        if file_ext not in allowed_extensions:
+            flash(
+                f"Unsupported file type '{file_ext}'. "
+                f"Allowed: {', '.join(allowed_extensions)}",
+                "error",
+            )
+            return redirect(url_for("main.reports"))
+
+        # Save to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp_file:
+            file.save(tmp_file.name)
+            tmp_path = tmp_file.name
+
+        try:
+            # Perform import
+            result = import_time_entries(
+                db.session,
+                file_path=tmp_path,
+                import_format=import_format,
+                on_conflict=on_conflict,
+                auto_create_categories=auto_create_categories,
+                include_leave_days=True,
+                dry_run=dry_run,
+            )
+
+            if not dry_run and result["success"]:
+                db.session.commit()
+
+            # Build result message
+            if result["success"]:
+                if dry_run:
+                    msg_type = "info"
+                    msg = "Dry run completed. "
+                else:
+                    msg_type = "success"
+                    msg = "Import completed successfully! "
+
+                details = []
+                if result["entries_imported"] > 0:
+                    details.append(f"{result['entries_imported']} entries imported")
+                if result["entries_updated"] > 0:
+                    details.append(f"{result['entries_updated']} entries updated")
+                if result["entries_skipped"] > 0:
+                    details.append(f"{result['entries_skipped']} entries skipped")
+                if result["leave_days_imported"] > 0:
+                    details.append(
+                        f"{result['leave_days_imported']} leave days imported"
+                    )
+                if result["categories_created"]:
+                    details.append(
+                        f"Categories created: {', '.join(result['categories_created'])}"
+                    )
+
+                msg += ". ".join(details) if details else "No entries to import."
+                flash(msg, msg_type)
+
+                # Show warnings
+                for warning in result.get("warnings", [])[:5]:
+                    flash(f"Warning: {warning}", "warning")
+
+            else:
+                flash("Import failed. Check errors below.", "error")
+                for error in result.get("errors", [])[:5]:
+                    flash(f"Error: {error}", "error")
+
+        finally:
+            # Clean up temp file
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+        return redirect(url_for("main.reports"))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Import error: {str(e)}", "error")
+        return redirect(url_for("main.reports"))
+
+
 @bp.route("/settings", methods=["GET", "POST"])
 def settings():
     """View and manage application settings."""

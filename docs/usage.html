@@ -215,6 +215,61 @@ waqt export --period all --format excel --output full_history.xlsx</code></pre>
                 </div>
             </div>
 
+            <div class="feature-highlight">
+                <h3><i class="fas fa-file-import"></i> Data Import</h3>
+                <p>Import time entries from CSV, JSON, or Excel files for data migration or restoring backups.</p>
+
+                <div class="feature-details">
+                    <div class="feature-section">
+                        <h4><i class="fas fa-laptop"></i> Web Interface</h4>
+                        <ul>
+                            <li><strong>Access:</strong> Click the "Import" button on the Reports page to open the
+                                import modal.</li>
+                            <li><strong>Formats:</strong> Supports CSV, JSON, and Excel (.xlsx, .xls) files.</li>
+                            <li><strong>Conflict Handling:</strong> Choose to skip, overwrite, or duplicate existing
+                                entries.</li>
+                            <li><strong>Auto-Create Categories:</strong> Optionally create missing categories during
+                                import.</li>
+                            <li><strong>Dry Run:</strong> Preview import results without saving changes.</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-section">
+                        <h4><i class="fas fa-terminal"></i> Command Line</h4>
+                        <pre><code># Import from JSON file
+waqt import --file backup.json
+
+# Import from CSV with overwrite mode
+waqt import --file entries.csv --on-conflict overwrite
+
+# Dry run to preview import
+waqt import --file data.json --dry-run
+
+# Import without auto-creating categories
+waqt import --file data.csv --no-auto-categories</code></pre>
+                    </div>
+
+                    <div class="feature-section">
+                        <h4><i class="fas fa-info-circle"></i> Conflict Resolution</h4>
+                        <ul>
+                            <li><strong>Skip:</strong> Ignore entries that match existing date/time combinations.</li>
+                            <li><strong>Overwrite:</strong> Update existing entries with imported data.</li>
+                            <li><strong>Duplicate:</strong> Create new entries even if duplicates exist.</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-section">
+                        <h4><i class="fas fa-file-alt"></i> File Formats</h4>
+                        <ul>
+                            <li><strong>JSON:</strong> Full data with entries and leave days. Best for backups.</li>
+                            <li><strong>CSV:</strong> Simple tabular format with date, start_time, end_time, description
+                                columns.</li>
+                            <li><strong>Excel:</strong> Spreadsheet format with same columns as CSV.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <div class="detailed-guide">
                 <h3>Detailed Guides</h3>
                 <div class="guide-cards">

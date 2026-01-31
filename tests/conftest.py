@@ -99,6 +99,30 @@ def app():
 
 
 @pytest.fixture(scope="function")
+def db_session():
+    """Create a standalone SQLAlchemy session for testing services.
+
+    This fixture creates a temporary in-memory database and yields a session
+    that can be used to test service functions directly without Flask context.
+    """
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from waqt.models import Base
+
+    # Create in-memory SQLite database
+    engine = create_engine("sqlite:///:memory:", echo=False)
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    yield session
+
+    session.close()
+    engine.dispose()
+
+
+@pytest.fixture(scope="function")
 def browser_instance():
     """Create a browser instance for tests."""
     if not PLAYWRIGHT_AVAILABLE or not PLAYWRIGHT_BROWSERS_INSTALLED:

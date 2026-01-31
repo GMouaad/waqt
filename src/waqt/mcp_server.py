@@ -877,6 +877,130 @@ def export_entries(
 
 
 @mcp.tool()
+def import_entries(
+    content: str,
+    import_format: str = "json",
+    on_conflict: str = "skip",
+    auto_create_categories: bool = True,
+    dry_run: bool = False,
+) -> Dict[str, Any]:
+    """Import time entries from JSON or CSV content.
+
+    Import time tracking data from a string containing JSON or CSV content.
+    Useful for restoring backups or migrating data.
+
+    Args:
+        content: The JSON or CSV content to import (as a string).
+        import_format: Format of the content: "json" or "csv". Defaults to "json".
+        on_conflict: How to handle duplicate entries: "skip", "overwrite", or
+            "duplicate". Defaults to "skip".
+        auto_create_categories: Create categories that don't exist. Defaults to True.
+        dry_run: Preview import without making changes. Defaults to False.
+
+    Returns:
+        Dictionary with status, import statistics, and any warnings/errors.
+
+    Examples:
+        import_entries(content='{"entries": [...]}')
+        import_entries(content=csv_data, import_format="csv")
+        import_entries(content=json_data, dry_run=True)
+    """
+    ensure_db_initialized()
+
+    import tempfile
+    import os
+    from .services import import_time_entries
+
+    # Validate format
+    if import_format.lower() not in ["json", "csv"]:
+        return {
+            "status": "error",
+            "message": (
+                f"Unsupported format '{import_format}'. "
+                "Only 'json' and 'csv' are supported."
+            ),
+        }
+
+    # Validate on_conflict
+    if on_conflict.lower() not in ["skip", "overwrite", "duplicate"]:
+        return {
+            "status": "error",
+            "message": (
+                f"Invalid on_conflict value '{on_conflict}'. "
+                "Use 'skip', 'overwrite', or 'duplicate'."
+            ),
+        }
+
+    if not content or not content.strip():
+        return {
+            "status": "error",
+            "message": "Content is empty. Provide JSON or CSV content to import.",
+        }
+
+    with get_session() as session:
+        # Create temp file to leverage the shared import_time_entries service
+        suffix = f".{import_format.lower()}"
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", delete=False, suffix=suffix, encoding="utf-8"
+            ) as tmp:
+                tmp.write(content)
+                tmp_path = tmp.name
+
+            result = import_time_entries(
+                session,
+                file_path=tmp_path,
+                import_format=import_format.lower(),
+                on_conflict=on_conflict.lower(),
+                auto_create_categories=auto_create_categories,
+                include_leave_days=True,
+                dry_run=dry_run,
+            )
+
+            if not result["success"]:
+                return {
+                    "status": "error",
+                    "message": "; ".join(result["errors"]) or "Import failed",
+                }
+
+            # Build message
+            action = "Would import" if dry_run else "Imported"
+            parts = []
+            if result["entries_imported"]:
+                parts.append(f"{result['entries_imported']} entries")
+            if result["entries_updated"]:
+                parts.append(f"updated {result['entries_updated']}")
+            if result["entries_skipped"]:
+                parts.append(f"skipped {result['entries_skipped']} duplicates")
+            if result["leave_days_imported"]:
+                parts.append(f"{result['leave_days_imported']} leave days")
+
+            message = f"{action}: {', '.join(parts)}." if parts else "No entries found."
+
+            return {
+                "status": "success",
+                "message": message,
+                "dry_run": dry_run,
+                "entries_imported": result["entries_imported"],
+                "entries_updated": result["entries_updated"],
+                "entries_skipped": result["entries_skipped"],
+                "leave_days_imported": result["leave_days_imported"],
+                "categories_created": result["categories_created"],
+                "errors": result["errors"][:5],
+                "warnings": result.get("warnings", [])[:5],
+            }
+
+        except ValueError as e:
+            return {"status": "error", "message": f"Parse error: {str(e)}"}
+        except Exception as e:
+            return {"status": "error", "message": f"Import failed: {str(e)}"}
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+
+@mcp.tool()
 def list_config() -> Dict[str, Any]:
     """Display all configuration options and their current values.
 
