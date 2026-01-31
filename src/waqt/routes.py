@@ -13,7 +13,7 @@ from flask import (
 )
 from datetime import datetime, timedelta
 from . import db
-from .models import TimeEntry, LeaveDay, Settings, Category
+from .models import TimeEntry, LeaveDay, Settings, Category, Template
 from .utils import (
     calculate_weekly_stats,
     calculate_monthly_stats,
@@ -32,6 +32,10 @@ from .services import (
     update_time_entry,
     add_time_entry,
     create_leave_requests,
+    create_template,
+    list_templates,
+    update_template,
+    delete_template,
 )
 from .config import (
     CONFIG_DEFAULTS,
@@ -558,6 +562,31 @@ def time_entry():
                 flash(result["message"], "error")
                 return redirect(url_for("main.time_entry"))
 
+            # Handle Save as Template
+            if request.form.get("save_as_template") == "on":
+                template_name = request.form.get("new_template_name", "").strip()
+                if template_name:
+                    # We have start_time and end_time objects
+
+                    create_template_result = create_template(
+                        db.session,
+                        name=template_name,
+                        start_time=start_time,
+                        end_time=end_time,
+                        pause_mode=pause_mode,
+                        pause_minutes=pause_minutes,
+                        category_id=category_id,
+                        description=description,
+                    )
+                    if create_template_result["success"]:
+                        flash(f"Template '{template_name}' saved.", "success")
+                    else:
+                        flash(
+                            "Warning: Could not save template: "
+                            f"{create_template_result['message']}",
+                            "warning",
+                        )
+
             db.session.commit()
             entry = result["entry"]
             flash(
@@ -576,12 +605,14 @@ def time_entry():
 
     # GET request - show form
     categories = Category.query.filter_by(is_active=True).order_by(Category.name).all()
+    templates = list_templates(db.session)
     return render_template(
         "time_entry.html",
         today=datetime.now().date(),
         time_format=time_format,
         default_pause=default_pause,
         categories=categories,
+        templates=templates,
     )
 
 
@@ -1009,12 +1040,6 @@ def export_excel():
 def import_data():
     """Import time entries from uploaded file (POST only, accessed via reports modal)."""
     from .services import import_time_entries
-    from .utils import (
-        detect_import_format,
-        parse_time_entries_from_json,
-        parse_time_entries_from_csv,
-        parse_time_entries_from_excel,
-    )
     import tempfile
     import os
 
@@ -1237,3 +1262,164 @@ def settings():
         "settings.html",
         settings_data=settings_data,
     )
+
+
+@bp.route("/templates")
+def templates():
+    """Manage time entry templates."""
+    templates = list_templates(db.session)
+    categories = Category.query.filter_by(is_active=True).order_by(Category.name).all()
+    return render_template("templates.html", templates=templates, categories=categories)
+
+
+@bp.route("/templates/create", methods=["POST"])
+def create_template_route():
+    """Create a new template."""
+    try:
+        name = request.form.get("name", "").strip()
+        start_time_str = request.form.get("start_time")
+        end_time_str = request.form.get("end_time")
+        duration_str = request.form.get("duration_minutes")
+        pause_mode = request.form.get("pause_mode", "default")
+        pause_str = request.form.get("pause_minutes", "0")
+        category_id = request.form.get("category_id") or None
+        description = request.form.get("description", "").strip()
+        is_default = request.form.get("is_default") == "on"
+
+        if not name or not start_time_str:
+            flash("Name and Start Time are required.", "error")
+            return redirect(url_for("main.templates"))
+
+        try:
+            start_time = datetime.strptime(start_time_str, "%H:%M").time()
+            end_time = (
+                datetime.strptime(end_time_str, "%H:%M").time()
+                if end_time_str
+                else None
+            )
+        except ValueError:
+            flash("Invalid time format.", "error")
+            return redirect(url_for("main.templates"))
+
+        duration_minutes = int(duration_str) if duration_str else None
+        pause_minutes = int(pause_str) if pause_str else 0
+        if category_id:
+            category_id = int(category_id)
+
+        result = create_template(
+            db.session,
+            name=name,
+            start_time=start_time,
+            end_time=end_time,
+            duration_minutes=duration_minutes,
+            pause_mode=pause_mode,
+            pause_minutes=pause_minutes,
+            category_id=category_id,
+            description=description,
+            is_default=is_default,
+        )
+
+        if result["success"]:
+            flash("Template created successfully.", "success")
+        else:
+            flash(f"Error: {result['message']}", "error")
+
+        # Service handles commit
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error creating template: {str(e)}", "error")
+
+    return redirect(url_for("main.templates"))
+
+
+@bp.route("/templates/<int:id>/edit", methods=["POST"])
+def edit_template_route(id):
+    """Edit a template."""
+    try:
+        # We need to get params from form
+        name = request.form.get("name", "").strip()
+        start_time_str = request.form.get("start_time")
+        end_time_str = request.form.get("end_time")
+        duration_str = request.form.get("duration_minutes")
+        pause_mode = request.form.get("pause_mode", "default")
+        pause_str = request.form.get("pause_minutes", "0")
+        category_id = request.form.get("category_id") or None
+        description = request.form.get("description", "").strip()
+        is_default = request.form.get("is_default") == "on"
+
+        if not name or not start_time_str:
+            flash("Name and Start Time are required.", "error")
+            return redirect(url_for("main.templates"))
+
+        try:
+            start_time = datetime.strptime(start_time_str, "%H:%M").time()
+            end_time = (
+                datetime.strptime(end_time_str, "%H:%M").time()
+                if end_time_str
+                else None
+            )
+        except ValueError:
+            flash("Invalid time format.", "error")
+            return redirect(url_for("main.templates"))
+
+        duration_minutes = int(duration_str) if duration_str else None
+        pause_minutes = int(pause_str) if pause_str else 0
+        if category_id:
+            category_id = int(category_id)
+
+        result = update_template(
+            db.session,
+            id,
+            name=name,
+            start_time=start_time,
+            end_time=end_time,
+            duration_minutes=duration_minutes,
+            pause_mode=pause_mode,
+            pause_minutes=pause_minutes,
+            category_id=category_id,
+            description=description,
+            is_default=is_default,
+        )
+
+        if result["success"]:
+            flash("Template updated successfully.", "success")
+        else:
+            flash(f"Error: {result['message']}", "error")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error editing template: {str(e)}", "error")
+
+    return redirect(url_for("main.templates"))
+
+
+@bp.route("/templates/<int:id>/delete", methods=["POST"])
+def delete_template_route(id):
+    """Delete a template."""
+    result = delete_template(db.session, id)
+    if result["success"]:
+        flash("Template deleted.", "success")
+    else:
+        flash(f"Error: {result['message']}", "error")
+    return redirect(url_for("main.templates"))
+
+
+@bp.route("/templates/<int:id>/default", methods=["POST"])
+def set_default_template_route(id):
+    with open("/tmp/route_debug.txt", "a") as f:
+        f.write(f"Entering set_default_template_route id={id}\n")
+    """Set a template as default."""
+    try:
+        # Clear existing default
+        Template.query.update({Template.is_default: False})
+
+        # Set new default
+        template = db.get_or_404(Template, id)
+        template.is_default = True
+        db.session.commit()
+        flash(f"Set '{template.name}' as default template.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error setting default template: {str(e)}", "error")
+
+    return redirect(url_for("main.templates"))

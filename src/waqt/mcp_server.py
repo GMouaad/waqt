@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from mcp.server.fastmcp import FastMCP
 
 from .database import get_session, initialize_database
-from .models import TimeEntry, LeaveDay, Settings
+from .models import TimeEntry, LeaveDay, Settings, Category
 from .utils import (
     get_week_bounds,
     get_month_bounds,
@@ -28,6 +28,11 @@ from .services import (
     update_time_entry,
     add_time_entry,
     create_leave_requests,
+    create_template,
+    list_templates,
+    get_template,
+    delete_template,
+    apply_template,
 )
 from .config import (
     CONFIG_DEFAULTS,
@@ -1120,6 +1125,150 @@ def set_config(key: str, value: str) -> Dict[str, Any]:
             "old_value": old_value,
             "new_value": value,
         }
+
+
+@mcp.tool()
+def create_template_tool(
+    name: str,
+    start_time: str,
+    end_time: str = None,
+    duration_minutes: int = None,
+    description: str = "Work session",
+    category_name: str = None,
+    is_default: bool = False,
+) -> str:
+    """Create a new time entry template.
+
+    Args:
+        name: Unique name for the template
+        start_time: Start time in HH:MM format
+        end_time: End time in HH:MM format (optional)
+        duration_minutes: Duration in minutes (optional, if end_time not provided)
+        description: Description/activity for the template
+        category_name: Name of the category (optional)
+        is_default: Whether to set this as the default template
+    """
+    ensure_db_initialized()
+
+    try:
+        start_t = datetime.strptime(start_time, "%H:%M").time()
+        end_t = datetime.strptime(end_time, "%H:%M").time() if end_time else None
+    except ValueError:
+        return "Error: Invalid time format. Use HH:MM."
+
+    with get_session() as session:
+        category_id = None
+        if category_name:
+            cat = session.query(Category).filter(Category.name == category_name).first()
+            if cat:
+                category_id = cat.id
+            else:
+                return f"Error: Category '{category_name}' not found."
+
+        result = create_template(
+            session=session,
+            name=name,
+            start_time=start_t,
+            end_time=end_t,
+            duration_minutes=duration_minutes,
+            category_id=category_id,
+            description=description,
+            is_default=is_default,
+        )
+
+        return result["message"]
+
+
+@mcp.tool()
+def list_templates_tool() -> str:
+    """List all available time entry templates."""
+    ensure_db_initialized()
+    with get_session() as session:
+        templates = list_templates(session)
+        if not templates:
+            return "No templates found."
+
+        output = []
+        output.append(f"Found {len(templates)} templates:")
+        for t in templates:
+            default_mark = " (Default)" if t.is_default else ""
+            duration_info = ""
+            if t.end_time:
+                duration_info = (
+                    f"{t.start_time.strftime('%H:%M')} - {t.end_time.strftime('%H:%M')}"
+                )
+            else:
+                duration_info = (
+                    f"{t.start_time.strftime('%H:%M')} + {t.duration_minutes}m"
+                )
+
+            output.append(f"- {t.name}{default_mark}: {duration_info}, {t.description}")
+
+        return "\n".join(output)
+
+
+@mcp.tool()
+def apply_template_tool(
+    template_name: str = None,
+    date: str = None,
+    start_time: str = None,
+    description: str = None,
+) -> str:
+    """Apply a template to create a time entry.
+
+    Args:
+        template_name: Name of the template to apply. If not provided, uses default.
+        date: Date to apply entry to (YYYY-MM-DD). Defaults to today.
+        start_time: Override start time (HH:MM).
+        description: Override description.
+    """
+    ensure_db_initialized()
+
+    try:
+        target_date = (
+            datetime.strptime(date, "%Y-%m-%d").date()
+            if date
+            else datetime.now().date()
+        )
+    except ValueError:
+        return "Error: Invalid date format. Use YYYY-MM-DD."
+
+    overrides = {}
+    if start_time:
+        try:
+            overrides["start_time"] = datetime.strptime(start_time, "%H:%M").time()
+        except ValueError:
+            return "Error: Invalid time format. Use HH:MM."
+
+    if description:
+        overrides["description"] = description
+
+    with get_session() as session:
+        result = apply_template(
+            session=session,
+            template_name=template_name,
+            target_date=target_date,
+            **overrides,
+        )
+
+        return result["message"]
+
+
+@mcp.tool()
+def delete_template_tool(name: str) -> str:
+    """Delete a time entry template.
+
+    Args:
+        name: Name of the template to delete
+    """
+    ensure_db_initialized()
+    with get_session() as session:
+        t = get_template(session, name)
+        if not t:
+            return f"Template '{name}' not found."
+
+        result = delete_template(session, t.id)
+        return result["message"]
 
 
 def main():

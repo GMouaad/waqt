@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 from .database import get_session, initialize_database
-from .models import TimeEntry, LeaveDay, Settings
+from .models import TimeEntry, LeaveDay, Settings, Category
 from .utils import (
     get_week_bounds,
     get_month_bounds,
@@ -25,6 +25,12 @@ from .services import (
     update_time_entry,
     add_time_entry,
     create_leave_requests,
+    create_template,
+    list_templates,
+    get_template,
+    update_template,
+    delete_template,
+    apply_template,
 )
 from ._version import VERSION, GIT_SHA
 from .config import (
@@ -88,14 +94,14 @@ def cli(ctx, verbose):
     "--start",
     "-s",
     type=str,
-    required=True,
+    required=False,
     help="Start time in HH:MM format",
 )
 @click.option(
     "--end",
     "-e",
     type=str,
-    required=True,
+    required=False,
     help="End time in HH:MM format",
 )
 @click.option(
@@ -112,7 +118,19 @@ def cli(ctx, verbose):
     default="default",
     help="Pause mode: 'default', 'none', or minutes (e.g. '30', '45')",
 )
-def add(date: Optional[str], start: str, end: str, description: str, pause: str):
+@click.option(
+    "--template",
+    type=str,
+    help="Use a saved template",
+)
+def add(
+    date: Optional[str],
+    start: Optional[str],
+    end: Optional[str],
+    description: str,
+    pause: str,
+    template: Optional[str],
+):
     """Add a completed time entry.
 
     Creates a past/completed time entry with start and end times.
@@ -121,10 +139,14 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
     - --pause none: No pause deduction
     - --pause 30: Deduct specific minutes (e.g. 30)
 
+    You can also use a template:
+    - --template "My Template": Use start/end/pause from template.
+
     Examples:
         waqt add --start 09:00 --end 17:00
         waqt add -d 2024-01-15 -s 09:00 -e 17:30 --pause none
         waqt add -s 09:00 -e 18:00 --pause 45 --desc "Long day"
+        waqt add --template "Standard Day"
     """
     with get_session() as session:
         # Parse date
@@ -142,62 +164,115 @@ def add(date: Optional[str], start: str, end: str, description: str, pause: str)
         else:
             entry_date = datetime.now().date()
 
-        # Parse times
-        try:
-            start_time = datetime.strptime(start, "%H:%M").time()
-            end_time = datetime.strptime(end, "%H:%M").time()
-        except ValueError:
-            click.echo(click.style("Error: Invalid time format. Use HH:MM.", fg="red"))
-            raise click.exceptions.Exit(1)
+        if template:
+            overrides = {}
+            if start:
+                try:
+                    overrides["start_time"] = datetime.strptime(start, "%H:%M").time()
+                except ValueError:
+                    click.echo("Error: Invalid time format. Use HH:MM.")
+                    raise click.exceptions.Exit(1)
 
-        # Parse pause
-        if pause.lower() == "default":
-            pause_mode = "default"
-            pause_minutes = 0
-        elif pause.lower() == "none":
-            pause_mode = "none"
-            pause_minutes = 0
+            # Only override description if it's explicitly provided (not default)
+            # The default is "Work session" in the click option.
+            if description and description != "Work session":
+                overrides["description"] = description
+
+            result = apply_template(
+                session=session,
+                template_name=template,
+                target_date=entry_date,
+                **overrides,
+            )
+
+            if not result["success"]:
+                click.echo(click.style(f"Error: {result['message']}", fg="red"))
+                raise click.exceptions.Exit(1)
+
+            entry = result["entry"]
+
+            click.echo(
+                click.style(
+                    f"✓ Time entry added successfully via template '{template}'!",
+                    fg="green",
+                    bold=True,
+                )
+            )
+            # Display details similar to below...
+
         else:
-            try:
-                pause_minutes = int(pause)
-                pause_mode = "custom"
-                if pause_minutes < 0:
-                    raise ValueError
-            except ValueError:
+            # Manual entry - require start and end
+            if not start or not end:
                 click.echo(
                     click.style(
-                        f"Error: Invalid pause value '{pause}'. "
-                        "Use 'default', 'none', or a positive integer.",
+                        "Error: --start and --end are required when not using a template.",
                         fg="red",
                     )
                 )
                 raise click.exceptions.Exit(1)
 
-        # Use shared service
-        result = add_time_entry(
-            session,
-            entry_date=entry_date,
-            start_time=start_time,
-            end_time=end_time,
-            description=description,
-            pause_mode=pause_mode,
-            pause_minutes=pause_minutes,
-        )
+            # Parse times
+            try:
+                start_time = datetime.strptime(start, "%H:%M").time()
+                end_time = datetime.strptime(end, "%H:%M").time()
+            except ValueError:
+                click.echo(
+                    click.style("Error: Invalid time format. Use HH:MM.", fg="red")
+                )
+                raise click.exceptions.Exit(1)
 
-        if not result["success"]:
-            click.echo(click.style(f"Error: {result['message']}", fg="red"))
-            raise click.exceptions.Exit(1)
+            # Parse pause
+            if pause.lower() == "default":
+                pause_mode = "default"
+                pause_minutes = 0
+            elif pause.lower() == "none":
+                pause_mode = "none"
+                pause_minutes = 0
+            else:
+                try:
+                    pause_minutes = int(pause)
+                    pause_mode = "custom"
+                    if pause_minutes < 0:
+                        raise ValueError
+                except ValueError:
+                    click.echo(
+                        click.style(
+                            f"Error: Invalid pause value '{pause}'. "
+                            "Use 'default', 'none', or a positive integer.",
+                            fg="red",
+                        )
+                    )
+                    raise click.exceptions.Exit(1)
 
-        entry = result["entry"]
-        click.echo(
-            click.style("✓ Time entry added successfully!", fg="green", bold=True)
-        )
+            # Use shared service
+            result = add_time_entry(
+                session,
+                entry_date=entry_date,
+                start_time=start_time,
+                end_time=end_time,
+                description=description,
+                pause_mode=pause_mode,
+                pause_minutes=pause_minutes,
+            )
+
+            if not result["success"]:
+                click.echo(click.style(f"Error: {result['message']}", fg="red"))
+                raise click.exceptions.Exit(1)
+
+            entry = result["entry"]
+            click.echo(
+                click.style("✓ Time entry added successfully!", fg="green", bold=True)
+            )
+
+        # Common display logic
         click.echo(f"Date: {entry_date}")
-        click.echo(f"Time: {format_time(start_time)} - {format_time(end_time)}")
+        click.echo(
+            f"Time: {format_time(entry.start_time)} - {format_time(entry.end_time)}"
+        )
         click.echo(f"Duration: {format_hours(entry.duration_hours)}")
         if entry.accumulated_pause_seconds > 0:
             click.echo(f"Pause: {int(entry.accumulated_pause_seconds/60)} minutes")
-        click.echo(f"Description: {description}")
+        click.echo(f"Description: {entry.description}")
 
 
 @cli.command()
@@ -1558,6 +1633,238 @@ def ui(port: int, host: str, debug: bool):
         click.echo("  - You have write permissions in the current directory")
         click.echo("  - All required dependencies are available")
         raise click.exceptions.Exit(1)
+
+
+# =============================================================================
+# Template Commands
+# =============================================================================
+
+
+@cli.group()
+def template():
+    """Manage time entry templates."""
+    pass
+
+
+@template.command("list")
+def template_list():
+    """List all saved templates."""
+    with get_session() as session:
+        templates = list_templates(session)
+        if not templates:
+            click.echo("No templates found.")
+            return
+
+        click.echo(f"Found {len(templates)} templates:")
+        for t in templates:
+            default_mark = " (Default)" if t.is_default else ""
+            duration_str = ""
+            if t.end_time:
+                duration_str = (
+                    f"{t.start_time.strftime('%H:%M')} - {t.end_time.strftime('%H:%M')}"
+                )
+            else:
+                duration_str = (
+                    f"{t.start_time.strftime('%H:%M')} + {t.duration_minutes}m"
+                )
+
+            click.echo(f"- {t.name}{default_mark}: {duration_str}, {t.description}")
+
+
+@template.command("show")
+@click.argument("name")
+def template_show(name):
+    """Show details of a specific template."""
+    with get_session() as session:
+        t = get_template(session, name)
+        if not t:
+            click.echo(f"Template '{name}' not found.")
+            return
+
+        click.echo(f"Template: {t.name}")
+        click.echo(f"Start Time: {t.start_time.strftime('%H:%M')}")
+        if t.end_time:
+            click.echo(f"End Time: {t.end_time.strftime('%H:%M')}")
+        else:
+            click.echo(f"Duration: {t.duration_minutes} minutes")
+
+        click.echo(f"Pause: {t.pause_minutes}m ({t.pause_mode})")
+        if t.category:
+            click.echo(f"Category: {t.category.name}")
+        click.echo(f"Description: {t.description}")
+        click.echo(f"Default: {'Yes' if t.is_default else 'No'}")
+
+
+@template.command("create")
+@click.argument("name")
+@click.option("-s", "--start", "start_time", required=True, help="Start time (HH:MM)")
+@click.option("-e", "--end", "end_time", help="End time (HH:MM)")
+@click.option(
+    "-d", "--duration", "duration_minutes", type=int, help="Duration in minutes"
+)
+@click.option(
+    "--pause-mode",
+    default="default",
+    type=click.Choice(["default", "custom", "none"]),
+    help="Pause handling mode",
+)
+@click.option(
+    "--pause", "pause_minutes", default=0, type=int, help="Pause duration in minutes"
+)
+@click.option("--category", "category_name", help="Category name")
+@click.option("--desc", "description", default="Work session", help="Description")
+@click.option("--default", "is_default", is_flag=True, help="Set as default template")
+def template_create(
+    name,
+    start_time,
+    end_time,
+    duration_minutes,
+    pause_mode,
+    pause_minutes,
+    category_name,
+    description,
+    is_default,
+):
+    """Create a new template."""
+    # Parse times
+    try:
+        start_t = datetime.strptime(start_time, "%H:%M").time()
+        end_t = datetime.strptime(end_time, "%H:%M").time() if end_time else None
+    except ValueError:
+        click.echo("Error: Invalid time format. Use HH:MM.")
+        return
+
+    with get_session() as session:
+        # Resolve category
+        category_id = None
+        if category_name:
+            cat = session.query(Category).filter(Category.name == category_name).first()
+            if cat:
+                category_id = cat.id
+            else:
+                click.echo(
+                    f"Warning: Category '{category_name}' not found. "
+                    "Creating template without category."
+                )
+
+        result = create_template(
+            session=session,
+            name=name,
+            start_time=start_t,
+            end_time=end_t,
+            duration_minutes=duration_minutes,
+            pause_mode=pause_mode,
+            pause_minutes=pause_minutes,
+            category_id=category_id,
+            description=description,
+            is_default=is_default,
+        )
+
+        if result["success"]:
+            click.echo(result["message"])
+        else:
+            click.echo(f"Error: {result['message']}")
+
+
+@template.command("edit")
+@click.argument("name")
+@click.option("--new-name", help="New name for the template")
+@click.option("-s", "--start", "start_time", help="Start time (HH:MM)")
+@click.option("-e", "--end", "end_time", help="End time (HH:MM)")
+@click.option(
+    "-d", "--duration", "duration_minutes", type=int, help="Duration in minutes"
+)
+@click.option("--desc", "description", help="Description")
+@click.option("--default", "is_default", is_flag=True, help="Set as default template")
+def template_edit(
+    name, new_name, start_time, end_time, duration_minutes, description, is_default
+):
+    """Edit an existing template."""
+    with get_session() as session:
+        t = get_template(session, name)
+        if not t:
+            click.echo(f"Template '{name}' not found.")
+            return
+
+        kwargs = {}
+        if new_name:
+            kwargs["name"] = new_name
+        if start_time:
+            kwargs["start_time"] = datetime.strptime(start_time, "%H:%M").time()
+        if end_time:
+            kwargs["end_time"] = datetime.strptime(end_time, "%H:%M").time()
+        if duration_minutes is not None:
+            kwargs["duration_minutes"] = duration_minutes
+        if description:
+            kwargs["description"] = description
+        if is_default:
+            kwargs["is_default"] = True
+
+        result = update_template(session, t.id, **kwargs)
+        if result["success"]:
+            click.echo(result["message"])
+        else:
+            click.echo(f"Error: {result['message']}")
+
+
+@template.command("delete")
+@click.argument("name")
+@click.confirmation_option(prompt="Are you sure you want to delete this template?")
+def template_delete_cmd(name):
+    """Delete a template."""
+    with get_session() as session:
+        t = get_template(session, name)
+        if not t:
+            click.echo(f"Template '{name}' not found.")
+            return
+
+        result = delete_template(session, t.id)
+        if result["success"]:
+            click.echo(result["message"])
+        else:
+            click.echo(f"Error: {result['message']}")
+
+
+@cli.command()
+@click.argument("template_name", required=False)
+@click.option("-d", "--date", "date_str", help="Date to apply to (YYYY-MM-DD)")
+@click.option("-s", "--start", "start_time_str", help="Override start time (HH:MM)")
+@click.option("--desc", "description", help="Override description")
+def apply(template_name, date_str, start_time_str, description):
+    """Apply a template to create a time entry."""
+
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            click.echo("Error: Invalid date format. Use YYYY-MM-DD.")
+            return
+    else:
+        target_date = datetime.now().date()
+
+    overrides = {}
+    if start_time_str:
+        try:
+            overrides["start_time"] = datetime.strptime(start_time_str, "%H:%M").time()
+        except ValueError:
+            click.echo("Error: Invalid time format. Use HH:MM.")
+            return
+
+    if description:
+        overrides["description"] = description
+
+    with get_session() as session:
+        result = apply_template(
+            session=session,
+            template_name=template_name,
+            target_date=target_date,
+            **overrides,
+        )
+
+        if result["success"]:
+            click.echo(result["message"])
+        else:
+            click.echo(f"Error: {result['message']}")
 
 
 def main():

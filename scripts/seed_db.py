@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta, time
 import random
 from waqt import create_app, db
-from waqt.models import Category, TimeEntry, LeaveDay, Settings
+from waqt.models import Category, TimeEntry, LeaveDay, Settings, Template
 
 
 def seed_database(app=None):
@@ -181,6 +181,48 @@ def seed_database(app=None):
             print(f"✓ Created {entries_created} time entries")
         else:
             print("• Skipped time entries (already populated)")
+
+        # 5. Seed Templates
+        print("\n--- Templates ---")
+        templates_data = [
+            {
+                "name": "Standard Day",
+                "start_time": time(9, 0),
+                "duration_minutes": 480,
+                "description": "Standard 8-hour work day",
+                "category_id": categories_map.get("Development"),
+                "pause_mode": "default",
+                "is_default": True,
+            },
+            {
+                "name": "Morning Standup",
+                "start_time": time(9, 30),
+                "duration_minutes": 30,
+                "description": "Daily team synchronization",
+                "category_id": categories_map.get("Meetings"),
+                "pause_mode": "none",
+                "is_default": False,
+            },
+            {
+                "name": "Deep Work Session",
+                "start_time": time(14, 0),
+                "duration_minutes": 120,
+                "description": "Focused coding session",
+                "category_id": categories_map.get("Development"),
+                "pause_mode": "custom",
+                "pause_minutes": 10,
+                "is_default": False,
+            },
+        ]
+
+        for t_data in templates_data:
+            existing = Template.query.filter_by(name=t_data["name"]).first()
+            if not existing:
+                template = Template(**t_data)
+                db.session.add(template)
+                print(f"✓ Created template: {t_data['name']}")
+            else:
+                print(f"• Skipped template: {t_data['name']} (exists)")
 
         db.session.commit()
         print("\n✅ Database seeding complete!")

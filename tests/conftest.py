@@ -83,6 +83,10 @@ def app():
         "TESTING": True,
         "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
         "WTF_CSRF_ENABLED": False,
+        "SQLALCHEMY_ENGINE_OPTIONS": {
+            "poolclass": None,  # Use NullPool to avoid connection pooling in tests
+            "pool_pre_ping": True,
+        },
     }
 
     app = create_app(test_config=test_config)
@@ -92,6 +96,8 @@ def app():
         yield app
         db.session.remove()
         db.drop_all()
+        # Dispose of the engine to ensure all connections are closed
+        db.engine.dispose()
 
     # Clean up the temporary database
     os.close(db_fd)

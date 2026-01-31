@@ -4,7 +4,7 @@ These models use standalone SQLAlchemy (via database.py Base) and are
 compatible with both Flask-SQLAlchemy and direct SQLAlchemy usage.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, time, timedelta
 from sqlalchemy import (
     Column,
     Integer,
@@ -304,3 +304,71 @@ class Settings(Base):
 
         with get_session() as session:
             return Settings.get_bool_with_session(session, key, default)
+
+
+class Template(Base):
+    """Model for time entry templates."""
+
+    __tablename__ = "templates"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True, nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=True)
+    duration_minutes = Column(Integer, nullable=True)
+    pause_mode = Column(String(20), default="default")
+    pause_minutes = Column(Integer, default=0)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    description = Column(Text, default="Work session")
+    is_default = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    category = relationship("Category", backref="templates")
+
+    def __repr__(self):
+        return f"<Template {self.name}>"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "start_time": (
+                self.start_time.strftime("%H:%M") if self.start_time else None
+            ),
+            "end_time": self.end_time.strftime("%H:%M") if self.end_time else None,
+            "duration_minutes": self.duration_minutes,
+            "pause_mode": self.pause_mode,
+            "pause_minutes": self.pause_minutes,
+            "category_id": self.category_id,
+            "category_name": self.category.name if self.category else None,
+            "description": self.description,
+            "is_default": self.is_default,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+    def get_end_time(self, start_time_ref: Optional[time] = None) -> time:
+        """Calculate end time from start_time + duration, or return stored end_time.
+
+        Args:
+            start_time_ref: Optional start time reference to use for calculation.
+                          If None, uses self.start_time.
+        """
+        if self.end_time:
+            return self.end_time
+
+        ref_start = start_time_ref or self.start_time
+        if self.duration_minutes and ref_start:
+            # Calculate end time from duration
+            # Use a dummy date since we only care about time calculation
+            start_dt = datetime.combine(date.today(), ref_start)
+            end_dt = start_dt + timedelta(minutes=self.duration_minutes)
+            return end_dt.time()
+
+        raise ValueError("Template has neither end_time nor duration_minutes")

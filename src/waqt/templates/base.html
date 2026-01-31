@@ -1,31 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Waqt{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
     <nav class="navbar" data-testid="navbar">
         <div class="container">
             <div class="nav-brand">
-                <a href="{{ url_for('main.index') }}" data-testid="logo" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                <a href="{{ url_for('main.index') }}" data-testid="logo"
+                    style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
                     <i class="fas fa-clock"></i>
                     <span>Waqt</span>
                 </a>
             </div>
             <ul class="nav-links">
-                <li><a href="{{ url_for('main.index') }}" data-testid="nav-dashboard" {% if request.endpoint == 'main.index' %}class="active"{% endif %}>Dashboard</a></li>
-                <li><a href="{{ url_for('main.time_entry') }}" data-testid="nav-time-entry" {% if request.endpoint == 'main.time_entry' %}class="active"{% endif %}>Add Time</a></li>
-                <li><a href="{{ url_for('main.reports') }}" data-testid="nav-reports" {% if request.endpoint == 'main.reports' %}class="active"{% endif %}>Reports</a></li>
-                <li><a href="{{ url_for('main.categories') }}" data-testid="nav-categories" {% if request.endpoint == 'main.categories' %}class="active"{% endif %}>Categories</a></li>
-                <li><a href="{{ url_for('main.leave') }}" data-testid="nav-leave" {% if request.endpoint == 'main.leave' %}class="active"{% endif %}>Leave</a></li>
-                <li><a href="{{ url_for('main.settings') }}" data-testid="nav-settings" {% if request.endpoint == 'main.settings' %}class="active"{% endif %}>Settings</a></li>
+                <li><a href="{{ url_for('main.index') }}" data-testid="nav-dashboard" {% if
+                        request.endpoint=='main.index' %}class="active" {% endif %}>Dashboard</a></li>
+                <li><a href="{{ url_for('main.time_entry') }}" data-testid="nav-time-entry" {% if
+                        request.endpoint=='main.time_entry' %}class="active" {% endif %}>Add Time</a></li>
+                <li><a href="{{ url_for('main.reports') }}" data-testid="nav-reports" {% if
+                        request.endpoint=='main.reports' %}class="active" {% endif %}>Reports</a></li>
+                <li><a href="{{ url_for('main.categories') }}" data-testid="nav-categories" {% if
+                        request.endpoint=='main.categories' %}class="active" {% endif %}>Categories</a></li>
+                <li><a href="{{ url_for('main.templates') }}" data-testid="nav-templates" {% if
+                        request.endpoint=='main.templates' %}class="active" {% endif %}>Templates</a></li>
+                <li><a href="{{ url_for('main.leave') }}" data-testid="nav-leave" {% if request.endpoint=='main.leave'
+                        %}class="active" {% endif %}>Leave</a></li>
+                <li><a href="{{ url_for('main.settings') }}" data-testid="nav-settings" {% if
+                        request.endpoint=='main.settings' %}class="active" {% endif %}>Settings</a></li>
                 <li>
                     <button id="theme-toggle" class="theme-toggle" data-testid="theme-toggle" aria-label="Toggle theme">
                         <span id="theme-icon">🌙</span>
@@ -34,33 +49,36 @@
             </ul>
         </div>
     </nav>
-    
+
     <main class="container content-wrapper">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages" data-testid="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}" data-testid="flash-{{ category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+        {% if messages %}
+        <div class="flash-messages" data-testid="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" data-testid="flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% endwith %}
-        
+
         {% block content %}{% endblock %}
     </main>
-    
+
     <footer>
         <div class="container">
             <p>&copy; 2026 Waqt - Simple time tracking for everyone</p>
             <div class="footer-links">
-                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
-                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"
+                    aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer"
+                    aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
             </div>
         </div>
     </footer>
-    
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
+
 </html>
