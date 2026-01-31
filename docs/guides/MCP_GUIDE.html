@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCP Server Documentation - Waqt</title>
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <a href="../index.html" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                <a href="../index.html"
+                    style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
                     <i class="fas fa-clock"></i>
                     <span>Waqt</span>
                 </a>
@@ -29,7 +36,8 @@
                 <li><a href="../installation.html">Installation</a></li>
                 <li><a href="../usage.html">Usage</a></li>
                 <li><a href="../documentation.html" class="active">Documentation</a></li>
-                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></li>
+                <li><a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"><i
+                            class="fab fa-github"></i> GitHub</a></li>
             </ul>
         </div>
     </nav>
@@ -37,17 +45,22 @@
     <div class="page-header">
         <div class="container">
             <h1>MCP Server Documentation</h1>
-            <a href="../documentation.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Documentation</a>
+            <a href="../documentation.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to
+                Documentation</a>
         </div>
     </div>
 
     <section class="content-section">
         <div class="container documentation-content">
             <h2 id="overview">Overview</h2>
-            <p>The Waqt MCP (Model Context Protocol) server exposes time tracking functionality to LLM applications and AI assistants. It provides the same core features as the CLI interface, allowing AI tools to track work hours, generate reports, and manage time entries.</p>
+            <p>The Waqt MCP (Model Context Protocol) server exposes time tracking functionality to LLM applications and
+                AI assistants. It provides the same core features as the CLI interface, allowing AI tools to track work
+                hours, generate reports, and manage time entries.</p>
 
             <h2 id="what-is-mcp">What is MCP?</h2>
-            <p>Model Context Protocol (MCP) is an open protocol that standardizes how applications provide context to Large Language Models (LLMs). The Waqt MCP server implements this protocol, making time tracking functionality available to any MCP-compatible AI assistant.</p>
+            <p>Model Context Protocol (MCP) is an open protocol that standardizes how applications provide context to
+                Large Language Models (LLMs). The Waqt MCP server implements this protocol, making time tracking
+                functionality available to any MCP-compatible AI assistant.</p>
 
             <h2 id="installation">Installation</h2>
             <p>The MCP server is included with the Waqt package. After installing Waqt:</p>
@@ -72,7 +85,8 @@ pip install -e .</code></pre>
             <p>The server will start and listen for MCP protocol messages on stdin/stdout.</p>
 
             <h3>Using with MCP Clients</h3>
-            <p>To use the Waqt MCP server with an MCP-compatible client, you'll need to configure the client to connect to the server. Here's an example configuration for Claude Desktop:</p>
+            <p>To use the Waqt MCP server with an MCP-compatible client, you'll need to configure the client to connect
+                to the server. Here's an example configuration for Claude Desktop:</p>
 
             <p><strong>Claude Desktop Configuration</strong> (<code>claude_desktop_config.json</code>):</p>
             <pre><code>{
@@ -85,7 +99,9 @@ pip install -e .</code></pre>
   }
 }</code></pre>
 
-            <p><strong>Note:</strong> If using the legacy installation method, replace <code>command</code> with <code>waqt-mcp</code> and remove <code>args</code>.</p>
+            <p><strong>Note:</strong> If using the legacy installation method, replace <code>command</code> with
+                <code>waqt-mcp</code> and remove <code>args</code>.
+            </p>
 
             <p><strong>Using with other MCP clients:</strong></p>
             <p>For other MCP clients, refer to their documentation for how to configure stdio-based MCP servers.</p>
@@ -97,9 +113,12 @@ pip install -e .</code></pre>
             <p>Start time tracking for a day.</p>
             <p><strong>Parameters:</strong></p>
             <ul>
-                <li><code>time</code> (optional): Start time in HH:MM format (e.g., "09:00"). Defaults to current time.</li>
-                <li><code>date</code> (optional): Date in YYYY-MM-DD format (e.g., "2024-01-15"). Defaults to today.</li>
-                <li><code>description</code> (optional): Description of the work session. Defaults to "Work session".</li>
+                <li><code>time</code> (optional): Start time in HH:MM format (e.g., "09:00"). Defaults to current time.
+                </li>
+                <li><code>date</code> (optional): Date in YYYY-MM-DD format (e.g., "2024-01-15"). Defaults to today.
+                </li>
+                <li><code>description</code> (optional): Description of the work session. Defaults to "Work session".
+                </li>
             </ul>
             <p><strong>Returns:</strong> JSON object with status, message, and entry details.</p>
             <p><strong>Example:</strong></p>
@@ -123,10 +142,13 @@ pip install -e .</code></pre>
             <p>End time tracking for a day.</p>
             <p><strong>Parameters:</strong></p>
             <ul>
-                <li><code>time</code> (optional): End time in HH:MM format (e.g., "17:30"). Defaults to current time.</li>
-                <li><code>date</code> (optional): Date in YYYY-MM-DD format (e.g., "2024-01-15"). Defaults to today.</li>
+                <li><code>time</code> (optional): End time in HH:MM format (e.g., "17:30"). Defaults to current time.
+                </li>
+                <li><code>date</code> (optional): Date in YYYY-MM-DD format (e.g., "2024-01-15"). Defaults to today.
+                </li>
             </ul>
-            <p><strong>Returns:</strong> JSON object with status, message, and entry details including calculated duration.</p>
+            <p><strong>Returns:</strong> JSON object with status, message, and entry details including calculated
+                duration.</p>
             <p><strong>Example:</strong></p>
             <pre><code>{
   "time": "17:30",
@@ -183,7 +205,8 @@ pip install -e .</code></pre>
             <ul>
                 <li><code>period</code> (optional): "week", "month", or "all". Defaults to "week".</li>
                 <li><code>date</code> (optional): Reference date in YYYY-MM-DD format. Defaults to today.</li>
-                <li><code>limit</code> (optional): Maximum number of entries to return. If not specified, returns all.</li>
+                <li><code>limit</code> (optional): Maximum number of entries to return. If not specified, returns all.
+                </li>
             </ul>
             <p><strong>Returns:</strong> JSON object with entries list and metadata.</p>
             <p><strong>Example:</strong></p>
@@ -220,10 +243,12 @@ pip install -e .</code></pre>
             <ul>
                 <li><code>period</code> (optional): "week", "month", or "all". Defaults to "all".</li>
                 <li><code>date</code> (optional): Reference date in YYYY-MM-DD format. Defaults to today.</li>
-                <li><code>format</code> (optional): Export format. Supported: <code>"csv"</code>, <code>"json"</code>. Defaults to <code>"csv"</code>.</li>
+                <li><code>format</code> (optional): Export format. Supported: <code>"csv"</code>, <code>"json"</code>.
+                    Defaults to <code>"csv"</code>.</li>
             </ul>
             <p><strong>Returns:</strong> JSON object with content as a string and metadata.</p>
-            <p><strong>Note on Excel:</strong> While the Web UI and CLI support Excel (XLSX) export, the MCP server currently only supports CSV and JSON for better compatibility with AI processing.</p>
+            <p><strong>Note on Excel:</strong> While the Web UI and CLI support Excel (XLSX) export, the MCP server
+                currently only supports CSV and JSON for better compatibility with AI processing.</p>
             <p><strong>Example:</strong></p>
             <pre><code>{
   "period": "month",
@@ -239,6 +264,46 @@ pip install -e .</code></pre>
   "period": "month_2024-01",
   "format": "json",
   "content": "{ \"period\": { ... }, \"entries\": [...] }"
+}</code></pre>
+
+            <h3>6. import_entries</h3>
+            <p>Import time entries from JSON or CSV content.</p>
+            <p><strong>Parameters:</strong></p>
+            <ul>
+                <li><code>content</code> (required): The JSON or CSV content to import as a string.</li>
+                <li><code>import_format</code> (optional): Format of the content. Options: <code>"json"</code>,
+                    <code>"csv"</code>. Defaults to <code>"json"</code>.
+                </li>
+                <li><code>on_conflict</code> (optional): How to handle duplicate entries. Options: <code>"skip"</code>,
+                    <code>"overwrite"</code>, <code>"duplicate"</code>. Defaults to <code>"skip"</code>.
+                </li>
+                <li><code>auto_create_categories</code> (optional): Create categories that don't exist. Defaults to
+                    <code>true</code>.
+                </li>
+                <li><code>dry_run</code> (optional): Preview import without making changes. Defaults to
+                    <code>false</code>.
+                </li>
+            </ul>
+            <p><strong>Returns:</strong> JSON object with status, import statistics, and any warnings/errors.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>{
+  "content": "{\"entries\": [{\"date\": \"2024-01-15\", \"start_time\": \"09:00\", \"end_time\": \"17:00\", \"description\": \"Work\"}]}",
+  "import_format": "json",
+  "on_conflict": "skip",
+  "dry_run": true
+}</code></pre>
+            <p><strong>Response:</strong></p>
+            <pre><code>{
+  "status": "success",
+  "message": "Would import: 1 entries.",
+  "dry_run": true,
+  "entries_imported": 1,
+  "entries_updated": 0,
+  "entries_skipped": 0,
+  "leave_days_imported": 0,
+  "categories_created": [],
+  "errors": [],
+  "warnings": []
 }</code></pre>
 
             <h2 id="comparison-with-cli">Comparison with CLI</h2>
@@ -273,6 +338,11 @@ pip install -e .</code></pre>
                         <td>Export data</td>
                         <td>✅ <code>waqt export</code></td>
                         <td>✅ <code>export_entries</code> tool</td>
+                    </tr>
+                    <tr>
+                        <td>Import data</td>
+                        <td>✅ <code>waqt import</code></td>
+                        <td>✅ <code>import_entries</code> tool</td>
                     </tr>
                     <tr>
                         <td>List entries</td>
@@ -352,7 +422,8 @@ pip install -e .</code></pre>
    (Filter entries where duration_hours > 8)</code></pre>
 
             <h2 id="integration-testing">Integration Testing</h2>
-            <p>The MCP server includes comprehensive integration tests in <code>tests/test_mcp_server.py</code>. Run them with:</p>
+            <p>The MCP server includes comprehensive integration tests in <code>tests/test_mcp_server.py</code>. Run
+                them with:</p>
             <pre><code>pytest tests/test_mcp_server.py -v</code></pre>
 
             <h2 id="error-handling">Error Handling</h2>
@@ -370,10 +441,13 @@ pip install -e .</code></pre>
 
             <h2 id="security-considerations">Security Considerations</h2>
             <ol>
-                <li><strong>Database Access:</strong> The MCP server uses the same SQLite database as the CLI and web interface</li>
-                <li><strong>No Authentication:</strong> The MCP server doesn't implement authentication (relies on MCP client security)</li>
+                <li><strong>Database Access:</strong> The MCP server uses the same SQLite database as the CLI and web
+                    interface</li>
+                <li><strong>No Authentication:</strong> The MCP server doesn't implement authentication (relies on MCP
+                    client security)</li>
                 <li><strong>Local Only:</strong> Designed for local use, not exposed over network</li>
-                <li><strong>Configuration Excluded:</strong> No configuration management via MCP per security requirements</li>
+                <li><strong>Configuration Excluded:</strong> No configuration management via MCP per security
+                    requirements</li>
             </ol>
 
             <h2 id="troubleshooting">Troubleshooting</h2>
@@ -438,9 +512,11 @@ pytest tests/test_mcp_server.py --cov=src.waqt.mcp_server</code></pre>
 
             <h2 id="references">References</h2>
             <ul>
-                <li><a href="https://modelcontextprotocol.io/" target="_blank">Model Context Protocol Documentation</a></li>
+                <li><a href="https://modelcontextprotocol.io/" target="_blank">Model Context Protocol Documentation</a>
+                </li>
                 <li><a href="https://github.com/modelcontextprotocol/python-sdk" target="_blank">MCP Python SDK</a></li>
-                <li><a href="https://github.com/GMouaad/waqt/blob/main/README.md#cli-usage-waqt" target="_blank">Waqt CLI Documentation</a></li>
+                <li><a href="https://github.com/GMouaad/waqt/blob/main/README.md#cli-usage-waqt" target="_blank">Waqt
+                        CLI Documentation</a></li>
                 <li><a href="usage.html">Waqt Usage Guide</a></li>
             </ul>
         </div>
@@ -451,12 +527,15 @@ pytest tests/test_mcp_server.py --cov=src.waqt.mcp_server</code></pre>
             <p>&copy; <span id="copyright-year">2024</span> Waqt Contributors. Licensed under the MIT License.</p>
             <p>Made with ❤️ by the Waqt Contributors</p>
             <div class="footer-links">
-                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer" aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
-                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer" aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
+                <a href="https://github.com/GMouaad/waqt" target="_blank" rel="noopener noreferrer"
+                    aria-label="View Waqt project on GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://github.com/GMouaad/waqt/issues" target="_blank" rel="noopener noreferrer"
+                    aria-label="Report an issue on GitHub"><i class="fas fa-bug"></i></a>
             </div>
         </div>
     </footer>
 
     <script src="../js/main.js"></script>
 </body>
+
 </html>

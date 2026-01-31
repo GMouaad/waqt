@@ -864,6 +864,140 @@ def export(period: str, date: Optional[str], output: Optional[str], export_forma
             raise click.exceptions.Exit(1)
 
 
+@cli.command("import")
+@click.argument("file", type=click.Path(exists=True))
+@click.option(
+    "--format",
+    "-f",
+    "import_format",
+    type=click.Choice(["auto", "csv", "json", "excel"], case_sensitive=False),
+    default="auto",
+    help="File format (default: auto-detect from extension)",
+)
+@click.option(
+    "--on-conflict",
+    type=click.Choice(["skip", "overwrite", "duplicate"], case_sensitive=False),
+    default="skip",
+    help="How to handle duplicate entries (default: skip)",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Preview import without making changes",
+)
+@click.option(
+    "--no-create-categories",
+    is_flag=True,
+    help="Don't auto-create missing categories",
+)
+def import_cmd(file, import_format, on_conflict, dry_run, no_create_categories):
+    """Import time entries from a file.
+
+    Supported formats: CSV, JSON, Excel (.xlsx)
+
+    The import function will:
+    - Auto-detect file format from extension (or use --format)
+    - Create missing categories automatically (unless --no-create-categories)
+    - Skip duplicate entries by default (or use --on-conflict to change)
+    - Import leave days from JSON files
+
+    Examples:
+
+        waqt import backup.json
+
+        waqt import data.csv --on-conflict overwrite
+
+        waqt import entries.xlsx --dry-run
+
+        waqt import legacy.json --no-create-categories
+    """
+    from .services import import_time_entries
+
+    with get_session() as session:
+        if dry_run:
+            click.echo(
+                click.style(
+                    "\n🔍 DRY RUN MODE - No changes will be saved\n",
+                    fg="yellow",
+                    bold=True,
+                )
+            )
+
+        click.echo(click.style(f"📥 Importing from: {file}", fg="cyan"))
+        click.echo(f"Format: {import_format}")
+        click.echo(f"On conflict: {on_conflict}")
+        click.echo("-" * 50)
+
+        result = import_time_entries(
+            session,
+            file_path=file,
+            import_format=import_format.lower(),
+            on_conflict=on_conflict.lower(),
+            auto_create_categories=not no_create_categories,
+            include_leave_days=True,
+            dry_run=dry_run,
+        )
+
+        # Display results
+        click.echo()
+        if result["success"]:
+            if dry_run:
+                click.echo(
+                    click.style("✓ Import preview completed", fg="green", bold=True)
+                )
+            else:
+                click.echo(
+                    click.style(
+                        "✓ Import completed successfully!", fg="green", bold=True
+                    )
+                )
+        else:
+            click.echo(click.style("✗ Import failed", fg="red", bold=True))
+
+        # Statistics
+        click.echo()
+        click.echo("Results:")
+        click.echo(f"  Time entries imported: {result['entries_imported']}")
+        if result["entries_updated"] > 0:
+            click.echo(f"  Time entries updated: {result['entries_updated']}")
+        if result["entries_skipped"] > 0:
+            click.echo(f"  Time entries skipped: {result['entries_skipped']}")
+        if result["leave_days_imported"] > 0:
+            click.echo(f"  Leave days imported: {result['leave_days_imported']}")
+        if result["leave_days_skipped"] > 0:
+            click.echo(f"  Leave days skipped: {result['leave_days_skipped']}")
+
+        # Categories created
+        if result["categories_created"]:
+            click.echo()
+            click.echo(click.style("Categories created:", fg="cyan"))
+            for cat_name in result["categories_created"]:
+                click.echo(f"  • {cat_name}")
+
+        # Warnings
+        if result["warnings"]:
+            click.echo()
+            click.echo(click.style("Warnings:", fg="yellow"))
+            for warning in result["warnings"][:10]:  # Limit display
+                click.echo(f"  ⚠ {warning}")
+            if len(result["warnings"]) > 10:
+                click.echo(f"  ... and {len(result['warnings']) - 10} more warnings")
+
+        # Errors
+        if result["errors"]:
+            click.echo()
+            click.echo(click.style("Errors:", fg="red"))
+            for error in result["errors"][:10]:  # Limit display
+                click.echo(f"  ✗ {error}")
+            if len(result["errors"]) > 10:
+                click.echo(f"  ... and {len(result['errors']) - 10} more errors")
+
+        click.echo()
+
+        if not result["success"]:
+            raise click.exceptions.Exit(1)
+
+
 # Configuration management commands
 @cli.group()
 def config():

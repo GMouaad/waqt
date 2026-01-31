@@ -699,3 +699,231 @@ def test_monthly_summary_with_leave_days(app):
         assert result["status"] == "success"
         assert result["statistics"]["vacation_days"] == 1
         assert result["statistics"]["sick_days"] == 1
+
+
+def test_import_entries_json_basic(app):
+    """Test basic JSON import via MCP."""
+    from src.waqt.mcp_server import import_entries
+    from src.waqt.models import TimeEntry
+
+    with app.app_context():
+        json_content = """{
+            "entries": [
+                {
+                    "date": "2026-10-01",
+                    "start_time": "09:00:00",
+                    "end_time": "17:00:00",
+                    "description": "MCP imported entry"
+                }
+            ]
+        }"""
+
+        result = import_entries(content=json_content)
+
+        assert result["status"] == "success"
+        assert result["entries_imported"] == 1
+
+        # Verify entry was created
+        entry = TimeEntry.query.filter_by(date=date(2026, 10, 1)).first()
+        assert entry is not None
+        assert entry.description == "MCP imported entry"
+
+
+def test_import_entries_csv_basic(app):
+    """Test basic CSV import via MCP."""
+    from src.waqt.mcp_server import import_entries
+    from src.waqt.models import TimeEntry
+
+    with app.app_context():
+        csv_content = """Date,Day of Week,Start Time,End Time,Duration (Hours),Duration (HH:MM),Description,Category,Overtime,Created At
+2026-10-02,Friday,08:00,16:00,8.00,8:00,CSV imported via MCP,,0.00,2026-10-02T08:00:00
+"""
+
+        result = import_entries(content=csv_content, import_format="csv")
+
+        assert result["status"] == "success"
+        assert result["entries_imported"] == 1
+
+        # Verify entry was created
+        entry = TimeEntry.query.filter_by(date=date(2026, 10, 2)).first()
+        assert entry is not None
+        assert entry.description == "CSV imported via MCP"
+
+
+def test_import_entries_dry_run(app):
+    """Test dry run doesn't create entries via MCP."""
+    from src.waqt.mcp_server import import_entries
+    from src.waqt.models import TimeEntry
+
+    with app.app_context():
+        json_content = """{
+            "entries": [
+                {
+                    "date": "2026-10-03",
+                    "start_time": "09:00:00",
+                    "end_time": "17:00:00",
+                    "description": "Dry run entry"
+                }
+            ]
+        }"""
+
+        result = import_entries(content=json_content, dry_run=True)
+
+        assert result["status"] == "success"
+        assert result["dry_run"] is True
+        assert result["entries_imported"] == 1
+
+        # Verify no entry was created
+        entry = TimeEntry.query.filter_by(date=date(2026, 10, 3)).first()
+        assert entry is None
+
+
+def test_import_entries_with_category(app):
+    """Test import creates categories automatically via MCP."""
+    from src.waqt.mcp_server import import_entries
+    from src.waqt.models import TimeEntry, Category
+
+    with app.app_context():
+        json_content = """{
+            "entries": [
+                {
+                    "date": "2026-10-04",
+                    "start_time": "09:00:00",
+                    "end_time": "17:00:00",
+                    "category": "MCPCreatedCategory"
+                }
+            ]
+        }"""
+
+        result = import_entries(content=json_content, auto_create_categories=True)
+
+        assert result["status"] == "success"
+        assert "MCPCreatedCategory" in result["categories_created"]
+
+        # Verify category was created
+        cat = Category.query.filter_by(name="MCPCreatedCategory").first()
+        assert cat is not None
+
+
+def test_import_entries_skip_duplicates(app):
+    """Test skip mode for duplicate entries via MCP."""
+    from src.waqt.mcp_server import import_entries
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+
+    with app.app_context():
+        # Create existing entry
+        entry = TimeEntry(
+            date=date(2026, 10, 5),
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Existing entry",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        json_content = """{
+            "entries": [
+                {
+                    "date": "2026-10-05",
+                    "start_time": "09:00:00",
+                    "end_time": "17:00:00"
+                }
+            ]
+        }"""
+
+        result = import_entries(content=json_content, on_conflict="skip")
+
+        assert result["status"] == "success"
+        assert result["entries_skipped"] >= 1
+        assert result["entries_imported"] == 0
+
+
+def test_import_entries_overwrite(app):
+    """Test overwrite mode for duplicate entries via MCP."""
+    from src.waqt.mcp_server import import_entries
+    from src.waqt.models import TimeEntry
+    from src.waqt import db
+
+    with app.app_context():
+        # Create existing entry
+        entry = TimeEntry(
+            date=date(2026, 10, 6),
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            duration_hours=8.0,
+            description="Original",
+            is_active=False,
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        json_content = """{
+            "entries": [
+                {
+                    "date": "2026-10-06",
+                    "start_time": "09:00:00",
+                    "end_time": "17:00:00",
+                    "description": "Updated via MCP"
+                }
+            ]
+        }"""
+
+        result = import_entries(content=json_content, on_conflict="overwrite")
+
+        assert result["status"] == "success"
+        assert result["entries_updated"] >= 1
+
+        # Verify entry description was updated
+        updated = TimeEntry.query.filter_by(date=date(2026, 10, 6)).first()
+        assert updated.description == "Updated via MCP"
+
+
+def test_import_entries_empty_content(app):
+    """Test import with empty content returns error."""
+    from src.waqt.mcp_server import import_entries
+
+    with app.app_context():
+        result = import_entries(content="")
+
+        assert result["status"] == "error"
+        assert "empty" in result["message"].lower()
+
+
+def test_import_entries_invalid_format(app):
+    """Test import with invalid format returns error."""
+    from src.waqt.mcp_server import import_entries
+
+    with app.app_context():
+        result = import_entries(content="{}", import_format="xml")
+
+        assert result["status"] == "error"
+        assert "Unsupported format" in result["message"]
+
+
+def test_import_entries_invalid_json(app):
+    """Test import with invalid JSON content."""
+    from src.waqt.mcp_server import import_entries
+
+    with app.app_context():
+        result = import_entries(content="not valid json")
+
+        assert result["status"] == "error"
+        # Message can be parse error or failed to read/parse file
+        assert (
+            "failed" in result["message"].lower()
+            or "invalid" in result["message"].lower()
+        )
+
+
+def test_import_entries_invalid_on_conflict(app):
+    """Test import with invalid on_conflict value."""
+    from src.waqt.mcp_server import import_entries
+
+    with app.app_context():
+        result = import_entries(content="{}", on_conflict="invalid")
+
+        assert result["status"] == "error"
+        assert "on_conflict" in result["message"].lower()

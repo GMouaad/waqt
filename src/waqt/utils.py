@@ -410,6 +410,7 @@ def export_time_entries_to_csv(
         "Duration (Hours)",
         "Duration (HH:MM)",
         "Description",
+        "Category",
         "Overtime",
         "Created At",
     ]
@@ -431,6 +432,7 @@ def export_time_entries_to_csv(
             f"{entry.duration_hours:.2f}",
             format_hours(entry.duration_hours),
             entry.description,
+            entry.category.name if entry.category else "",
             f"{overtime:.2f}",
             entry.created_at.isoformat() if entry.created_at else "",
         ]
@@ -465,6 +467,7 @@ def export_time_entries_to_json(
     entries: List[TimeEntry],
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    leave_days: Optional[List[LeaveDay]] = None,
 ) -> str:
     """
     Export time entries to JSON format.
@@ -473,6 +476,7 @@ def export_time_entries_to_json(
         entries: List of TimeEntry objects to export
         start_date: Optional start date for the export period
         end_date: Optional end date for the export period
+        leave_days: Optional list of LeaveDay objects to include
 
     Returns:
         JSON content as a string
@@ -493,9 +497,26 @@ def export_time_entries_to_json(
             "description": entry.description,
             "overtime": round(overtime, 2),
             "category": entry.category.name if entry.category else None,
+            "category_code": entry.category.code if entry.category else None,
             "created_at": entry.created_at.isoformat() if entry.created_at else None,
         }
         data.append(entry_data)
+
+    # Build leave days data
+    leave_data = []
+    if leave_days:
+        for leave in leave_days:
+            leave_data.append(
+                {
+                    "id": leave.id,
+                    "date": leave.date.isoformat(),
+                    "leave_type": leave.leave_type,
+                    "description": leave.description or "",
+                    "created_at": (
+                        leave.created_at.isoformat() if leave.created_at else None
+                    ),
+                }
+            )
 
     export_data = {
         "period": {
@@ -503,10 +524,12 @@ def export_time_entries_to_json(
             "end_date": end_date.isoformat() if end_date else None,
         },
         "entries": data,
+        "leave_days": leave_data,
         "summary": {
             "total_entries": len(entries),
             "total_hours": round(sum(e.duration_hours for e in entries), 2),
             "total_overtime": round(sum(daily_overtime.values()), 2),
+            "total_leave_days": len(leave_data),
         },
     }
 
@@ -737,3 +760,435 @@ def generate_calendar_data(year: int, month: int) -> Dict:
         "prev_month": prev_month,
         "next_month": next_month,
     }
+
+
+# =============================================================================
+# Import Parsing Functions
+# =============================================================================
+
+
+def detect_import_format(file_path: str) -> str:
+    """
+    Auto-detect file format from extension.
+
+    Args:
+        file_path: Path to the file
+
+    Returns:
+        Format string: 'csv', 'json', or 'excel'
+
+    Raises:
+        ValueError: If format cannot be determined
+    """
+    import os
+
+    ext = os.path.splitext(file_path)[1].lower()
+
+    format_map = {
+        ".csv": "csv",
+        ".json": "json",
+        ".xlsx": "excel",
+        ".xls": "excel",
+    }
+
+    if ext in format_map:
+        return format_map[ext]
+
+    raise ValueError(
+        f"Cannot determine file format from extension '{ext}'. "
+        "Supported extensions: .csv, .json, .xlsx"
+    )
+
+
+def normalize_time_string(time_str: str) -> Optional[datetime_time]:
+    """
+    Parse various time formats into datetime.time.
+
+    Supported formats:
+    - HH:MM (24-hour)
+    - HH:MM:SS (24-hour with seconds)
+    - HH:MM AM/PM (12-hour)
+    - HH:MM:SS AM/PM (12-hour with seconds)
+
+    Args:
+        time_str: Time string to parse
+
+    Returns:
+        datetime.time object or None if parsing fails
+    """
+    if not time_str or not isinstance(time_str, str):
+        return None
+
+    time_str = time_str.strip()
+
+    # List of formats to try
+    formats = [
+        "%H:%M:%S",  # 14:30:00
+        "%H:%M",  # 14:30
+        "%I:%M:%S %p",  # 02:30:00 PM
+        "%I:%M %p",  # 02:30 PM
+        "%I:%M:%S%p",  # 02:30:00PM (no space)
+        "%I:%M%p",  # 02:30PM (no space)
+    ]
+
+    for fmt in formats:
+        try:
+            parsed = datetime.strptime(time_str, fmt)
+            return parsed.time()
+        except ValueError:
+            continue
+
+    return None
+
+
+def normalize_date_string(date_str: str) -> Optional[date]:
+    """
+    Parse various date formats into datetime.date.
+
+    Supported formats (in order of precedence):
+    - YYYY-MM-DD (ISO 8601 - preferred, unambiguous)
+    - YYYY/MM/DD (ISO 8601 variant - unambiguous)
+    - DD-MM-YYYY (European, unambiguous when day > 12)
+    - DD/MM/YYYY (European)
+    - MM/DD/YYYY (US format - tried last to prefer European interpretation)
+
+    Note: For ambiguous dates like 01/02/2026, DD/MM/YYYY (European) is tried
+    before MM/DD/YYYY (US). Users importing from US-formatted systems should
+    ensure their dates are in ISO format (YYYY-MM-DD) to avoid misinterpretation.
+
+    Args:
+        date_str: Date string to parse
+
+    Returns:
+        datetime.date object or None if parsing fails
+    """
+    if not date_str or not isinstance(date_str, str):
+        return None
+
+    date_str = date_str.strip()
+
+    # Formats listed in order of precedence
+    # ISO formats first (unambiguous), then European, then US
+    formats = [
+        "%Y-%m-%d",  # 2026-01-15 (ISO 8601 - preferred)
+        "%Y/%m/%d",  # 2026/01/15 (ISO variant)
+        "%d-%m-%Y",  # 15-01-2026 (European with dashes)
+        "%d/%m/%Y",  # 15/01/2026 (European with slashes)
+        "%m/%d/%Y",  # 01/15/2026 (US format - tried last)
+    ]
+
+    for fmt in formats:
+        try:
+            parsed = datetime.strptime(date_str, fmt)
+            return parsed.date()
+        except ValueError:
+            continue
+
+    return None
+
+
+def validate_time_entry_data(entry: Dict) -> Tuple[bool, List[str]]:
+    """
+    Validate a single time entry dictionary.
+
+    Args:
+        entry: Dictionary with time entry data
+
+    Returns:
+        Tuple of (is_valid, list_of_error_messages)
+    """
+    errors = []
+
+    # Required fields
+    if not entry.get("date"):
+        errors.append("Missing required field: date")
+    else:
+        parsed_date = normalize_date_string(str(entry["date"]))
+        if parsed_date is None:
+            errors.append(f"Invalid date format: {entry['date']}")
+
+    if not entry.get("start_time"):
+        errors.append("Missing required field: start_time")
+    else:
+        parsed_start = normalize_time_string(str(entry["start_time"]))
+        if parsed_start is None:
+            errors.append(f"Invalid start_time format: {entry['start_time']}")
+
+    if not entry.get("end_time"):
+        errors.append("Missing required field: end_time")
+    else:
+        parsed_end = normalize_time_string(str(entry["end_time"]))
+        if parsed_end is None:
+            errors.append(f"Invalid end_time format: {entry['end_time']}")
+
+    # Duration validation (warning, not error)
+    if entry.get("duration_hours"):
+        try:
+            duration = float(entry["duration_hours"])
+            if duration < 0:
+                errors.append(f"Invalid negative duration: {duration}")
+            elif duration > 24:
+                # Warning but not an error - will be in warnings list
+                pass
+        except (ValueError, TypeError):
+            pass  # Will be recalculated
+
+    return len(errors) == 0, errors
+
+
+def parse_time_entries_from_json(content: str) -> Dict:
+    """
+    Parse JSON content into structured import data.
+
+    Args:
+        content: JSON string content
+
+    Returns:
+        Dictionary with:
+        - entries: List of entry dictionaries
+        - leave_days: List of leave day dictionaries
+        - period: Period info dictionary (if present)
+
+    Raises:
+        ValueError: If JSON is invalid or has unexpected structure
+    """
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
+
+    # Handle both old format (just entries list) and new format (object with entries key)
+    if isinstance(data, list):
+        # Old format: just a list of entries
+        return {"entries": data, "leave_days": [], "period": None}
+
+    if not isinstance(data, dict):
+        raise ValueError("JSON must be an object or array of entries")
+
+    entries = data.get("entries", [])
+    if not isinstance(entries, list):
+        raise ValueError("'entries' field must be an array")
+
+    leave_days = data.get("leave_days", [])
+    if not isinstance(leave_days, list):
+        leave_days = []
+
+    period = data.get("period")
+
+    return {
+        "entries": entries,
+        "leave_days": leave_days,
+        "period": period,
+    }
+
+
+def parse_time_entries_from_csv(content: str) -> Dict:
+    """
+    Parse CSV content into structured import data.
+
+    Handles CSV files with or without Category column.
+    Skips summary statistics rows at the end.
+
+    Args:
+        content: CSV string content
+
+    Returns:
+        Dictionary with:
+        - entries: List of entry dictionaries
+        - leave_days: Empty list (CSV doesn't support leave days)
+
+    Raises:
+        ValueError: If CSV is empty or has no valid rows
+    """
+    reader = csv.DictReader(io.StringIO(content))
+
+    entries = []
+    for row in reader:
+        # Skip empty rows and summary statistics rows
+        if not row or not row.get("Date"):
+            continue
+
+        # Check if this is a summary row (no start time)
+        if not row.get("Start Time"):
+            # Likely hit the summary section, stop processing
+            break
+
+        entry = {
+            "date": row.get("Date", "").strip(),
+            "start_time": row.get("Start Time", "").strip(),
+            "end_time": row.get("End Time", "").strip(),
+            "description": row.get("Description", "").strip(),
+        }
+
+        # Optional Category column
+        if "Category" in row and row["Category"]:
+            entry["category"] = row["Category"].strip()
+
+        # Optional duration (will be recalculated if missing)
+        duration_str = row.get("Duration (Hours)", "").strip()
+        if duration_str:
+            try:
+                entry["duration_hours"] = float(duration_str)
+            except ValueError:
+                pass
+
+        # Optional created_at
+        created_at = row.get("Created At", "").strip()
+        if created_at:
+            entry["created_at"] = created_at
+
+        entries.append(entry)
+
+    if not entries:
+        raise ValueError("CSV file contains no valid time entries")
+
+    return {
+        "entries": entries,
+        "leave_days": [],  # CSV doesn't support leave days
+    }
+
+
+def parse_time_entries_from_excel(content: bytes) -> Dict:
+    """
+    Parse Excel content into structured import data.
+
+    Reads from the first sheet (Time Entries).
+
+    Args:
+        content: Excel file content as bytes
+
+    Returns:
+        Dictionary with:
+        - entries: List of entry dictionaries
+        - leave_days: Empty list (Excel doesn't support leave days yet)
+
+    Raises:
+        ValueError: If Excel file is invalid or has no valid rows
+    """
+    workbook = openpyxl.load_workbook(io.BytesIO(content), read_only=True)
+
+    # Get the first sheet
+    sheet = workbook.active
+
+    # Read headers from first row
+    headers = []
+    for cell in sheet[1]:
+        headers.append(cell.value if cell.value else "")
+
+    # Map headers to column indices
+    header_map = {h: i for i, h in enumerate(headers)}
+
+    # Required columns
+    date_col = header_map.get("Date")
+    start_col = header_map.get("Start Time")
+    end_col = header_map.get("End Time")
+
+    if date_col is None or start_col is None or end_col is None:
+        raise ValueError(
+            "Excel file must have 'Date', 'Start Time', and 'End Time' columns"
+        )
+
+    # Optional columns
+    desc_col = header_map.get("Description")
+    cat_col = header_map.get("Category")
+    duration_col = header_map.get("Duration (Hours)")
+    created_col = header_map.get("Created At")
+
+    entries = []
+    for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), 2):
+        # Skip empty rows
+        if not row or not row[date_col]:
+            continue
+
+        # Format date - handle both string and date objects
+        date_val = row[date_col]
+        if isinstance(date_val, date):
+            date_str = date_val.isoformat()
+        elif date_val:
+            date_str = str(date_val)
+        else:
+            continue
+
+        # Format times - handle both string and time objects
+        start_val = row[start_col]
+        if isinstance(start_val, datetime_time):
+            start_str = start_val.strftime("%H:%M:%S")
+        elif start_val:
+            start_str = str(start_val)
+        else:
+            continue
+
+        end_val = row[end_col]
+        if isinstance(end_val, datetime_time):
+            end_str = end_val.strftime("%H:%M:%S")
+        elif end_val:
+            end_str = str(end_val)
+        else:
+            continue
+
+        entry = {
+            "date": date_str,
+            "start_time": start_str,
+            "end_time": end_str,
+        }
+
+        # Optional fields
+        if desc_col is not None and row[desc_col]:
+            entry["description"] = str(row[desc_col])
+
+        if cat_col is not None and row[cat_col]:
+            entry["category"] = str(row[cat_col])
+
+        if duration_col is not None and row[duration_col]:
+            try:
+                entry["duration_hours"] = float(row[duration_col])
+            except (ValueError, TypeError):
+                pass
+
+        if created_col is not None and row[created_col]:
+            created_val = row[created_col]
+            if isinstance(created_val, datetime):
+                entry["created_at"] = created_val.isoformat()
+            elif created_val:
+                entry["created_at"] = str(created_val)
+
+        entries.append(entry)
+
+    workbook.close()
+
+    if not entries:
+        raise ValueError("Excel file contains no valid time entries")
+
+    return {
+        "entries": entries,
+        "leave_days": [],  # Excel doesn't support leave days yet
+    }
+
+
+def validate_leave_day_data(leave: Dict) -> Tuple[bool, List[str]]:
+    """
+    Validate a single leave day dictionary.
+
+    Args:
+        leave: Dictionary with leave day data
+
+    Returns:
+        Tuple of (is_valid, list_of_error_messages)
+    """
+    errors = []
+
+    # Required fields
+    if not leave.get("date"):
+        errors.append("Missing required field: date")
+    else:
+        parsed_date = normalize_date_string(str(leave["date"]))
+        if parsed_date is None:
+            errors.append(f"Invalid date format: {leave['date']}")
+
+    leave_type = leave.get("leave_type", "").lower() if leave.get("leave_type") else ""
+    if not leave_type:
+        errors.append("Missing required field: leave_type")
+    elif leave_type not in ("vacation", "sick"):
+        errors.append(f"Invalid leave_type: {leave_type}. Must be 'vacation' or 'sick'")
+
+    return len(errors) == 0, errors

@@ -9,11 +9,22 @@ the `database.get_session()` context manager.
 """
 
 from datetime import datetime, date, time, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 
 from .models import TimeEntry, LeaveDay, Settings, Category
-from .utils import calculate_duration, get_working_days_in_range
+from .utils import (
+    calculate_duration,
+    get_working_days_in_range,
+    detect_import_format,
+    parse_time_entries_from_json,
+    parse_time_entries_from_csv,
+    parse_time_entries_from_excel,
+    validate_time_entry_data,
+    validate_leave_day_data,
+    normalize_date_string,
+    normalize_time_string,
+)
 
 
 def add_time_entry(
@@ -396,3 +407,347 @@ def create_leave_requests(
         "weekend_days": weekend_days,
         "working_days": len(working_days),
     }
+
+
+# =============================================================================
+# Import Functions
+# =============================================================================
+
+
+def _resolve_category(
+    session: Session,
+    category_name: Optional[str],
+    category_code: Optional[str],
+    auto_create: bool,
+) -> tuple[Optional[int], Optional[str]]:
+    """
+    Resolve category by code or name, optionally creating if not found.
+
+    Args:
+        session: SQLAlchemy session
+        category_name: Category name from import data
+        category_code: Category code from import data
+        auto_create: Whether to create missing categories
+
+    Returns:
+        Tuple of (category_id or None, created_category_name or None)
+    """
+    if not category_name and not category_code:
+        return None, None
+
+    # Try to find by code first (more reliable for matching)
+    if category_code:
+        category = session.query(Category).filter_by(code=category_code).first()
+        if category:
+            return category.id, None
+
+    # Try to find by name
+    if category_name:
+        category = session.query(Category).filter_by(name=category_name).first()
+        if category:
+            return category.id, None
+
+    # Category not found - create if allowed
+    if auto_create and category_name:
+        # Generate code if not provided
+        if not category_code:
+            # Use first 6 chars, uppercase, alphanumeric only
+            code_base = "".join(c for c in category_name.upper() if c.isalnum())[:6]
+            category_code = code_base if code_base else "IMPORT"
+
+            # Ensure code is unique
+            existing = session.query(Category).filter_by(code=category_code).first()
+            if existing:
+                # Append number to make unique
+                for i in range(1, 100):
+                    new_code = f"{category_code[:5]}{i}"
+                    if not session.query(Category).filter_by(code=new_code).first():
+                        category_code = new_code
+                        break
+
+        new_category = Category(
+            name=category_name,
+            code=category_code,
+            description=f"Auto-created during import on {datetime.now().date()}",
+            is_active=True,
+        )
+        session.add(new_category)
+        session.flush()  # Get the ID
+        return new_category.id, category_name
+
+    return None, None
+
+
+def _check_duplicate_entry(
+    session: Session,
+    entry_date: date,
+    start_time: time,
+    end_time: time,
+) -> Optional[TimeEntry]:
+    """
+    Check if a matching time entry already exists.
+
+    Args:
+        session: SQLAlchemy session
+        entry_date: Date of the entry
+        start_time: Start time
+        end_time: End time
+
+    Returns:
+        Existing TimeEntry if found, None otherwise
+    """
+    return (
+        session.query(TimeEntry)
+        .filter_by(
+            date=entry_date,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        .first()
+    )
+
+
+def _check_duplicate_leave(
+    session: Session,
+    leave_date: date,
+) -> Optional[LeaveDay]:
+    """
+    Check if a leave day already exists for this date.
+
+    Args:
+        session: SQLAlchemy session
+        leave_date: Date to check
+
+    Returns:
+        Existing LeaveDay if found, None otherwise
+    """
+    return session.query(LeaveDay).filter_by(date=leave_date).first()
+
+
+def import_time_entries(
+    session: Session,
+    file_path: str,
+    import_format: str = "auto",
+    on_conflict: str = "skip",
+    auto_create_categories: bool = True,
+    include_leave_days: bool = True,
+    dry_run: bool = False,
+) -> Dict[str, Any]:
+    """
+    Import time entries and leave days from a file.
+
+    Args:
+        session: SQLAlchemy session
+        file_path: Path to the import file
+        import_format: 'csv', 'json', 'excel', or 'auto' (auto-detect)
+        on_conflict: How to handle duplicates:
+            - 'skip': Skip duplicate entries (default)
+            - 'overwrite': Update existing entries with imported data
+            - 'duplicate': Create new entries regardless of duplicates
+        auto_create_categories: Create missing categories automatically
+        include_leave_days: Import leave days from JSON (if present)
+        dry_run: Preview without saving changes
+
+    Returns:
+        Dictionary with:
+        - success: bool
+        - entries_imported: int
+        - entries_skipped: int
+        - entries_updated: int (for overwrite mode)
+        - leave_days_imported: int
+        - leave_days_skipped: int
+        - categories_created: List[str]
+        - errors: List[str]
+        - warnings: List[str]
+    """
+    result = {
+        "success": True,
+        "entries_imported": 0,
+        "entries_skipped": 0,
+        "entries_updated": 0,
+        "leave_days_imported": 0,
+        "leave_days_skipped": 0,
+        "categories_created": [],
+        "errors": [],
+        "warnings": [],
+    }
+
+    # Validate on_conflict option
+    valid_conflict_modes = ["skip", "overwrite", "duplicate"]
+    if on_conflict not in valid_conflict_modes:
+        result["success"] = False
+        result["errors"].append(
+            f"Invalid on_conflict mode '{on_conflict}'. "
+            f"Must be one of: {', '.join(valid_conflict_modes)}"
+        )
+        return result
+
+    # Detect format if auto
+    try:
+        if import_format == "auto":
+            import_format = detect_import_format(file_path)
+    except ValueError as e:
+        result["success"] = False
+        result["errors"].append(str(e))
+        return result
+
+    # Read and parse file
+    try:
+        if import_format == "json":
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            parsed = parse_time_entries_from_json(content)
+        elif import_format == "csv":
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            parsed = parse_time_entries_from_csv(content)
+        elif import_format == "excel":
+            with open(file_path, "rb") as f:
+                content = f.read()
+            parsed = parse_time_entries_from_excel(content)
+        else:
+            result["success"] = False
+            result["errors"].append(f"Unsupported format: {import_format}")
+            return result
+    except (ValueError, OSError) as e:
+        result["success"] = False
+        result["errors"].append(f"Failed to read/parse file: {e}")
+        return result
+
+    entries_data = parsed.get("entries", [])
+    leave_data = parsed.get("leave_days", [])
+
+    # Process time entries
+    for idx, entry_data in enumerate(entries_data, 1):
+        # Validate entry
+        is_valid, validation_errors = validate_time_entry_data(entry_data)
+        if not is_valid:
+            for err in validation_errors:
+                result["errors"].append(f"Entry {idx}: {err}")
+            result["entries_skipped"] += 1
+            continue
+
+        # Parse date and times
+        entry_date = normalize_date_string(str(entry_data["date"]))
+        start_time = normalize_time_string(str(entry_data["start_time"]))
+        end_time = normalize_time_string(str(entry_data["end_time"]))
+
+        if not entry_date or not start_time or not end_time:
+            result["entries_skipped"] += 1
+            continue
+
+        # Check for duplicates
+        existing = _check_duplicate_entry(session, entry_date, start_time, end_time)
+
+        if existing:
+            if on_conflict == "skip":
+                result["entries_skipped"] += 1
+                continue
+            elif on_conflict == "overwrite":
+                # Update existing entry
+                existing.description = (
+                    entry_data.get("description", "").strip() or existing.description
+                )
+
+                # Resolve category for update
+                category_id, created_name = _resolve_category(
+                    session,
+                    entry_data.get("category"),
+                    entry_data.get("category_code"),
+                    auto_create_categories,
+                )
+                if created_name:
+                    result["categories_created"].append(created_name)
+                if category_id:
+                    existing.category_id = category_id
+
+                result["entries_updated"] += 1
+                continue
+            # else: on_conflict == "duplicate" - continue to create new
+
+        # Resolve category
+        category_id, created_name = _resolve_category(
+            session,
+            entry_data.get("category"),
+            entry_data.get("category_code"),
+            auto_create_categories,
+        )
+        if created_name:
+            result["categories_created"].append(created_name)
+
+        # Calculate duration
+        duration_hours = calculate_duration(start_time, end_time)
+        if duration_hours <= 0:
+            result["warnings"].append(
+                f"Entry {idx} ({entry_date}): Invalid time range, skipping"
+            )
+            result["entries_skipped"] += 1
+            continue
+
+        # Check for excessive duration
+        if duration_hours > 16:
+            result["warnings"].append(
+                f"Entry {idx} ({entry_date}): Duration {duration_hours:.1f}h exceeds 16 hours"
+            )
+
+        # Create new entry
+        if not dry_run:
+            new_entry = TimeEntry(
+                date=entry_date,
+                start_time=start_time,
+                end_time=end_time,
+                duration_hours=duration_hours,
+                description=entry_data.get("description", "").strip(),
+                category_id=category_id,
+                is_active=False,
+                accumulated_pause_seconds=0,
+            )
+            session.add(new_entry)
+
+        result["entries_imported"] += 1
+
+    # Process leave days (JSON only)
+    if include_leave_days and leave_data:
+        for idx, leave_item in enumerate(leave_data, 1):
+            # Validate leave day
+            is_valid, validation_errors = validate_leave_day_data(leave_item)
+            if not is_valid:
+                for err in validation_errors:
+                    result["errors"].append(f"Leave day {idx}: {err}")
+                result["leave_days_skipped"] += 1
+                continue
+
+            leave_date = normalize_date_string(str(leave_item["date"]))
+            if not leave_date:
+                result["leave_days_skipped"] += 1
+                continue
+
+            # Check for duplicate leave
+            existing_leave = _check_duplicate_leave(session, leave_date)
+            if existing_leave:
+                result["leave_days_skipped"] += 1
+                continue
+
+            # Create leave day
+            if not dry_run:
+                new_leave = LeaveDay(
+                    date=leave_date,
+                    leave_type=leave_item.get("leave_type", "").lower(),
+                    description=leave_item.get("description", ""),
+                )
+                session.add(new_leave)
+
+            result["leave_days_imported"] += 1
+
+    # Remove duplicate category names
+    result["categories_created"] = list(set(result["categories_created"]))
+
+    # Set success based on whether any entries were imported
+    if result["entries_imported"] == 0 and result["leave_days_imported"] == 0:
+        if result["errors"]:
+            result["success"] = False
+        else:
+            result["success"] = True  # No errors, but nothing to import
+            result["warnings"].append("No new entries to import")
+
+    return result
