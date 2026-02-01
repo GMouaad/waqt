@@ -1706,7 +1706,7 @@ def ui_start(ctx, port: Optional[int], host: Optional[str]):
     "--force",
     "-f",
     is_flag=True,
-    help="Force kill the process (SIGKILL instead of SIGTERM)",
+    help="Force terminate the process immediately instead of graceful shutdown",
 )
 def ui_stop(force: bool):
     """Stop the background web UI process.

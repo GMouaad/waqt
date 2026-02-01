@@ -12,6 +12,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -28,7 +29,14 @@ except ImportError:
 
 
 def get_data_dir() -> Path:
-    """Get the waqt data directory."""
+    """Get the waqt data directory.
+
+    Honors the WAQT_DATA_DIR environment variable for consistency with
+    database.py and logging.py.
+    """
+    data_dir = os.environ.get("WAQT_DATA_DIR")
+    if data_dir:
+        return Path(data_dir)
     return Path(platformdirs.user_data_dir("waqt", "GMouaad"))
 
 
@@ -72,6 +80,7 @@ def write_state_file(state: Dict[str, Any]) -> None:
         try:
             os.unlink(temp_path)
         except OSError:
+            # Best-effort cleanup of the temporary file; ignore deletion errors.
             pass
         raise
 
@@ -86,30 +95,87 @@ def cleanup_state_files() -> None:
 
 
 def is_process_running(pid: int) -> bool:
-    """Check if a process with the given PID is running."""
+    """Check if a process with the given PID is running.
+
+    Uses psutil on all platforms when available for reliability.
+    Falls back to platform-specific methods otherwise.
+    """
     if pid <= 0:
         return False
-    try:
-        os.kill(pid, 0)  # Signal 0 = existence check, no actual signal sent
-        return True
-    except (OSError, ProcessLookupError):
-        return False
+
+    # Use psutil when available (most reliable, cross-platform)
+    if HAS_PSUTIL:
+        return psutil.pid_exists(pid)
+
+    # Platform-specific fallbacks
+    if sys.platform == "win32":
+        # Windows: use tasklist to check if PID exists
+        try:
+            result = subprocess.run(
+                ["tasklist", "/FI", f"PID eq {pid}", "/NH"],
+                capture_output=True,
+                text=True,
+            )
+            return str(pid) in result.stdout
+        except Exception:
+            return False
+    else:
+        # Unix: use kill signal 0
+        try:
+            os.kill(pid, 0)
+            return True
+        except (OSError, ProcessLookupError):
+            return False
 
 
 def is_our_process(pid: int) -> bool:
     """Verify the PID belongs to a waqt server, not a reused PID.
 
-    Uses psutil if available, otherwise returns True (skip check).
-    """
-    if not HAS_PSUTIL:
-        return True  # Skip check if psutil not available
+    Uses psutil when available to inspect the process command line.
+    When psutil is not available, falls back to verifying that:
+    - the PID matches the one stored in the state file,
+    - the process is still running, and
+    - the configured host/port appear to be serving something.
 
-    try:
-        proc = psutil.Process(pid)
-        cmdline = " ".join(proc.cmdline()).lower()
-        return "waqt" in cmdline
-    except Exception:
+    The fallback is intentionally conservative to avoid killing
+    unrelated processes if the state file is stale and the PID
+    has been reused.
+    """
+    if pid <= 0:
         return False
+
+    if HAS_PSUTIL:
+        try:
+            proc = psutil.Process(pid)
+            cmdline = " ".join(proc.cmdline()).lower()
+            return "waqt" in cmdline
+        except Exception:
+            return False
+
+    # Fallback path when psutil is not available.
+    # Be conservative: only treat this as our process if the
+    # state file agrees on the PID and the expected port is in use.
+    state = read_state_file()
+    if not state:
+        return False
+
+    stored_pid = state.get("pid")
+    if stored_pid != pid:
+        return False
+
+    host = state.get("host", "127.0.0.1")
+    port = state.get("port")
+    if not isinstance(port, int):
+        return False
+
+    if not is_process_running(pid):
+        return False
+
+    # Verify the port is in use (suggests our server is running)
+    if not is_port_in_use(host, port):
+        return False
+
+    return True
 
 
 def is_port_in_use(host: str, port: int) -> bool:
@@ -219,7 +285,20 @@ def start_background_server(host: str, port: int) -> Dict[str, Any]:
                 **kwargs,
             )
 
-        # Write state file
+        # Wait briefly to verify the process started successfully
+        time.sleep(0.5)
+
+        # Check if process is still running (catches immediate failures)
+        if not is_process_running(process.pid):
+            return {
+                "success": False,
+                "message": (
+                    "Server process exited immediately after starting. "
+                    f"Check the log file for errors: {log_file}"
+                ),
+            }
+
+        # Write state file only after confirming process is running
         state = {
             "pid": process.pid,
             "port": port,
@@ -227,6 +306,18 @@ def start_background_server(host: str, port: int) -> Dict[str, Any]:
             "started_at": datetime.now().isoformat(),
         }
         write_state_file(state)
+
+        # Wait a bit more and verify port is bound
+        time.sleep(1.0)
+        if not is_port_in_use(host, port):
+            # Process running but port not bound yet - give a warning but succeed
+            return {
+                "success": True,
+                "pid": process.pid,
+                "url": f"http://{host}:{port}",
+                "log_file": str(log_file),
+                "warning": "Server started but port not yet bound. It may still be initializing.",
+            }
 
         return {
             "success": True,
@@ -246,7 +337,7 @@ def stop_server(force: bool = False) -> Dict[str, Any]:
     """Stop the background server.
 
     Args:
-        force: If True, use SIGKILL instead of SIGTERM (Unix) or /F flag (Windows)
+        force: If True, force terminate the process immediately
 
     Returns:
         Dict with 'success' (bool), and on success: 'pid'.
@@ -264,22 +355,43 @@ def stop_server(force: bool = False) -> Dict[str, Any]:
             args = ["taskkill", "/PID", str(pid)]
             if force:
                 args.insert(1, "/F")
-            subprocess.run(args, capture_output=True)
+            result = subprocess.run(args, capture_output=True, text=True)
+            if result.returncode != 0:
+                stdout = (result.stdout or "").strip() or "<empty>"
+                stderr = (result.stderr or "").strip() or "<empty>"
+                return {
+                    "success": False,
+                    "message": (
+                        f"Failed to stop process {pid} with taskkill "
+                        f"(exit code {result.returncode}). "
+                        f"stdout: {stdout} | stderr: {stderr}"
+                    ),
+                }
         else:
             # Unix: send signal
             sig = signal.SIGKILL if force else signal.SIGTERM
             os.kill(pid, sig)
 
         # Wait for process to terminate
-        import time
-
         for _ in range(10):  # Wait up to 5 seconds
             if not is_process_running(pid):
-                break
+                cleanup_state_files()
+                return {"success": True, "pid": pid}
             time.sleep(0.5)
 
-        cleanup_state_files()
-        return {"success": True, "pid": pid}
+        # If we reach here, the process still appears to be running.
+        # Do not clean up state so the user can retry or use --force.
+        if force:
+            message = (
+                "Failed to forcibly terminate server process; it may still be "
+                f"running (PID: {pid})."
+            )
+        else:
+            message = (
+                "Server process did not stop within the expected time and may "
+                f"still be running (PID: {pid}). You can retry or use --force."
+            )
+        return {"success": False, "pid": pid, "message": message}
 
     except Exception as e:
         return {"success": False, "message": str(e)}
