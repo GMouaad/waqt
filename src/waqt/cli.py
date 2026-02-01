@@ -1580,7 +1580,7 @@ def update_install(yes: bool, prerelease: bool):
         raise click.exceptions.Exit(1)
 
 
-@cli.command()
+@cli.group(invoke_without_command=True)
 @click.option(
     "--port",
     "-p",
@@ -1600,39 +1600,180 @@ def update_install(yes: bool, prerelease: bool):
     is_flag=True,
     help="Run in debug mode (not recommended for production)",
 )
-def ui(port: int, host: str, debug: bool):
-    """Start the web UI for interactive time tracking.
+@click.pass_context
+def ui(ctx, port: int, host: str, debug: bool):
+    """Web UI management commands.
 
-    Launches the Flask web application that provides a graphical interface
-    for managing time entries, viewing reports, and configuring settings.
+    Run without subcommand to start in foreground (default behavior).
+    Use subcommands for background process management:
 
+    \b
     Examples:
-        waqt ui
-        waqt ui --port 8080
-        waqt ui --host 0.0.0.0 --port 8000
-        waqt ui --debug
+        waqt ui                 # Start in foreground (default)
+        waqt ui --port 8080     # Start in foreground on port 8080
+        waqt ui start           # Start as background process
+        waqt ui stop            # Stop background process
+        waqt ui status          # Check if server is running
     """
-    # Import Flask app factory only when needed (for 'ui' command)
-    from . import create_app
+    # Store options in context for subcommands
+    ctx.ensure_object(dict)
+    ctx.obj["port"] = port
+    ctx.obj["host"] = host
+    ctx.obj["debug"] = debug
 
-    click.echo(
-        click.style("\n🚀 Starting waqt web application...", fg="cyan", bold=True)
-    )
-    click.echo(f"Access the application at: http://{host}:{port}")
-    click.echo("\nPress Ctrl+C to stop the server.")
-    click.echo("-" * 50)
-    click.echo()
+    # If no subcommand is provided, run in foreground (backward compatible)
+    if ctx.invoked_subcommand is None:
+        from . import create_app
 
-    try:
-        app = create_app()
-        app.run(debug=debug, host=host, port=port)
-    except Exception as e:
-        click.echo(click.style(f"\n❌ Error starting application: {e}", fg="red"))
-        click.echo("\nPlease check that:")
-        click.echo(f"  - Port {port} is not already in use")
-        click.echo("  - You have write permissions in the current directory")
-        click.echo("  - All required dependencies are available")
+        click.echo(
+            click.style("\n🚀 Starting waqt web application...", fg="cyan", bold=True)
+        )
+        click.echo(f"Access the application at: http://{host}:{port}")
+        click.echo("\nPress Ctrl+C to stop the server.")
+        click.echo("-" * 50)
+        click.echo()
+
+        try:
+            app = create_app()
+            app.run(debug=debug, host=host, port=port)
+        except Exception as e:
+            click.echo(click.style(f"\n❌ Error starting application: {e}", fg="red"))
+            click.echo("\nPlease check that:")
+            click.echo(f"  - Port {port} is not already in use")
+            click.echo("  - You have write permissions in the current directory")
+            click.echo("  - All required dependencies are available")
+            raise click.exceptions.Exit(1)
+
+
+@ui.command("start")
+@click.option(
+    "--port",
+    "-p",
+    type=int,
+    default=None,
+    help="Port to run the web server on (default: 5555)",
+)
+@click.option(
+    "--host",
+    "-h",
+    type=str,
+    default=None,
+    help="Host to bind the web server to (default: 127.0.0.1)",
+)
+@click.pass_context
+def ui_start(ctx, port: Optional[int], host: Optional[str]):
+    """Start the web UI as a background process.
+
+    The server will run in the background and you can continue using the terminal.
+    Use 'waqt ui status' to check if it's running and 'waqt ui stop' to stop it.
+
+    \b
+    Examples:
+        waqt ui start
+        waqt ui start --port 8080
+        waqt ui start --host 0.0.0.0
+    """
+    from .process_manager import get_state_file_path, start_background_server
+
+    # Use parent options if not specified
+    port = port or ctx.obj.get("port", 5555)
+    host = host or ctx.obj.get("host", "127.0.0.1")
+
+    click.echo(click.style("\n🚀 Starting waqt web UI in background...", fg="cyan"))
+
+    result = start_background_server(host, port)
+
+    if result["success"]:
+        click.echo(
+            click.style("✓ Waqt UI started in background", fg="green", bold=True)
+        )
+        click.echo(f"  URL: {result['url']}")
+        click.echo(f"  PID: {result['pid']}")
+        click.echo(f"  Log: {result['log_file']}")
+        click.echo(f"  State: {get_state_file_path()}")
+        click.echo()
+        click.echo(
+            "To stop the server, run: " + click.style("waqt ui stop", fg="yellow")
+        )
+        click.echo()
+    else:
+        click.echo(click.style(f"❌ {result['message']}", fg="red"))
         raise click.exceptions.Exit(1)
+
+
+@ui.command("stop")
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Force kill the process (SIGKILL instead of SIGTERM)",
+)
+def ui_stop(force: bool):
+    """Stop the background web UI process.
+
+    Sends a termination signal to the background server and cleans up state files.
+    Use --force for immediate termination if graceful shutdown doesn't work.
+
+    \b
+    Examples:
+        waqt ui stop
+        waqt ui stop --force
+    """
+    from .process_manager import stop_server
+
+    click.echo(click.style("\n⏹  Stopping waqt web UI...", fg="cyan"))
+
+    result = stop_server(force=force)
+
+    if result["success"]:
+        click.echo(click.style(f"✓ Waqt UI stopped (PID: {result['pid']})", fg="green"))
+        click.echo()
+    else:
+        click.echo(click.style(f"❌ {result['message']}", fg="red"))
+        if "not running" in result["message"].lower():
+            click.echo(
+                "To start the server, run: " + click.style("waqt ui start", fg="yellow")
+            )
+        raise click.exceptions.Exit(1)
+
+
+@ui.command("status")
+def ui_status():
+    """Check if the web UI is running.
+
+    Displays the current server status including PID, URL, and uptime.
+    Automatically cleans up stale state files if the server crashed.
+
+    \b
+    Examples:
+        waqt ui status
+    """
+    from .process_manager import get_status, get_uptime
+
+    status = get_status()
+
+    if status.get("was_stale"):
+        click.echo(click.style("(Cleaned up stale state file)", fg="yellow"))
+
+    click.echo()
+    if status["running"]:
+        uptime = get_uptime(status.get("started_at"))
+        click.echo(click.style("✓ Waqt UI is running", fg="green", bold=True))
+        click.echo(f"  URL: {status['url']}")
+        click.echo(f"  PID: {status['pid']}")
+        if uptime:
+            click.echo(f"  Uptime: {uptime}")
+        click.echo()
+        click.echo(
+            "To stop the server, run: " + click.style("waqt ui stop", fg="yellow")
+        )
+    else:
+        click.echo(click.style("✗ Waqt UI is not running", fg="red"))
+        click.echo()
+        click.echo(
+            "To start the server, run: " + click.style("waqt ui start", fg="yellow")
+        )
+    click.echo()
 
 
 # =============================================================================
