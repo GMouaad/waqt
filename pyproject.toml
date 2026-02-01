@@ -32,6 +32,7 @@ dependencies = [
     "platformdirs>=4.0.0",
     "openpyxl>=3.1.5",
     "alembic>=1.13.0",
+    "waitress>=3.0.0",
 ]
 
 [project.optional-dependencies]
