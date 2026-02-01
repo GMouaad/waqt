@@ -121,7 +121,8 @@ jobs:
             --add-data "src/waqt/static:waqt/static" \
             --hidden-import=werkzeug \
             --hidden-import=flask \
-            --hidden-import=click
+            --hidden-import=click \
+            --hidden-import=waitress
 
       - name: Build executable (Windows)
         if: runner.os == 'Windows'
@@ -132,7 +133,8 @@ jobs:
             --add-data "src/waqt/static;waqt/static" \
             --hidden-import=werkzeug \
             --hidden-import=flask \
-            --hidden-import=click
+            --hidden-import=click \
+            --hidden-import=waitress
 
       - name: Create zip (Unix)
         if: runner.os != 'Windows'
