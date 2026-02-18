@@ -41,7 +41,7 @@ Added comprehensive tests in `tests/test_updater.py`:
 
 ### Manual Testing
 To manually test the fix on Windows:
-1. Build a frozen executable: `python -m PyInstaller waqt.spec`
+1. Build a frozen executable using the instructions from README.md (typically involves PyInstaller with appropriate flags)
 2. Run the executable: `dist/waqt.exe`
 3. Attempt an update: `dist/waqt.exe update check`
 4. If an update is available: `dist/waqt.exe update install`

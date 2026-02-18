@@ -88,10 +88,29 @@ class TestWindowsUpdateScript:
 
             # Read and verify script content
             content = script_path.read_text()
-            assert "timeout /t 2" in content
-            assert str(new_exe_path) in content
-            assert current_exe in content
-            assert str(backup_path) in content
+            # Check for increased timeout (3 seconds instead of 2)
+            assert "timeout /t 3" in content
+            # Check for retry logic
+            assert "RETRIES=5" in content
+            assert "RETRY_COPY" in content
+            # Check paths are present (may be escaped)
+            assert "waqt_new.exe" in content
+            assert "waqt.exe" in content
+            assert "waqt.exe.bak" in content
+            # Check cleanup of both backup and new exe
+            assert content.count('del "') >= 3  # backup, new exe, and script itself
+
+    def test_escape_batch_path(self):
+        """Test that batch path escaping works correctly."""
+        from src.waqt.updater import _escape_batch_path
+
+        # Test percent sign escaping
+        assert _escape_batch_path("C:\\test%path\\file.exe") == "C:\\test%%path\\file.exe"
+        assert _escape_batch_path("C:\\normal\\path.exe") == "C:\\normal\\path.exe"
+        
+        # Multiple percent signs
+        assert _escape_batch_path("%temp%\\%file%") == "%%temp%%\\%%file%%"
+
 
 
 class TestVersionParsing:
