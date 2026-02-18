@@ -1,6 +1,97 @@
 """Unit tests for the updater module."""
 
 import pytest
+from unittest.mock import Mock, patch
+import tempfile
+from pathlib import Path
+
+
+class TestRetryLogic:
+    """Tests for file operation retry logic."""
+
+    def test_retry_success_on_first_attempt(self):
+        """Test that operation succeeds on first attempt."""
+        from src.waqt.updater import _retry_file_operation
+
+        mock_operation = Mock(return_value="success")
+        result = _retry_file_operation(mock_operation, max_retries=3)
+
+        assert result == "success"
+        assert mock_operation.call_count == 1
+
+    def test_retry_success_after_failures(self):
+        """Test that operation succeeds after some failures."""
+        from src.waqt.updater import _retry_file_operation
+
+        mock_operation = Mock()
+        # Fail twice, then succeed
+        mock_operation.side_effect = [
+            OSError("File locked"),
+            PermissionError("Access denied"),
+            "success",
+        ]
+
+        result = _retry_file_operation(mock_operation, max_retries=5, initial_delay=0.01)
+
+        assert result == "success"
+        assert mock_operation.call_count == 3
+
+    def test_retry_exhausted_raises_exception(self):
+        """Test that exhausted retries raise an exception."""
+        from src.waqt.updater import _retry_file_operation
+
+        mock_operation = Mock(side_effect=OSError("File permanently locked"))
+
+        with pytest.raises(Exception) as exc_info:
+            _retry_file_operation(mock_operation, max_retries=3, initial_delay=0.01)
+
+        assert "Failed after 3 attempts" in str(exc_info.value)
+        assert "File permanently locked" in str(exc_info.value)
+        assert mock_operation.call_count == 3
+
+    def test_retry_only_catches_os_permission_errors(self):
+        """Test that retry only catches OSError and PermissionError."""
+        from src.waqt.updater import _retry_file_operation
+
+        mock_operation = Mock(side_effect=ValueError("Different error"))
+
+        with pytest.raises(ValueError):
+            _retry_file_operation(mock_operation, max_retries=3, initial_delay=0.01)
+
+        # Should fail on first attempt since ValueError is not caught
+        assert mock_operation.call_count == 1
+
+
+class TestWindowsUpdateScript:
+    """Tests for Windows update script creation."""
+
+    def test_create_windows_update_script(self):
+        """Test that Windows update script is created correctly."""
+        from src.waqt.updater import _create_windows_update_script
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_path = Path(tmpdir)
+            backup_path = temp_path / "waqt.exe.bak"
+            new_exe_path = temp_path / "waqt_new.exe"
+            current_exe = str(temp_path / "waqt.exe")
+
+            # Create dummy files
+            backup_path.touch()
+            new_exe_path.touch()
+
+            script_path = _create_windows_update_script(
+                backup_path, new_exe_path, current_exe
+            )
+
+            assert script_path.exists()
+            assert script_path.name == "waqt_update.bat"
+
+            # Read and verify script content
+            content = script_path.read_text()
+            assert "timeout /t 2" in content
+            assert str(new_exe_path) in content
+            assert current_exe in content
+            assert str(backup_path) in content
 
 
 class TestVersionParsing:
