@@ -13,6 +13,8 @@ import json
 import zipfile
 import shutil
 import tempfile
+import time
+import subprocess
 from typing import Optional, Tuple, Dict
 from pathlib import Path
 
@@ -210,6 +212,120 @@ def check_for_updates(
         raise Exception(f"Failed to check for updates: {e}")
 
 
+def _retry_file_operation(operation, max_retries: int = 5, initial_delay: float = 0.1):
+    """Retry a file operation with exponential backoff.
+    
+    Args:
+        operation: Callable to execute
+        max_retries: Maximum number of retry attempts
+        initial_delay: Initial delay in seconds between retries
+        
+    Returns:
+        Result of the operation
+        
+    Raises:
+        Exception: If all retries fail, raises the last exception
+    """
+    last_exception = None
+    delay = initial_delay
+    
+    for attempt in range(max_retries):
+        try:
+            return operation()
+        except (OSError, PermissionError) as e:
+            last_exception = e
+            if attempt < max_retries - 1:
+                # Exponential backoff
+                time.sleep(delay)
+                delay *= 2
+            else:
+                # Last attempt failed
+                raise Exception(
+                    f"Failed after {max_retries} attempts: {e}. "
+                    f"The file may be locked by another process. "
+                    f"Please close any other instances of waqt and try again."
+                ) from e
+    
+    # Should not reach here, but just in case
+    if last_exception:
+        raise last_exception
+
+
+def _escape_batch_path(path: str) -> str:
+    """Escape special characters in paths for batch scripts.
+    
+    Args:
+        path: File path to escape
+        
+    Returns:
+        Escaped path safe for use in batch scripts
+    """
+    # Escape special batch characters: % ^ & | < > ( )
+    # Double quotes are already used to wrap paths
+    path = str(path).replace("%", "%%")
+    return path
+
+
+def _create_windows_update_script(
+    backup_path: Path, new_exe_path: Path, current_exe: str
+) -> Path:
+    """Create a Windows batch script to perform delayed update.
+    
+    On Windows, the executable cannot be replaced while running. This creates
+    a batch script that waits for the current process to exit, then performs
+    the replacement.
+    
+    Args:
+        backup_path: Path to backup of current executable
+        new_exe_path: Path to new executable to install (must be in a permanent location)
+        current_exe: Path to current executable to replace
+        
+    Returns:
+        Path to the created batch script
+    """
+    script_path = backup_path.parent / "waqt_update.bat"
+    
+    # Escape paths for batch script safety
+    escaped_new_exe = _escape_batch_path(new_exe_path)
+    escaped_current_exe = _escape_batch_path(current_exe)
+    escaped_backup = _escape_batch_path(backup_path)
+    
+    # Create a batch script that:
+    # 1. Waits for the current process to exit (with retries)
+    # 2. Replaces the executable
+    # 3. Cleans up temporary files
+    script_content = f"""@echo off
+set RETRIES=5
+:RETRY_COPY
+timeout /t 3 /nobreak > nul
+echo Applying update...
+copy /y "{escaped_new_exe}" "{escaped_current_exe}" > nul
+if errorlevel 1 (
+    set /a RETRIES-=1
+    if %RETRIES% GTR 0 (
+        echo Update copy failed, retrying...
+        goto RETRY_COPY
+    )
+    echo Failed to copy new executable after all retries
+    if exist "{escaped_backup}" (
+        echo Restoring backup...
+        copy /y "{escaped_backup}" "{escaped_current_exe}" > nul
+    )
+    pause
+    exit /b 1
+)
+del "{escaped_backup}" > nul 2>&1
+del "{escaped_new_exe}" > nul 2>&1
+del "%~f0" > nul 2>&1
+echo Update completed successfully
+"""
+    
+    with open(script_path, "w") as f:
+        f.write(script_content)
+    
+    return script_path
+
+
 def download_and_install_update(release_info: Dict[str, str]) -> bool:
     """Download and install an update.
 
@@ -315,20 +431,64 @@ def download_and_install_update(release_info: Dict[str, str]) -> bool:
             # Backup current executable
             if backup_path.exists():
                 backup_path.unlink()
-            shutil.copy2(current_exe, backup_path)
+            
+            def backup_operation():
+                shutil.copy2(current_exe, backup_path)
+            
+            _retry_file_operation(backup_operation)
 
-            # Replace with new executable
-            shutil.copy2(new_exe_path, current_exe)
-
-            # Make executable on Unix
-            if os_name != "windows":
-                os.chmod(current_exe, 0o755)
-
-            # Remove backup
-            backup_path.unlink()
-
-            print(f"✓ Successfully updated to version {release_info['version']}")
-            return True
+            # On Windows, file replacement while running needs special handling
+            if os_name == "windows":
+                # Copy new executable to a permanent location outside temp directory
+                # The batch script will reference this location
+                permanent_new_exe = backup_path.parent / f"waqt_new_{release_info['version']}.exe"
+                if permanent_new_exe.exists():
+                    permanent_new_exe.unlink()
+                shutil.copy2(new_exe_path, permanent_new_exe)
+                
+                # Create a batch script to perform the update after exit
+                script_path = _create_windows_update_script(
+                    backup_path, permanent_new_exe, current_exe
+                )
+                
+                print(f"✓ Update prepared for version {release_info['version']}")
+                print("\nThe update will be applied when you close this program.")
+                print("Launching update script...")
+                
+                # Launch the batch script detached from this process
+                # Use DETACHED_PROCESS flag to run without console (consistent with process_manager.py)
+                try:
+                    DETACHED_PROCESS = 0x00000008
+                    subprocess.Popen(
+                        [str(script_path)],
+                        creationflags=DETACHED_PROCESS,
+                        close_fds=True,
+                    )
+                except OSError as popen_error:
+                    # Clean up permanent file on error
+                    if permanent_new_exe.exists():
+                        permanent_new_exe.unlink()
+                    raise Exception(
+                        f"Failed to launch update script: {popen_error}. "
+                        "Please check your permissions or antivirus settings."
+                    )
+                
+                # Don't delete backup yet - the script will handle it
+                print("\nPlease close this window to complete the update.")
+                return True
+            else:
+                # On Unix systems, try with retry logic
+                def replace_operation():
+                    shutil.copy2(new_exe_path, current_exe)
+                    os.chmod(current_exe, 0o755)
+                
+                _retry_file_operation(replace_operation)
+                
+                # Remove backup on success
+                backup_path.unlink()
+                
+                print(f"✓ Successfully updated to version {release_info['version']}")
+                return True
 
         except Exception as e:
             # Try to restore backup on error

@@ -1,6 +1,116 @@
 """Unit tests for the updater module."""
 
 import pytest
+from unittest.mock import Mock, patch
+import tempfile
+from pathlib import Path
+
+
+class TestRetryLogic:
+    """Tests for file operation retry logic."""
+
+    def test_retry_success_on_first_attempt(self):
+        """Test that operation succeeds on first attempt."""
+        from src.waqt.updater import _retry_file_operation
+
+        mock_operation = Mock(return_value="success")
+        result = _retry_file_operation(mock_operation, max_retries=3)
+
+        assert result == "success"
+        assert mock_operation.call_count == 1
+
+    def test_retry_success_after_failures(self):
+        """Test that operation succeeds after some failures."""
+        from src.waqt.updater import _retry_file_operation
+
+        mock_operation = Mock()
+        # Fail twice, then succeed
+        mock_operation.side_effect = [
+            OSError("File locked"),
+            PermissionError("Access denied"),
+            "success",
+        ]
+
+        result = _retry_file_operation(mock_operation, max_retries=5, initial_delay=0.01)
+
+        assert result == "success"
+        assert mock_operation.call_count == 3
+
+    def test_retry_exhausted_raises_exception(self):
+        """Test that exhausted retries raise an exception."""
+        from src.waqt.updater import _retry_file_operation
+
+        mock_operation = Mock(side_effect=OSError("File permanently locked"))
+
+        with pytest.raises(Exception) as exc_info:
+            _retry_file_operation(mock_operation, max_retries=3, initial_delay=0.01)
+
+        assert "Failed after 3 attempts" in str(exc_info.value)
+        assert "File permanently locked" in str(exc_info.value)
+        assert mock_operation.call_count == 3
+
+    def test_retry_only_catches_os_permission_errors(self):
+        """Test that retry only catches OSError and PermissionError."""
+        from src.waqt.updater import _retry_file_operation
+
+        mock_operation = Mock(side_effect=ValueError("Different error"))
+
+        with pytest.raises(ValueError):
+            _retry_file_operation(mock_operation, max_retries=3, initial_delay=0.01)
+
+        # Should fail on first attempt since ValueError is not caught
+        assert mock_operation.call_count == 1
+
+
+class TestWindowsUpdateScript:
+    """Tests for Windows update script creation."""
+
+    def test_create_windows_update_script(self):
+        """Test that Windows update script is created correctly."""
+        from src.waqt.updater import _create_windows_update_script
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_path = Path(tmpdir)
+            backup_path = temp_path / "waqt.exe.bak"
+            new_exe_path = temp_path / "waqt_new.exe"
+            current_exe = str(temp_path / "waqt.exe")
+
+            # Create dummy files
+            backup_path.touch()
+            new_exe_path.touch()
+
+            script_path = _create_windows_update_script(
+                backup_path, new_exe_path, current_exe
+            )
+
+            assert script_path.exists()
+            assert script_path.name == "waqt_update.bat"
+
+            # Read and verify script content
+            content = script_path.read_text()
+            # Check for increased timeout (3 seconds instead of 2)
+            assert "timeout /t 3" in content
+            # Check for retry logic
+            assert "RETRIES=5" in content
+            assert "RETRY_COPY" in content
+            # Check paths are present (may be escaped)
+            assert "waqt_new.exe" in content
+            assert "waqt.exe" in content
+            assert "waqt.exe.bak" in content
+            # Check cleanup of both backup and new exe
+            assert content.count('del "') >= 3  # backup, new exe, and script itself
+
+    def test_escape_batch_path(self):
+        """Test that batch path escaping works correctly."""
+        from src.waqt.updater import _escape_batch_path
+
+        # Test percent sign escaping
+        assert _escape_batch_path("C:\\test%path\\file.exe") == "C:\\test%%path\\file.exe"
+        assert _escape_batch_path("C:\\normal\\path.exe") == "C:\\normal\\path.exe"
+        
+        # Multiple percent signs
+        assert _escape_batch_path("%temp%\\%file%") == "%%temp%%\\%%file%%"
+
 
 
 class TestVersionParsing:
